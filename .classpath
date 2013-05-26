@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="testsrc"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/fuse-jna"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.jgit-2.3.1.201302201838-r.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="http://download.eclipse.org/jgit/docs/latest/apidocs/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/commons-dost/lib/commons-lang3-3.1.jar" sourcepath="/commons-dost/libsrc/commons-lang3-3.1-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="http://commons.apache.org/lang/api-3.1/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
