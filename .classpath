@@ -14,5 +14,7 @@
 			<attribute name="javadoc_location" value="http://commons.apache.org/lang/api-3.1/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="/fuse-jna/lib/jna/jna-3.5.2.jar" sourcepath="/fuse-jna/lib/jna/jna-3.5.2-sources.zip"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
