@@ -51,10 +51,12 @@ public class JGitFS extends FuseFilesystemAdapterFull
 		
 	}
 
-	private void close() {
+	private void close() throws IOException, FuseException {
 		if(repository != null) {
 			repository.close();
 		}
+		
+		unmount();
 	}
 
 	public JGitFS(String gitDir) throws IOException {
@@ -146,5 +148,4 @@ public class JGitFS extends FuseFilesystemAdapterFull
 	private Node getNodeForPath(String path) {
 		return root.getNodeForPath(path);
 	}
-	
 }
