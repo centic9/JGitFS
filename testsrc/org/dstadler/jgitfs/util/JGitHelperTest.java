@@ -114,8 +114,32 @@ public class JGitHelperTest {
 	}
 	
 	@Test
-	public void testGetBranchHead() {
-		// TODO: ...
+	public void testGetBranchHeadCommit() throws GitAPIException {
+		assertNull(helper.getBranchHeadCommit("somebranch"));
+		assertNotNull(helper.getBranchHeadCommit("master"));
+		assertNotNull(helper.getBranchHeadCommit("refs/heads/master"));
+	}
+	
+	@Test
+	public void testGetBranches() throws GitAPIException {
+		List<String> branches = helper.getBranches();
+		assertTrue(branches.size() > 0);
+		assertTrue("Had: " + branches.toString(), branches.contains("master"));
+		assertTrue("Had: " + branches.toString(), branches.contains("refs/heads/master"));
+	}
+	
+	@Test
+	public void testGetTagHead() throws GitAPIException {
+		assertNull(helper.getTagHeadCommit("sometag"));
+		assertNotNull(helper.getTagHeadCommit("testtag"));
+	}
+
+	@Test
+	public void testGetTags() throws GitAPIException {
+		List<String> tags = helper.getTags();
+		assertTrue(tags.size() > 0);
+		assertTrue("Had: " + tags.toString(), tags.contains("testtag"));
+		assertTrue("Had: " + tags.toString(), tags.contains("refs/tags/testtag"));
 	}
 	
 	@Test

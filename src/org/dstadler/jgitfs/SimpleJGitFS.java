@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 import net.fusejna.DirectoryFiller;
+import net.fusejna.ErrorCodes;
 import net.fusejna.FuseException;
 import net.fusejna.StructFuseFileInfo.FileInfoWrapper;
 import net.fusejna.StructStat.StatWrapper;
@@ -78,19 +79,13 @@ public class SimpleJGitFS extends FuseFilesystemAdapterFull
 	@Override
 	public int getattr(final String path, final StatWrapper stat)
 	{
-		if(DIRS.contains(path) || 
-				GitUtils.isCommitDir(path) ||
-				// 8 for /commit/, 40 + 2 for commitish plus two slashes
-				(path.startsWith("/commit/") && path.length() == (8 + 40 + 1))) {
+		if(DIRS.contains(path) || GitUtils.isCommitTupel(path) || GitUtils.isCommitDir(path)) {
 			stat.setMode(NodeType.DIRECTORY);
 			return 0;
-		} else if (GitUtils.isBranchDir(path) ||
-				GitUtils.isTagDir(path)) {
+		} else if (GitUtils.isBranchDir(path) || GitUtils.isTagDir(path)) {
 			stat.setMode(NodeType.SYMBOLIC_LINK);
 			return 0;
-		} else if (path.startsWith("/commit/") && 
-				// 8 for /commit/, 40 + 2 for commitish plus two slashes
-				path.length() > (8 + 40 + 2)) {
+		} else if (GitUtils.isCommitSubDir(path)) {
 			String commit = jgitHelper.readCommit(path);
 			String file = jgitHelper.readPath(path);
 			
@@ -102,26 +97,11 @@ public class SimpleJGitFS extends FuseFilesystemAdapterFull
 			return 0;
 		}
 
-		throw new IllegalStateException("Had unknown path " + path + " in getattr()");
+		//throw new IllegalStateException("Had unknown path " + path + " in getattr()");
+		System.out.println("Had unknown path " + path + " in getattr()");
 		
-		//return getNodeForPath(path).populateStats(stat);
-		
-		// let the related node handle this
-//		Node node = topLevelHandlers.get(path);
-//		if(node != null) {
-//			return node.populateStats(stat);
-//		}
-//		
-//		
-//		if (path.equals(File.separator)) { // Root directory
-//			stat.setMode(NodeType.DIRECTORY);
-//			return 0;
-//		}
-//		if (path.equals(filename)) { // hello.txt
-//			stat.setMode(NodeType.FILE).size(contents.length());
-//			return 0;
-//		}
-//		return -ErrorCodes.ENOENT;
+		// all others are reported as "not found"
+		return -ErrorCodes.ENOENT;
 	}
 
 	@Override
@@ -139,7 +119,9 @@ public class SimpleJGitFS extends FuseFilesystemAdapterFull
 					openFile.read();
 				}
 				
+				// then return the requested number of bytes
 				for(int i = 0;i < size;i++) {
+					// TODO: handle end of file?
 					buffer.put((byte)openFile.read());
 				}
 			} finally {
@@ -190,7 +172,7 @@ public class SimpleJGitFS extends FuseFilesystemAdapterFull
 			}
 			
 			return 0;
-		} else if (GitUtils.isCommitDir(path)) {
+		} else if (GitUtils.isCommitTupel(path)) {
 			// get all commit-tupels to populate the first level
 			String tupel = StringUtils.removeStart(path, "/commit/");
 			try {
@@ -205,7 +187,7 @@ public class SimpleJGitFS extends FuseFilesystemAdapterFull
 			}
 			
 			return 0;
-		} else if (path.startsWith("/commit/")) {
+		} else if (GitUtils.isCommitDir(path) || GitUtils.isCommitSubDir(path)) {
 			String commit = jgitHelper.readCommit(path);
 			String dir = jgitHelper.readPath(path);
 			
@@ -216,6 +198,30 @@ public class SimpleJGitFS extends FuseFilesystemAdapterFull
 				}
 			} catch (Exception e) {
 				throw new IllegalStateException("Error reading elements of path " + path + ", found commit " + commit + " and directory " + dir, e);
+			}
+			
+			return 0;
+		} else if (path.equals("/tag")) {
+			try {
+				List<String> items = jgitHelper.getTags();
+				for(String item : items) {
+					// TODO: handle branches with slash, e.g. refs/heads/master
+					filler.add(item);
+				}
+			} catch (Exception e) {
+				throw new IllegalStateException("Error reading tags", e);
+			}
+			
+			return 0;
+		} else if (path.equals("/branch")) {
+			try {
+				List<String> items = jgitHelper.getBranches();
+				for(String item : items) {
+					// TODO: handle tags with slash
+					filler.add(item);
+				}
+			} catch (Exception e) {
+				throw new IllegalStateException("Error reading branches", e);
 			}
 			
 			return 0;
@@ -240,9 +246,38 @@ public class SimpleJGitFS extends FuseFilesystemAdapterFull
 		// TODO: implement symbolic link handling
 		
 		if(GitUtils.isBranchDir(path)) {
+			StringBuilder target = new StringBuilder("/commit/");
 			
+			try {
+				String commit = jgitHelper.getBranchHeadCommit(path.substring("/branch/".length()));
+				if(commit == null) {
+					throw new IllegalStateException("Had unknown branch " + path + " in readlink()");
+				}
+				target.append(commit.substring(0, 2)).append("/").append(commit.substring(2));
+				
+				buffer.put(target.toString().getBytes());
+			} catch (Exception e) {
+				throw new IllegalStateException("Error reading commit of branch-path " + path, e);
+			}
+			
+			return 0;
 		} else if (GitUtils.isTagDir(path)) {
+			StringBuilder target = new StringBuilder("/commit/");
 			
+			try {
+				String commit = jgitHelper.getTagHeadCommit(path.substring("/tag/".length()));
+				if(commit == null) {
+					throw new IllegalStateException("Had unknown tag " + path + " in readlink()");
+				}
+
+				target.append(commit.substring(0, 2)).append("/").append(commit.substring(2));
+				
+				buffer.put(target.toString().getBytes());
+			} catch (Exception e) {
+				throw new IllegalStateException("Error reading commit of branch-path " + path, e);
+			}
+			
+			return 0;
 		}
 
 		throw new IllegalStateException("Had unknown path " + path + " in readlink()");

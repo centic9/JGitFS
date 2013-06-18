@@ -131,7 +131,7 @@ public class JGitHelper implements Closeable {
 		throw new IllegalStateException("Did not find expected file '" + path + "' in tree '" + tree.getName() + "'");
 	}
 
-	public RevTree buildRevTree(String commit) throws MissingObjectException, IncorrectObjectTypeException, IOException {
+	private RevTree buildRevTree(String commit) throws MissingObjectException, IncorrectObjectTypeException, IOException {
 		// a RevWalk allows to walk over commits based on some filtering that is defined
 		RevWalk revWalk = new RevWalk(repository);
 		RevCommit revCommit = revWalk.parseCommit(ObjectId.fromString(commit));
@@ -141,15 +141,58 @@ public class JGitHelper implements Closeable {
 		return tree;
 	}
 
-	public String getBranchHead(String branch) throws GitAPIException {
-		List<Ref> call = new Git(repository).tagList().call();
+	public List<String> getBranches() throws GitAPIException {
+		List<Ref> call = git.branchList().call();
+		List<String> branches = new ArrayList<String>();
 		for(Ref rev : call) {
-			//if(rev.)
+			String name = rev.getName();
+			branches.add(name);
+			if(name.startsWith("refs/heads/")) {
+				branches.add(StringUtils.removeStart(name, "refs/heads/"));
+			}
+		}
+		return branches;
+	}
+	
+	public String getBranchHeadCommit(String branch) throws GitAPIException {
+		List<Ref> call = git.branchList().call();
+		for(Ref rev : call) {
+			String name = rev.getName();
+			//System.out.println("Had branch: " + name);
+			if(name.equals(branch) || name.equals("refs/heads/" + branch)) {
+				return rev.getObjectId().getName();
+			}
 		}
 		
-		return "";
+		return null;
 	}
 
+	public List<String> getTags() throws GitAPIException {
+		List<Ref> call = git.tagList().call();
+		List<String> tags = new ArrayList<String>();
+		for(Ref rev : call) {
+			String name = rev.getName();
+			tags.add(name);
+			if(name.startsWith("refs/tags/")) {
+				tags.add(StringUtils.removeStart(name, "refs/tags/"));
+			}
+		}
+		return tags;
+	}
+	
+	public String getTagHeadCommit(String tag) throws GitAPIException {
+		List<Ref> call = git.tagList().call();
+		for(Ref rev : call) {
+			String name = rev.getName();
+			//System.out.println("Had tag: " + name);
+			if(name.equals(tag) || name.equals("refs/tags/" + tag)) {
+				return rev.getObjectId().getName();
+			}
+		}
+		
+		return null;
+	}
+	
 	public List<String> allCommitTupels() throws NoHeadException, GitAPIException, IOException {
 		List<String> commits = new ArrayList<String>();
 		
@@ -176,11 +219,11 @@ public class JGitHelper implements Closeable {
 		// as a workaround we currently use all branches (includes master) and all tags for finding commits quickly
 		RevWalk walk = new RevWalk(repository);
 
-		List<Ref> branches = new Git(repository).branchList().call();
+		List<Ref> branches = git.branchList().call();
 		for(Ref rev : branches) {
 			addCommits(commits, walk, rev.getName());
 		}
-		List<Ref> tags = new Git(repository).tagList().call();
+		List<Ref> tags = git.tagList().call();
 		for(Ref rev : tags) {
 			addCommits(commits, walk, rev.getName());
 		}
@@ -209,13 +252,28 @@ public class JGitHelper implements Closeable {
 	public List<String> readElementsAt(String commit, String path) throws MissingObjectException, IncorrectObjectTypeException, IOException {
 		RevTree tree = buildRevTree(commit);
 
+		List<String> items = new ArrayList<String>();
+
+		// shortcut for root-path
+		if(path.isEmpty()) {
+			TreeWalk treeWalk = new TreeWalk(repository);
+			treeWalk.addTree(tree);
+			treeWalk.setRecursive(false);
+			treeWalk.setPostOrderTraversal(false);
+
+			while(treeWalk.next()) {
+				items.add(treeWalk.getPathString());
+			}
+
+			return items;
+		}
+		
 		// now try to find a specific file
 		TreeWalk treeWalk = buildTreeWalk(tree, path);
 		if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_TREE) == 0) {
 			throw new IllegalStateException("Tried to read the elements of a non-tree for commit '" + commit + "' and path '" + path + "', had filemode " + treeWalk.getFileMode(0).getBits());
 		}
 
-		List<String> items = new ArrayList<String>();
 		TreeWalk dirWalk = new TreeWalk(repository);
 		dirWalk.addTree(treeWalk.getObjectId(0));
 		dirWalk.setRecursive(false);

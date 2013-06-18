@@ -9,6 +9,24 @@ import org.junit.Test;
 public class GitUtilsTest {
 
 	@Test
+	public void testIsCommitTupel() {
+		assertFalse(GitUtils.isCommitTupel(""));
+		assertFalse(GitUtils.isCommitTupel("/"));
+		assertFalse(GitUtils.isCommitTupel("/something"));
+		assertFalse(GitUtils.isCommitTupel("/branch"));
+		assertFalse(GitUtils.isCommitTupel("/tag"));
+		assertFalse(GitUtils.isCommitTupel("/commit"));
+		assertFalse(GitUtils.isCommitTupel("/commit/00/"));
+		assertFalse(GitUtils.isCommitTupel("/commit/0g"));
+		assertFalse(GitUtils.isCommitTupel("/commit/fg"));
+		assertFalse(GitUtils.isCommitTupel("/commit/zz"));
+		
+		assertTrue(GitUtils.isCommitTupel("/commit/00"));
+		assertTrue(GitUtils.isCommitTupel("/commit/ff"));
+		assertTrue(GitUtils.isCommitTupel("/commit/ae"));
+	}
+
+	@Test
 	public void testIsCommitDir() {
 		assertFalse(GitUtils.isCommitDir(""));
 		assertFalse(GitUtils.isCommitDir("/"));
@@ -20,10 +38,30 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isCommitDir("/commit/0g"));
 		assertFalse(GitUtils.isCommitDir("/commit/fg"));
 		assertFalse(GitUtils.isCommitDir("/commit/zz"));
+		assertFalse(GitUtils.isCommitDir("/commit/00"));
+		assertFalse(GitUtils.isCommitDir("/commit/ab"));
 		
-		assertTrue(GitUtils.isCommitDir("/commit/00"));
-		assertTrue(GitUtils.isCommitDir("/commit/ff"));
-		assertTrue(GitUtils.isCommitDir("/commit/ae"));
+		assertTrue(GitUtils.isCommitDir("/commit/12/34567890123456789012345678901234567890"));
+	}
+	
+	@Test
+	public void testIsCommitSubDir() {
+		assertFalse(GitUtils.isCommitSubDir(""));
+		assertFalse(GitUtils.isCommitSubDir("/"));
+		assertFalse(GitUtils.isCommitSubDir("/something"));
+		assertFalse(GitUtils.isCommitSubDir("/branch"));
+		assertFalse(GitUtils.isCommitSubDir("/tag"));
+		assertFalse(GitUtils.isCommitSubDir("/commit"));
+		assertFalse(GitUtils.isCommitSubDir("/commit/00/"));
+		assertFalse(GitUtils.isCommitSubDir("/commit/0g"));
+		assertFalse(GitUtils.isCommitSubDir("/commit/fg"));
+		assertFalse(GitUtils.isCommitSubDir("/commit/zz"));
+		assertFalse(GitUtils.isCommitSubDir("/commit/00"));
+		assertFalse(GitUtils.isCommitSubDir("/commit/ab"));
+		assertFalse(GitUtils.isCommitSubDir("/commit/12/34567890123456789012345678901234567890"));
+		assertFalse(GitUtils.isCommitSubDir("/commit/12/34567890123456789012345678901234567890/"));
+		
+		assertTrue(GitUtils.isCommitSubDir("/commit/12/34567890123456789012345678901234567890/file123"));
 	}
 
 	@Test
@@ -37,7 +75,8 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isBranchDir("/branch/00/"));
 		assertFalse(GitUtils.isBranchDir("/branch/asdfasd/sjwekw"));
 		assertFalse(GitUtils.isBranchDir("/branch/asdfasd_aldsjfasd asdlkjasdj.,.;_:;:öÖLP\"=)==\"§\"§%/\"!§)$§\""));
-
+		assertFalse(GitUtils.isBranchDir("/branch/ae/.hidden"));
+		
 		assertTrue(GitUtils.isBranchDir("/branch/asdfasd"));
 		assertTrue(GitUtils.isBranchDir("/branch/fg"));
 		assertTrue(GitUtils.isBranchDir("/branch/zz"));
@@ -59,6 +98,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isTagDir("/tag/00/"));
 		assertFalse(GitUtils.isTagDir("/tag/asdfasd/sjwekw"));
 		assertFalse(GitUtils.isTagDir("/tag/asdfasd_aldsjfasd asdlkjasdj.,.;_:;:öÖLP\"=)==\"§\"§%/\"!§)$§\""));
+		assertFalse(GitUtils.isTagDir("/branch/ae/.hidden"));
 
 		assertTrue(GitUtils.isTagDir("/tag/asdfasd"));
 		assertTrue(GitUtils.isTagDir("/tag/fg"));
