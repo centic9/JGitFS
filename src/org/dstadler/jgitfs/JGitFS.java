@@ -30,10 +30,6 @@ public class JGitFS extends FuseFilesystemAdapterFull
 			System.exit(1);
 		}
 		
-		// jna update: 
-		// * https://groups.google.com/forum/?fromgroups#!msg/jna-users/ju0CyEmiU_4/41litv0Tux4J
-		// * https://github.com/twall/jna/blob/master/CHANGES.md
-		
 		//read GIT
 		JGitFS gitFS = new JGitFS(args[0]);
 		try {

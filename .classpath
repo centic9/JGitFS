@@ -4,7 +4,7 @@
 	<classpathentry kind="src" path="testsrc"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/fuse-jna"/>
-	<classpathentry kind="lib" path="lib/org.eclipse.jgit-2.3.1.201302201838-r.jar">
+	<classpathentry kind="lib" path="lib/org.eclipse.jgit-2.3.1.201302201838-r.jar" sourcepath="/home/dstadler/.m2/repository/org/eclipse/jgit/org.eclipse.jgit/2.3.1.201302201838-r/org.eclipse.jgit-2.3.1.201302201838-r-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://download.eclipse.org/jgit/docs/latest/apidocs/"/>
 		</attributes>
@@ -16,5 +16,10 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="/fuse-jna/lib/jna/jna-3.5.2.jar" sourcepath="/fuse-jna/lib/jna/jna-3.5.2-sources.zip"/>
+	<classpathentry kind="lib" path="/commons-dost/lib/commons-io-2.4.jar" sourcepath="/commons-dost/libsrc/commons-io-2.4-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="http://commons.apache.org/io/api-2.4/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

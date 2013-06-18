@@ -9,6 +9,9 @@ import net.fusejna.FuseJna;
 
 public class FuseUtils {
 	public static void prepareMountpoint(File mountPoint) throws IOException {
+		// if mountpoint exists, try to unmount it before re-using it
+		FuseJna.unmount(mountPoint);
+
 		// does not exist => create it
 		if(!mountPoint.exists()) {
 			if(!mountPoint.mkdirs()) {
