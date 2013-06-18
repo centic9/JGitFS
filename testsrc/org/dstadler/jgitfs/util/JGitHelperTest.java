@@ -33,14 +33,14 @@ public class JGitHelperTest {
 	@Test
 	public void test() throws Exception {
 		assertNotNull(helper);
-		assertTrue(helper.allCommits().size() > 0);
+		assertTrue(helper.allCommits(null).size() > 0);
 	}
 	
 	@Test
 	public void testWithGitdir() throws Exception {
 		JGitHelper lhelper = new JGitHelper("./.git");
 		assertNotNull(lhelper);
-		assertTrue(lhelper.allCommits().size() > 0);
+		assertTrue(lhelper.allCommits(null).size() > 0);
 		lhelper.close();
 	}
 
@@ -60,7 +60,7 @@ public class JGitHelperTest {
 
 	@Test
 	public void testReadType() throws Exception {
-		String commit = helper.allCommits().get(0);
+		String commit = helper.allCommits(null).get(0);
 		
 		System.out.println("Had commit: " + commit);
 		assertEquals(NodeType.DIRECTORY, helper.readType(commit, "src"));
@@ -72,7 +72,7 @@ public class JGitHelperTest {
 
 	@Test
 	public void testOpenFile() throws Exception {
-		String commit = helper.allCommits().get(0);
+		String commit = helper.allCommits(null).get(0);
 		
 		System.out.println("Had commit: " + commit);
 		String runSh = IOUtils.toString(helper.openFile(commit, "run.sh"));
@@ -94,7 +94,7 @@ public class JGitHelperTest {
 
 	@Test
 	public void testReadElementsAt() throws Exception {
-		String commit = helper.allCommits().get(0);
+		String commit = helper.allCommits(null).get(0);
 		
 		System.out.println("Had commit: " + commit);
 		assertEquals("[org]", helper.readElementsAt(commit, "src").toString());
@@ -117,7 +117,7 @@ public class JGitHelperTest {
 	public void testGetBranchHeadCommit() throws GitAPIException {
 		assertNull(helper.getBranchHeadCommit("somebranch"));
 		assertNotNull(helper.getBranchHeadCommit("master"));
-		assertNotNull(helper.getBranchHeadCommit("refs/heads/master"));
+		assertNotNull(helper.getBranchHeadCommit("refs_heads_master"));
 	}
 	
 	@Test
@@ -125,13 +125,14 @@ public class JGitHelperTest {
 		List<String> branches = helper.getBranches();
 		assertTrue(branches.size() > 0);
 		assertTrue("Had: " + branches.toString(), branches.contains("master"));
-		assertTrue("Had: " + branches.toString(), branches.contains("refs/heads/master"));
+		assertTrue("Had: " + branches.toString(), branches.contains("refs_heads_master"));
 	}
 	
 	@Test
 	public void testGetTagHead() throws GitAPIException {
 		assertNull(helper.getTagHeadCommit("sometag"));
 		assertNotNull(helper.getTagHeadCommit("testtag"));
+		assertNotNull(helper.getTagHeadCommit("refs_tags_testtag"));
 	}
 
 	@Test
@@ -139,13 +140,25 @@ public class JGitHelperTest {
 		List<String> tags = helper.getTags();
 		assertTrue(tags.size() > 0);
 		assertTrue("Had: " + tags.toString(), tags.contains("testtag"));
-		assertTrue("Had: " + tags.toString(), tags.contains("refs/tags/testtag"));
+		assertTrue("Had: " + tags.toString(), tags.contains("refs_tags_testtag"));
 	}
 	
 	@Test
-	public void testAllCommits() throws NoHeadException, GitAPIException, IOException {
-		int size = helper.allCommits().size();
+	public void testallCommitsNull() throws NoHeadException, GitAPIException, IOException {
+		int size = helper.allCommits(null).size();
 		assertTrue("Had size: " + size, size > 3);
+	}
+
+	@Test
+	public void testallCommits() throws NoHeadException, GitAPIException, IOException {
+		int size = helper.allCommits("zz").size();
+		assertEquals("Had size: " + size, 0, size);
+		
+		List<String> allCommits = helper.allCommits(null);
+		assertTrue(allCommits.size() > 0);
+		
+		List<String> commits = helper.allCommits(allCommits.get(0).substring(0, 2));
+		assertTrue(commits.size() > 0);
 	}
 
 	@Test
@@ -166,7 +179,7 @@ public class JGitHelperTest {
 		helper.close();
 		helper = new JGitHelper("/opt/poi");
 		
-		int size = helper.allCommits().size();
+		int size = helper.allCommits(null).size();
 		assertTrue("Had size: " + size, size > 3);
 	}
 }

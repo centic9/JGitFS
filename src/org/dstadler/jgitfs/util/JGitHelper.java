@@ -75,6 +75,17 @@ public class JGitHelper implements Closeable {
 
 		throw new IllegalStateException("Found unknown FileMode in Git for commit '" + commit + "' and path '" + path + "'");
 	}
+	
+	public long readSize(String commit, String path) throws MissingObjectException, IOException {
+		RevTree tree = buildRevTree(commit);
+		
+		// now read the file/directory attributes
+		TreeWalk treeWalk = buildTreeWalk(tree, path);
+
+		ObjectLoader loader = repository.open(treeWalk.getObjectId(0));
+
+	    return loader.getSize();
+	}
 
 	public InputStream openFile(String commit, String path) throws MissingObjectException, IncorrectObjectTypeException, IOException {
 		RevTree tree = buildRevTree(commit);
@@ -137,7 +148,7 @@ public class JGitHelper implements Closeable {
 		RevCommit revCommit = revWalk.parseCommit(ObjectId.fromString(commit));
 		// and using commit's tree find the path
 		RevTree tree = revCommit.getTree();
-		System.out.println("Having tree: " + tree + " for commit " + commit);
+		//System.out.println("Having tree: " + tree + " for commit " + commit);
 		return tree;
 	}
 
@@ -145,10 +156,10 @@ public class JGitHelper implements Closeable {
 		List<Ref> call = git.branchList().call();
 		List<String> branches = new ArrayList<String>();
 		for(Ref rev : call) {
-			String name = rev.getName();
+			String name = adjustName(rev.getName());
 			branches.add(name);
-			if(name.startsWith("refs/heads/")) {
-				branches.add(StringUtils.removeStart(name, "refs/heads/"));
+			if(name.startsWith("refs_heads_")) {
+				branches.add(StringUtils.removeStart(name, "refs_heads_"));
 			}
 		}
 		return branches;
@@ -157,9 +168,9 @@ public class JGitHelper implements Closeable {
 	public String getBranchHeadCommit(String branch) throws GitAPIException {
 		List<Ref> call = git.branchList().call();
 		for(Ref rev : call) {
-			String name = rev.getName();
+			String name = adjustName(rev.getName());
 			//System.out.println("Had branch: " + name);
-			if(name.equals(branch) || name.equals("refs/heads/" + branch)) {
+			if(name.equals(branch) || name.equals("refs_heads_" + branch)) {
 				return rev.getObjectId().getName();
 			}
 		}
@@ -171,21 +182,25 @@ public class JGitHelper implements Closeable {
 		List<Ref> call = git.tagList().call();
 		List<String> tags = new ArrayList<String>();
 		for(Ref rev : call) {
-			String name = rev.getName();
+			String name = adjustName(rev.getName());
 			tags.add(name);
-			if(name.startsWith("refs/tags/")) {
-				tags.add(StringUtils.removeStart(name, "refs/tags/"));
+			if(name.startsWith("refs_tags_")) {
+				tags.add(StringUtils.removeStart(name, "refs_tags_"));
 			}
 		}
 		return tags;
 	}
 	
+	public String adjustName(String name) {
+		return name.replace("/", "_");
+	}
+	
 	public String getTagHeadCommit(String tag) throws GitAPIException {
 		List<Ref> call = git.tagList().call();
 		for(Ref rev : call) {
-			String name = rev.getName();
+			String name = adjustName(rev.getName());
 			//System.out.println("Had tag: " + name);
-			if(name.equals(tag) || name.equals("refs/tags/" + tag)) {
+			if(name.equals(tag) || name.equals("refs_tags_" + tag)) {
 				return rev.getObjectId().getName();
 			}
 		}
@@ -196,14 +211,14 @@ public class JGitHelper implements Closeable {
 	public List<String> allCommitTupels() throws NoHeadException, GitAPIException, IOException {
 		List<String> commits = new ArrayList<String>();
 		
-		for(String commit : allCommits()) {
+		for(String commit : allCommits(null)) {
 			commits.add(commit.substring(0, 2));
 		}
 		
 		return commits;
 	}
 	
-	public List<String> allCommits() throws NoHeadException, GitAPIException, IOException {
+	public List<String> allCommits(String tupel) throws NoHeadException, GitAPIException, IOException {
 		List<String> commits = new ArrayList<String>();
 
 		// TODO: do this differently, currently we only walk master here!!!
@@ -221,23 +236,26 @@ public class JGitHelper implements Closeable {
 
 		List<Ref> branches = git.branchList().call();
 		for(Ref rev : branches) {
-			addCommits(commits, walk, rev.getName());
+			addCommits(commits, walk, rev.getName(), tupel);
 		}
 		List<Ref> tags = git.tagList().call();
 		for(Ref rev : tags) {
-			addCommits(commits, walk, rev.getName());
+			addCommits(commits, walk, rev.getName(), tupel);
 		}
 
 		return commits;
 	}
 
-	private void addCommits(List<String> commits, RevWalk walk, String ref) throws IOException, MissingObjectException,
+	private void addCommits(List<String> commits, RevWalk walk, String ref, String tupel) throws IOException, MissingObjectException,
 			IncorrectObjectTypeException {
 		Ref head = repository.getRef(ref);
 		RevCommit commit = walk.parseCommit(head.getObjectId());
 		walk.markStart(commit);
 		for(RevCommit rev : walk) {
-			commits.add(rev.getId().getName());
+			String name = rev.getId().getName();
+			if(tupel == null || name.startsWith(tupel)) {
+				commits.add(name);
+			}
 		}
 		walk.reset();
 	}

@@ -60,6 +60,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isCommitSubDir("/commit/ab"));
 		assertFalse(GitUtils.isCommitSubDir("/commit/12/34567890123456789012345678901234567890"));
 		assertFalse(GitUtils.isCommitSubDir("/commit/12/34567890123456789012345678901234567890/"));
+		assertFalse(GitUtils.isCommitSubDir("/commit/12/34567890123456789012345678901234567890/file123/.hidden"));
 		
 		assertTrue(GitUtils.isCommitSubDir("/commit/12/34567890123456789012345678901234567890/file123"));
 	}
