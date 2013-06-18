@@ -3,7 +3,7 @@ package org.dstadler.jgitfs.util;
 
 public class GitUtils {
 	public final static String COMMIT_SLASH = "/commit/";
-	private final static int COMMIT_SLASH_LENGTH = COMMIT_SLASH.length();
+	public final static int COMMIT_SLASH_LENGTH = COMMIT_SLASH.length();
 	
 	public final static String BRANCH_SLASH = "/branch/";
 	public final static String TAG_SLASH = "/tag/";

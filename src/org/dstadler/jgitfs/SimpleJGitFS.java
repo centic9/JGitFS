@@ -81,7 +81,7 @@ public class SimpleJGitFS extends FuseFilesystemAdapterFull
 	{
 		// known entries and directories beneath /commit are always directories 
 		if(DIRS.contains(path) || GitUtils.isCommitTupel(path) || GitUtils.isCommitDir(path)) {
-			stat.setMode(NodeType.DIRECTORY);
+			stat.setMode(NodeType.DIRECTORY, true, false, true, true, false, true, false, false, false);
 			return 0;
 		} else if (GitUtils.isCommitSubDir(path)) {
 			// for actual entries for a commit we need to read the file-type information from Git 
@@ -90,7 +90,8 @@ public class SimpleJGitFS extends FuseFilesystemAdapterFull
 			
 			try {
 				NodeType readType = jgitHelper.readType(commit, file);
-				stat.setMode(readType);
+				// TODO: executable flag?
+				stat.setMode(readType, true, false, false, true, false, false, false, false, false);
 				if(readType.equals(NodeType.FILE)) {
 					stat.size(jgitHelper.readSize(commit, file));
 				}
@@ -100,7 +101,7 @@ public class SimpleJGitFS extends FuseFilesystemAdapterFull
 			return 0;
 		} else if (GitUtils.isBranchDir(path) || GitUtils.isTagDir(path)) {
 			// entries under /branch and /tag are always symbolic links
-			stat.setMode(NodeType.SYMBOLIC_LINK);
+			stat.setMode(NodeType.SYMBOLIC_LINK, true, true, true, true, true, true, true, true, true);
 			return 0;
 		}
 

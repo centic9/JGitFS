@@ -50,12 +50,12 @@ public class JGitHelper implements Closeable {
 	}
 
 	public String readCommit(String path) {
-		String commit = StringUtils.removeStart(path, "/commit/").replace("/", "");
+		String commit = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH).replace("/", "");
 		return StringUtils.substring(commit, 0, 40);
 	}
 	
 	public String readPath(final String path) {
-		String file = StringUtils.removeStart(path, "/commit/");
+		String file = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH);
 		return StringUtils.substring(file, 40 + 2);	// cut away commitish and two slashes
 	}
 	
