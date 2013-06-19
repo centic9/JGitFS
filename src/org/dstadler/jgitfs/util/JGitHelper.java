@@ -69,6 +69,8 @@ public class JGitHelper implements Closeable {
 		
 		stat.ctime(revCommit.getCommitTime());
 		stat.mtime(revCommit.getCommitTime());
+		stat.uid(GitUtils.UID);
+		stat.gid(GitUtils.GID);
 		
 		// now read the file/directory attributes
 		TreeWalk treeWalk = buildTreeWalk(tree, path);

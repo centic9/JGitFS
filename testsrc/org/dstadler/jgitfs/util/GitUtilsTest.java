@@ -3,6 +3,8 @@ package org.dstadler.jgitfs.util;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+
 import org.junit.Test;
 
 
@@ -108,5 +110,15 @@ public class GitUtilsTest {
 		assertTrue(GitUtils.isTagDir("/tag/ff"));
 		assertTrue(GitUtils.isTagDir("/tag/ae"));
 		assertTrue(GitUtils.isTagDir("/tag/asdfasd_aldsjfasd asdlkjasdj.,.;_:;:öÖLP\"=)==\"§\"§%\"!§)$§\""));
+	}
+
+	@Test
+	public void testGetUID() throws IOException {
+		assertTrue(GitUtils.getUID() >= 0);
+	}
+
+	@Test
+	public void testGetGID() throws IOException {
+		assertTrue(GitUtils.getGID() >= 0);
 	}
 }
