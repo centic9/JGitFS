@@ -103,7 +103,7 @@ public class SimpleJGitFS extends FuseFilesystemAdapterFull
 		// all others are reported as "not found"
 		// don't throw an exception here as we get requests for some files/directories, e.g. .hidden or .Trash
 		System.out.println("Had unknown path " + path + " in getattr()");
-		return -ErrorCodes.ENOENT;
+		return -ErrorCodes.ENOENT();
 	}
 
 	@Override
@@ -111,26 +111,21 @@ public class SimpleJGitFS extends FuseFilesystemAdapterFull
 		String commit = jgitHelper.readCommit(path);
 		String file = jgitHelper.readPath(path);
 		
-		// TODO: do we need to tune this?!?
 		try {
 			InputStream openFile = jgitHelper.openFile(commit, file);
 			
 			try {
 				// skip until we are at the offset
-				for(int i = 0;i < offset;i++) {
-					openFile.read();
-				}
-				
-				// then return the requested number of bytes
-				for(int i = 0;i < size;i++) {
-					// TODO: handle end of file?
-					buffer.put((byte)openFile.read());
-				}
+				openFile.skip(offset);
+
+				byte[] arr = new byte[(int)size];
+				int read = openFile.read(arr, 0, (int)size);
+				buffer.put(arr);
+
+				return read;
 			} finally {
 				openFile.close();
 			}
-			
-			return (int)(size-offset);
 		} catch (Exception e) {
 			throw new IllegalStateException("Error reading contents of path " + path + ", found commit " + commit + " and file " + file, e);
 		}
@@ -219,8 +214,6 @@ public class SimpleJGitFS extends FuseFilesystemAdapterFull
 
 	@Override
 	public int readlink(String path, ByteBuffer buffer, long size) {
-		// TODO: implement symbolic link handling
-		
 		if(GitUtils.isBranchDir(path)) {
 			StringBuilder target = new StringBuilder(".." + GitUtils.COMMIT_SLASH);
 			

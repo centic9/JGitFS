@@ -61,12 +61,20 @@ public class JGitHelper implements Closeable {
 	}
 	
 	public void readType(String commit, String path, StatWrapper stat) throws MissingObjectException, IncorrectObjectTypeException, IOException {
-		RevTree tree = buildRevTree(commit);
+		RevCommit revCommit = buildRevCommit(commit);
+
+		// and using commit's tree find the path
+		RevTree tree = revCommit.getTree();
+		//System.out.println("Having tree: " + tree + " for commit " + commit);
+		
+		stat.ctime(revCommit.getCommitTime());
+		stat.mtime(revCommit.getCommitTime());
 		
 		// now read the file/directory attributes
 		TreeWalk treeWalk = buildTreeWalk(tree, path);
 		FileMode fileMode = treeWalk.getFileMode(0);
 		
+		// TODO: read file timestamp
 		if(fileMode.equals(FileMode.EXECUTABLE_FILE) ||
 				fileMode.equals(FileMode.REGULAR_FILE)) {
 			ObjectLoader loader = repository.open(treeWalk.getObjectId(0));
@@ -87,7 +95,11 @@ public class JGitHelper implements Closeable {
 	}
 	
 	public InputStream openFile(String commit, String path) throws MissingObjectException, IncorrectObjectTypeException, IOException {
-		RevTree tree = buildRevTree(commit);
+		RevCommit revCommit = buildRevCommit(commit);
+
+		// and using commit's tree find the path
+		RevTree tree = revCommit.getTree();
+		//System.out.println("Having tree: " + tree + " for commit " + commit);
 
 		// now try to find a specific file
 		TreeWalk treeWalk = buildTreeWalk(tree, path);
@@ -141,14 +153,10 @@ public class JGitHelper implements Closeable {
 		throw new IllegalStateException("Did not find expected file '" + path + "' in tree '" + tree.getName() + "'");
 	}
 
-	private RevTree buildRevTree(String commit) throws MissingObjectException, IncorrectObjectTypeException, IOException {
+	private RevCommit buildRevCommit(String commit) throws MissingObjectException, IncorrectObjectTypeException, IOException {
 		// a RevWalk allows to walk over commits based on some filtering that is defined
 		RevWalk revWalk = new RevWalk(repository);
-		RevCommit revCommit = revWalk.parseCommit(ObjectId.fromString(commit));
-		// and using commit's tree find the path
-		RevTree tree = revCommit.getTree();
-		//System.out.println("Having tree: " + tree + " for commit " + commit);
-		return tree;
+		return revWalk.parseCommit(ObjectId.fromString(commit));
 	}
 
 	public List<String> getBranches() throws GitAPIException {
@@ -267,8 +275,12 @@ public class JGitHelper implements Closeable {
 	}
 
 	public List<String> readElementsAt(String commit, String path) throws MissingObjectException, IncorrectObjectTypeException, IOException {
-		RevTree tree = buildRevTree(commit);
+		RevCommit revCommit = buildRevCommit(commit);
 
+		// and using commit's tree find the path
+		RevTree tree = revCommit.getTree();
+		//System.out.println("Having tree: " + tree + " for commit " + commit);
+		
 		List<String> items = new ArrayList<String>();
 
 		// shortcut for root-path
