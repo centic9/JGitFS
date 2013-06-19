@@ -13,5 +13,5 @@
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.dstadler.jgitfs.SimpleJGitFS"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="/opt/poi /opt/git-fs/poi"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="jGitFS"/>
-<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dnotused=agentpath:/opt/dynaTrace/dynatrace-5.5.0/agent/lib64/libdtagent.so=name=JGitFS,server=localhost,wait=5"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Dnotused=agentpath:/opt/dynaTrace/dynatrace-5.5.0/agent/lib64/libdtagent.so=name=JGitFS,server=localhost,wait=5&#10;-Xmx128m -Xms20m"/>
 </launchConfiguration>
