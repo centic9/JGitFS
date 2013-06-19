@@ -89,12 +89,7 @@ public class SimpleJGitFS extends FuseFilesystemAdapterFull
 			String file = jgitHelper.readPath(path);
 			
 			try {
-				NodeType readType = jgitHelper.readType(commit, file);
-				// TODO: executable flag?
-				stat.setMode(readType, true, false, false, true, false, false, false, false, false);
-				if(readType.equals(NodeType.FILE)) {
-					stat.size(jgitHelper.readSize(commit, file));
-				}
+				jgitHelper.readType(commit, file, stat);
 			} catch (Exception e) {
 				throw new IllegalStateException("Error reading type of path " + path + ", found commit " + commit + " and file " + file, e);
 			}

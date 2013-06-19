@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode.NodeType;
 
 import org.apache.commons.lang3.StringUtils;
@@ -59,34 +60,32 @@ public class JGitHelper implements Closeable {
 		return StringUtils.substring(file, 40 + 2);	// cut away commitish and two slashes
 	}
 	
-	public NodeType readType(String commit, String path) throws MissingObjectException, IncorrectObjectTypeException, IOException {
+	public void readType(String commit, String path, StatWrapper stat) throws MissingObjectException, IncorrectObjectTypeException, IOException {
 		RevTree tree = buildRevTree(commit);
 		
 		// now read the file/directory attributes
 		TreeWalk treeWalk = buildTreeWalk(tree, path);
 		FileMode fileMode = treeWalk.getFileMode(0);
-		if((fileMode.getBits() & FileMode.TYPE_FILE) != 0) {
-			return NodeType.FILE;
-		} else if((fileMode.getBits() & FileMode.TYPE_TREE) != 0) {
-			return NodeType.DIRECTORY;
-		} if((fileMode.getBits() & FileMode.TYPE_SYMLINK) != 0) {
-			return NodeType.SYMBOLIC_LINK;
-		} 
-
-		throw new IllegalStateException("Found unknown FileMode in Git for commit '" + commit + "' and path '" + path + "'");
+		
+		if(fileMode.equals(FileMode.EXECUTABLE_FILE) ||
+				fileMode.equals(FileMode.REGULAR_FILE)) {
+			ObjectLoader loader = repository.open(treeWalk.getObjectId(0));
+			stat.size(loader.getSize());
+			stat.setMode(NodeType.FILE, 
+					true, false, fileMode.equals(FileMode.EXECUTABLE_FILE), 
+					true, false, fileMode.equals(FileMode.EXECUTABLE_FILE), 
+					false, false, false);
+			return;
+		} else if(fileMode.equals(FileMode.TREE)) {
+			stat.setMode(NodeType.DIRECTORY, true, false, true, true, false, true, false, false, false);
+			return;
+		} if(fileMode.equals(FileMode.SYMLINK)) {
+			stat.setMode(NodeType.SYMBOLIC_LINK, true, false, true, true, false, true, false, false, false);
+			return;
+		}  
+		throw new IllegalStateException("Found unknown FileMode in Git for commit '" + commit + "' and path '" + path + "': " + fileMode.getBits());
 	}
 	
-	public long readSize(String commit, String path) throws MissingObjectException, IOException {
-		RevTree tree = buildRevTree(commit);
-		
-		// now read the file/directory attributes
-		TreeWalk treeWalk = buildTreeWalk(tree, path);
-
-		ObjectLoader loader = repository.open(treeWalk.getObjectId(0));
-
-	    return loader.getSize();
-	}
-
 	public InputStream openFile(String commit, String path) throws MissingObjectException, IncorrectObjectTypeException, IOException {
 		RevTree tree = buildRevTree(commit);
 

@@ -5,6 +5,9 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.util.List;
 
+import net.fusejna.StatWrapperFactory;
+import net.fusejna.StructStat.StatWrapper;
+import net.fusejna.types.TypeMode;
 import net.fusejna.types.TypeMode.NodeType;
 
 import org.apache.commons.io.IOUtils;
@@ -60,14 +63,27 @@ public class JGitHelperTest {
 
 	@Test
 	public void testReadType() throws Exception {
+		StatWrapper wrapper = StatWrapperFactory.create();
 		String commit = helper.allCommits(null).get(0);
 		
 		System.out.println("Had commit: " + commit);
-		assertEquals(NodeType.DIRECTORY, helper.readType(commit, "src"));
-		assertEquals(NodeType.DIRECTORY, helper.readType(commit, "src/org"));
+		helper.readType(commit, "src", wrapper);
+		assertEquals(NodeType.DIRECTORY, wrapper.type());
 		
-		assertEquals(NodeType.FILE, helper.readType(commit, "run.sh"));
-		assertEquals(NodeType.FILE, helper.readType(commit, "src/org/dstadler/jgitfs/JGitFS.java"));
+		helper.readType(commit, "src/org", wrapper);
+		assertEquals(NodeType.DIRECTORY, wrapper.type());
+		
+		helper.readType(commit, "run.sh", wrapper);
+		assertEquals(NodeType.FILE, wrapper.type());
+		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) != 0);
+		assertTrue((wrapper.mode() & TypeMode.S_IXGRP) != 0);
+		assertTrue((wrapper.mode() & TypeMode.S_IXOTH) == 0);
+		
+		helper.readType(commit, "src/org/dstadler/jgitfs/JGitFS.java", wrapper);
+		assertEquals(NodeType.FILE, wrapper.type());
+		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) == 0);
+		assertTrue((wrapper.mode() & TypeMode.S_IXGRP) == 0);
+		assertTrue((wrapper.mode() & TypeMode.S_IXOTH) == 0);
 	}
 
 	@Test
