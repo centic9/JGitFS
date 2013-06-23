@@ -2,26 +2,29 @@ package org.dstadler.jgitfs;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import net.fusejna.DirectoryFiller;
+import net.fusejna.ErrorCodes;
 import net.fusejna.FuseException;
 import net.fusejna.StructFuseFileInfo.FileInfoWrapper;
 import net.fusejna.StructStat.StatWrapper;
+import net.fusejna.types.TypeMode.NodeType;
 import net.fusejna.util.FuseFilesystemAdapterFull;
 
-import org.dstadler.jgitfs.node.Node;
-import org.dstadler.jgitfs.node.RootNode;
+import org.apache.commons.lang3.StringUtils;
 import org.dstadler.jgitfs.util.FuseUtils;
+import org.dstadler.jgitfs.util.GitUtils;
+import org.dstadler.jgitfs.util.JGitHelper;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 public class JGitFS extends FuseFilesystemAdapterFull
 {
-	private final Repository repository;
-	//private final NodeFactory factory;
-	private final Node root;
+	private final JGitHelper jgitHelper;
 	
 	public static void main(final String... args) throws FuseException, IOException, GitAPIException
 	{
@@ -30,6 +33,8 @@ public class JGitFS extends FuseFilesystemAdapterFull
 			System.exit(1);
 		}
 		
+		System.out.println("Mounting git repository at " + args[0] + " at mountpoint " + args[1]);
+
 		//read GIT
 		JGitFS gitFS = new JGitFS(args[0]);
 		try {
@@ -48,8 +53,8 @@ public class JGitFS extends FuseFilesystemAdapterFull
 	}
 
 	private void close() throws IOException, FuseException {
-		if(repository != null) {
-			repository.close();
+		if(jgitHelper != null) {
+			jgitHelper.close();
 		}
 		
 		unmount();
@@ -57,91 +62,197 @@ public class JGitFS extends FuseFilesystemAdapterFull
 
 	public JGitFS(String gitDir) throws IOException {
 		super();
-
-		if(!gitDir.endsWith(".git")) {
-			gitDir = gitDir + "/.git";
-		}
-		if(!new File(gitDir).exists()) {
-			throw new IllegalStateException("Could not find git repository at " + gitDir);
-		}
-
-		System.out.println("Using git repo at " + gitDir);
-		FileRepositoryBuilder builder = new FileRepositoryBuilder();
-		repository = builder.setGitDir(new File(gitDir))
-		  .readEnvironment() // scan environment GIT_* variables
-		  .findGitDir() // scan up the file system tree
-		  .build();
 		
-		//factory = new NodeFactory(repository);
-		root = new RootNode();
-		root.setRepository(repository);
+		jgitHelper = new JGitHelper(gitDir);
 	}
 
+	private static Set<String> DIRS = new HashSet<String>();
+	static {
+		DIRS.add("/");
+		DIRS.add("/commit");
+		DIRS.add("/branch");
+		DIRS.add("/tag");
+		
+		// directories looked for by gnome/Linux/...
+//		DIRS.add("/.Trash");
+//		DIRS.add("/.Trash-1000");
+	}
+	
 	@Override
 	public int getattr(final String path, final StatWrapper stat)
 	{
-		return getNodeForPath(path).populateStats(stat);
-		
-		// let the related node handle this
-//		Node node = topLevelHandlers.get(path);
-//		if(node != null) {
-//			return node.populateStats(stat);
-//		}
-//		
-//		
-//		if (path.equals(File.separator)) { // Root directory
-//			stat.setMode(NodeType.DIRECTORY);
-//			return 0;
-//		}
-//		if (path.equals(filename)) { // hello.txt
-//			stat.setMode(NodeType.FILE).size(contents.length());
-//			return 0;
-//		}
-//		return -ErrorCodes.ENOENT;
+		// known entries and directories beneath /commit are always directories 
+		if(DIRS.contains(path) || GitUtils.isCommitTupel(path) || GitUtils.isCommitDir(path)) {
+			stat.setMode(NodeType.DIRECTORY, true, false, true, true, false, true, false, false, false);
+			return 0;
+		} else if (GitUtils.isCommitSubDir(path)) {
+			// for actual entries for a commit we need to read the file-type information from Git 
+			String commit = jgitHelper.readCommit(path);
+			String file = jgitHelper.readPath(path);
+			
+			try {
+				jgitHelper.readType(commit, file, stat);
+			} catch (Exception e) {
+				throw new IllegalStateException("Error reading type of path " + path + ", found commit " + commit + " and file " + file, e);
+			}
+			return 0;
+		} else if (GitUtils.isBranchDir(path) || GitUtils.isTagDir(path)) {
+			// entries under /branch and /tag are always symbolic links
+			stat.setMode(NodeType.SYMBOLIC_LINK, true, true, true, true, true, true, true, true, true);
+			return 0;
+		}
+
+		// all others are reported as "not found"
+		// don't throw an exception here as we get requests for some files/directories, e.g. .hidden or .Trash
+		System.out.println("Had unknown path " + path + " in getattr()");
+		return -ErrorCodes.ENOENT();
 	}
 
 	@Override
 	public int read(final String path, final ByteBuffer buffer, final long size, final long offset, final FileInfoWrapper info) {
-		return getNodeForPath(path).read(buffer, size, offset, info);
-		// let the related node handle this
-//		Node node = topLevelHandlers.get(path);
-//		if(node != null) {
-//			return node.read(buffer, size, offset, info);
-//		}
-//		
-//		// Compute substring that we are being asked to read
-//		final String s = contents.substring((int) offset,
-//				(int) Math.max(offset, Math.min(contents.length() - offset, offset + size)));
-//		buffer.put(s.getBytes());
-//		return s.getBytes().length;
+		String commit = jgitHelper.readCommit(path);
+		String file = jgitHelper.readPath(path);
+		
+		try {
+			InputStream openFile = jgitHelper.openFile(commit, file);
+			
+			try {
+				// skip until we are at the offset
+				openFile.skip(offset);
+
+				byte[] arr = new byte[(int)size];
+				int read = openFile.read(arr, 0, (int)size);
+				buffer.put(arr);
+
+				return read;
+			} finally {
+				openFile.close();
+			}
+		} catch (Exception e) {
+			throw new IllegalStateException("Error reading contents of path " + path + ", found commit " + commit + " and file " + file, e);
+		}
 	}
 
 	@Override
 	public int readdir(final String path, final DirectoryFiller filler) {
-		getNodeForPath(path).populateDirectory(filler);
+		if(path.equals("/")) {
+			filler.add("/commit");
+			filler.add("/branch");
+			filler.add("/tag");
+			
+			// TODO: implement later
+//			filler.add("/index");
+//			filler.add("/workspace");
+
+			return 0;
+		} else if (path.equals("/commit")) {
+			// list two-char tupels for all commits 
+			try {
+				List<String> items = jgitHelper.allCommitTupels();
+				for(String item : items) {
+					filler.add(item);
+				}
+			} catch (Exception e) {
+				throw new IllegalStateException("Error reading elements of path " + path, e);
+			}
+			
+			return 0;
+		} else if (GitUtils.isCommitTupel(path)) {
+			// list all commits for the requested tupel
+			String tupel = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH);
+			try {
+				List<String> items = jgitHelper.allCommits(tupel);
+				for(String item : items) {
+					filler.add(item.substring(2));
+				}
+			} catch (Exception e) {
+				throw new IllegalStateException("Error reading elements of path " + path, e);
+			}
+			
+			return 0;
+		} else if (GitUtils.isCommitDir(path) || GitUtils.isCommitSubDir(path)) {
+			// handle listing the root dir of a commit or a file beneath that
+			String commit = jgitHelper.readCommit(path);
+			String dir = jgitHelper.readPath(path);
+			
+			try {
+				List<String> items = jgitHelper.readElementsAt(commit, dir);
+				for(String item : items) {
+					filler.add(item);
+				}
+			} catch (Exception e) {
+				throw new IllegalStateException("Error reading elements of path " + path + ", found commit " + commit + " and directory " + dir, e);
+			}
+			
+			return 0;
+		} else if (path.equals("/tag")) {
+			try {
+				List<String> items = jgitHelper.getTags();
+				for(String item : items) {
+					// TODO: handle branches with slash, e.g. refs/heads/master
+					filler.add(jgitHelper.adjustName(item));
+				}
+			} catch (Exception e) {
+				throw new IllegalStateException("Error reading tags", e);
+			}
+			
+			return 0;
+		} else if (path.equals("/branch")) {
+			try {
+				List<String> items = jgitHelper.getBranches();
+				for(String item : items) {
+					// TODO: handle tags with slash as subdirs instead of replacing with underscore
+					filler.add(jgitHelper.adjustName(item));
+				}
+			} catch (Exception e) {
+				throw new IllegalStateException("Error reading branches", e);
+			}
+			
+			return 0;
+		}
 		
-		return 0;
-//		Node node = topLevelHandlers.get(path);
-//		if(node != null) {
-//			node.populateDirectory(filler);
-//		}
-//
-////		filler.add(filename);
-//		return 0;
+		throw new IllegalStateException("Had unknown path " + path + " in readdir()");
 	}
 
 	@Override
 	public int readlink(String path, ByteBuffer buffer, long size) {
-		return getNodeForPath(path).populateLink(buffer, size);
-//		Node node = topLevelHandlers.get(path);
-//		if(node != null) {
-//			node.populateLink(buffer, size);
-//		}
-//
-//		return super.readlink(path, buffer, size);
-	}
-	
-	private Node getNodeForPath(String path) {
-		return root.getNodeForPath(path);
+		if(GitUtils.isBranchDir(path)) {
+			StringBuilder target = new StringBuilder(".." + GitUtils.COMMIT_SLASH);
+			
+			try {
+				String commit = jgitHelper.getBranchHeadCommit(StringUtils.removeStart(path, GitUtils.BRANCH_SLASH));
+				if(commit == null) {
+					throw new IllegalStateException("Had unknown branch " + path + " in readlink()");
+				}
+				target.append(commit.substring(0, 2)).append("/").append(commit.substring(2));
+				
+				buffer.put(target.toString().getBytes());
+				buffer.put((byte)0);
+			} catch (Exception e) {
+				throw new IllegalStateException("Error reading commit of branch-path " + path, e);
+			}
+			
+			return 0;
+		} else if (GitUtils.isTagDir(path)) {
+			StringBuilder target = new StringBuilder(".." + GitUtils.COMMIT_SLASH);
+			
+			try {
+				String commit = jgitHelper.getTagHeadCommit(StringUtils.removeStart(path, GitUtils.TAG_SLASH));
+				if(commit == null) {
+					throw new IllegalStateException("Had unknown tag " + path + " in readlink()");
+				}
+
+				target.append(commit.substring(0, 2)).append("/").append(commit.substring(2));
+				
+				buffer.put(target.toString().getBytes());
+				buffer.put((byte)0);
+			} catch (Exception e) {
+				throw new IllegalStateException("Error reading commit of branch-path " + path, e);
+			}
+			
+			return 0;
+		}
+
+		throw new IllegalStateException("Had unknown path " + path + " in readlink()");
 	}
 }
