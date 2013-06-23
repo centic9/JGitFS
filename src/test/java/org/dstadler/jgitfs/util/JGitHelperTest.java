@@ -65,7 +65,7 @@ public class JGitHelperTest {
 	@Test
 	public void testReadType() throws Exception {
 		StatWrapper wrapper = StatWrapperFactory.create();
-		String commit = helper.allCommits(null).iterator().next();
+		String commit = "c9eff9171d3d694a0dc3cc7574627b2a414f293d";
 		
 		System.out.println("Had commit: " + commit);
 		helper.readType(commit, "src", wrapper);
@@ -100,8 +100,7 @@ public class JGitHelperTest {
 
 	@Test
 	public void testOpenFile() throws Exception {
-		String commit = helper.allCommits(null).iterator().next();
-		
+		String commit = "c9eff9171d3d694a0dc3cc7574627b2a414f293d";
 		System.out.println("Had commit: " + commit);
 		String runSh = IOUtils.toString(helper.openFile(commit, "README.md"));
 		assertTrue("Had: " + runSh, StringUtils.isNotEmpty(runSh));
@@ -122,7 +121,7 @@ public class JGitHelperTest {
 
 	@Test
 	public void testReadElementsAt() throws Exception {
-		String commit = helper.allCommits(null).iterator().next();
+		String commit = "c9eff9171d3d694a0dc3cc7574627b2a414f293d";
 		
 		System.out.println("Had commit: " + commit);
 		assertEquals("[main, test]", helper.readElementsAt(commit, "src").toString());
