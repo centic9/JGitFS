@@ -1,0 +1,26 @@
+apply plugin: 'java'
+//apply plugin: 'idea'
+//apply plugin: 'eclipse'
+
+ /*<repositories>
+    <repository>
+      <id>jgit-repository</id>
+      <url>http://download.eclipse.org/jgit/maven</url>
+    </repository>
+  </repositories>
+  */
+  
+repositories {
+  flatDir { dir 'lib' }
+  mavenCentral()
+}
+
+dependencies {
+	compile 'commons-io:commons-io:2.4'
+	compile 'org.apache.commons:commons-lang3:3.1'
+	compile 'net.java.dev.jna:jna:3.5.2'
+	compile 'org.eclipse.jgit:org.eclipse.jgit:2.3.1.201302201838-r'
+	compile name: 'fuse-jna'
+
+	testCompile 'junit:junit:4.11'
+}

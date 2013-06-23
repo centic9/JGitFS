@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="testsrc"/>
+	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry kind="src" path="src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/fuse-jna"/>
-	<classpathentry kind="lib" path="lib/org.eclipse.jgit-2.3.1.201302201838-r.jar" sourcepath="/home/dstadler/.m2/repository/org/eclipse/jgit/org.eclipse.jgit/2.3.1.201302201838-r/org.eclipse.jgit-2.3.1.201302201838-r-sources.jar">
+	<classpathentry kind="lib" path="lib/fuse-jna.jar" sourcepath="../fuse-jna/src/main/java"/>
+	<classpathentry kind="lib" path="build/lib/org.eclipse.jgit-2.3.1.201302201838-r.jar" sourcepath="/home/dstadler/.m2/repository/org/eclipse/jgit/org.eclipse.jgit/2.3.1.201302201838-r/org.eclipse.jgit-2.3.1.201302201838-r-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://download.eclipse.org/jgit/docs/latest/apidocs/"/>
 		</attributes>
