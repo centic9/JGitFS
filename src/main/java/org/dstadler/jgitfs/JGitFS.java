@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -141,6 +142,7 @@ public class JGitFS extends FuseFilesystemAdapterFull
 			filler.add("/tag");
 			
 			// TODO: implement later
+//			filler.add("/remotes");
 //			filler.add("/index");
 //			filler.add("/workspace");
 
@@ -161,7 +163,7 @@ public class JGitFS extends FuseFilesystemAdapterFull
 			// list all commits for the requested tupel
 			String tupel = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH);
 			try {
-				List<String> items = jgitHelper.allCommits(tupel);
+				Collection<String> items = jgitHelper.allCommits(tupel);
 				for(String item : items) {
 					filler.add(item.substring(2));
 				}

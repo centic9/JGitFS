@@ -3,6 +3,7 @@ package org.dstadler.jgitfs.util;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 import net.fusejna.StatWrapperFactory;
@@ -64,34 +65,45 @@ public class JGitHelperTest {
 	@Test
 	public void testReadType() throws Exception {
 		StatWrapper wrapper = StatWrapperFactory.create();
-		String commit = helper.allCommits(null).get(0);
+		String commit = helper.allCommits(null).iterator().next();
 		
 		System.out.println("Had commit: " + commit);
 		helper.readType(commit, "src", wrapper);
 		assertEquals(NodeType.DIRECTORY, wrapper.type());
 		
-		helper.readType(commit, "src/org", wrapper);
+		helper.readType(commit, "src/main/java/org", wrapper);
 		assertEquals(NodeType.DIRECTORY, wrapper.type());
 		
-		helper.readType(commit, "run.sh", wrapper);
+		helper.readType(commit, "README.md", wrapper);
 		assertEquals(NodeType.FILE, wrapper.type());
-		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) != 0);
-		assertTrue((wrapper.mode() & TypeMode.S_IXGRP) != 0);
+		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) == 0);
+		assertTrue((wrapper.mode() & TypeMode.S_IXGRP) == 0);
 		assertTrue((wrapper.mode() & TypeMode.S_IXOTH) == 0);
 		
-		helper.readType(commit, "src/org/dstadler/jgitfs/JGitFS.java", wrapper);
+		helper.readType(commit, "src/main/java/org/dstadler/jgitfs/JGitFS.java", wrapper);
 		assertEquals(NodeType.FILE, wrapper.type());
 		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) == 0);
 		assertTrue((wrapper.mode() & TypeMode.S_IXGRP) == 0);
 		assertTrue((wrapper.mode() & TypeMode.S_IXOTH) == 0);
 	}
+	
+	@Test
+	public void testReadTypeExecutable() throws Exception {
+		// Look at a specific older commit to have an executable file		
+		StatWrapper wrapper = StatWrapperFactory.create();
+		helper.readType("355ea52f1e38b1c8e6537c093332180918808b68", "run.sh", wrapper);
+		assertEquals(NodeType.FILE, wrapper.type());
+		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) != 0);
+		assertTrue((wrapper.mode() & TypeMode.S_IXGRP) != 0);
+		assertTrue((wrapper.mode() & TypeMode.S_IXOTH) == 0);
+	}
 
 	@Test
 	public void testOpenFile() throws Exception {
-		String commit = helper.allCommits(null).get(0);
+		String commit = helper.allCommits(null).iterator().next();
 		
 		System.out.println("Had commit: " + commit);
-		String runSh = IOUtils.toString(helper.openFile(commit, "run.sh"));
+		String runSh = IOUtils.toString(helper.openFile(commit, "README.md"));
 		assertTrue("Had: " + runSh, StringUtils.isNotEmpty(runSh));
 
 		try {
@@ -110,11 +122,11 @@ public class JGitHelperTest {
 
 	@Test
 	public void testReadElementsAt() throws Exception {
-		String commit = helper.allCommits(null).get(0);
+		String commit = helper.allCommits(null).iterator().next();
 		
 		System.out.println("Had commit: " + commit);
-		assertEquals("[org]", helper.readElementsAt(commit, "src").toString());
-		assertEquals("[dstadler]", helper.readElementsAt(commit, "src/org").toString());
+		assertEquals("[main, test]", helper.readElementsAt(commit, "src").toString());
+		assertEquals("[dstadler]", helper.readElementsAt(commit, "src/main/java/org").toString());
 
 		try {
 			helper.readElementsAt(commit, "run.sh");
@@ -125,8 +137,8 @@ public class JGitHelperTest {
 
 		String list = helper.readElementsAt(commit, "").toString();
 		assertTrue("Had: " + list, list.contains("src"));
-		assertTrue("Had: " + list, list.contains("testsrc"));
-		assertTrue("Had: " + list, list.contains(".classpath"));
+		assertTrue("Had: " + list, list.contains("README.md"));
+		assertTrue("Had: " + list, list.contains("build.gradle"));
 	}
 	
 	@Test
@@ -170,10 +182,10 @@ public class JGitHelperTest {
 		int size = helper.allCommits("zz").size();
 		assertEquals("Had size: " + size, 0, size);
 		
-		List<String> allCommits = helper.allCommits(null);
+		Collection<String> allCommits = helper.allCommits(null);
 		assertTrue(allCommits.size() > 0);
 		
-		List<String> commits = helper.allCommits(allCommits.get(0).substring(0, 2));
+		Collection<String> commits = helper.allCommits(allCommits.iterator().next().substring(0, 2));
 		assertTrue(commits.size() > 0);
 	}
 

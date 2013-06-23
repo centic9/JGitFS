@@ -5,7 +5,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode.NodeType;
@@ -227,18 +230,10 @@ public class JGitHelper implements Closeable {
 		return commits;
 	}
 	
-	public List<String> allCommits(String tupel) throws NoHeadException, GitAPIException, IOException {
-		List<String> commits = new ArrayList<String>();
+	public Collection<String> allCommits(String tupel) throws NoHeadException, GitAPIException, IOException {
+		Set<String> commits = new HashSet<String>();
 
-		// TODO: do this differently, currently we only walk master here!!!
-
-//		Iterable<RevCommit> logs = git.log().all().call();
-//		//int count = 0;
-//		for (RevCommit commit : logs) {
-//			//System.out.println("LogCommit: " + commit);
-//			//count++;
-//			commits.add(commit.getId().getName());
-//		}
+		// TODO: we do not read all commits here and reading is done in an unperformant way as we likely read the same commits over and over again
 		
 		// as a workaround we currently use all branches (includes master) and all tags for finding commits quickly
 		RevWalk walk = new RevWalk(repository);
@@ -255,7 +250,7 @@ public class JGitHelper implements Closeable {
 		return commits;
 	}
 
-	private void addCommits(List<String> commits, RevWalk walk, String ref, String tupel) throws IOException, MissingObjectException,
+	private void addCommits(Collection<String> commits, RevWalk walk, String ref, String tupel) throws IOException, MissingObjectException,
 			IncorrectObjectTypeException {
 		Ref head = repository.getRef(ref);
 		RevCommit commit = walk.parseCommit(head.getObjectId());
