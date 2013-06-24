@@ -3,7 +3,8 @@
 JGitFS provides access to Git branches/tags/commits like if they would be separate directories via a [FUSE][Linux-Fuse] 
 userland filesystem. 
 
-## The straight dope
+## Getting started
+
 #### Grab it
 
     git clone git://github.com/centic9/JGitFS
@@ -42,14 +43,19 @@ On the Git side I had heard about [JGit] and wanted to give it a try anyway, usi
 * Some operations are not performance-optimized yet, listing files in a directory sometimes results in high IO and CPU load, surely JGit can be used better in a few places
 * Especially reading information about a specific path as-of a specific commit is done in a bad way and causes lots of overhead, see comments in JGitHelper.buildTreeWalk() for details
 * Remote branches are not included yet, but should be fairly easy to add
+* Would be nice to get this on Windows via cygwin as well, seems there is https://github.com/openunix/fuse-cygwin/, but could not get it to compile yet 
 
 #### How to hack on it
+
+Implementation should be straightforward, the class `JGitFS` implements the filesystem interface, `JGitHelper` encapsulates access to Git, `GitUtils` are local utils for computing commits, ...
 
 Create matching Eclipse project files
 
 	gradle eclipse
 
-Implementation should be straightforward, the class `JGitFS` implements the filesystem interface, `JGitHelper` encapsulates access to Git, `GitUtils` are local utils for computing commits, ...
+Running unit tests
+
+	gradle test
 
 #### Compatibility
 
