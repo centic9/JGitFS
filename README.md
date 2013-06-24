@@ -1,4 +1,4 @@
-[![Build Status]((https://travis-ci.org/centic9/JGitFS.png)](https://travis-ci.org/centic9/JGitFS)
+[![Build Status](https://buildhive.cloudbees.com/job/centic9/job/JGitFS/badge/icon)](https://buildhive.cloudbees.com/job/centic9/job/JGitFS/)
 
 JGitFS provides access to Git branches/tags/commits like if they would be separate directories via a [FUSE][Linux-Fuse] 
 userland filesystem. 
@@ -65,12 +65,18 @@ Because it is based on [fuse-jna], JGitFS should work with:
 * Linux with [FUSE][Linux-Fuse] on Intel and PowerPC architectures
 * FreeBSD with [FUSE][FreeBSD-Fuse] on Intel architectures
 
+#### Related projects
+
+* https://github.com/g2p/git-fs
+* https://bitbucket.org/billcroberts/gitfs
+* https://github.com/akiellor/githubfs
+
 #### Licensing
-JGitFS is licensed under the [BSD 2-Clause License].
-[fuse-jna] is licensed under the [BSD 2-Clause License].
-[JNA] is licensed under the [LGPL v2.1].
-[JGit] is licensed under the [EDL]. 
-The Apache Commons `io` and `lang` libraries are licensed under the [Apache 2.0 License] 
+* JGitFS is licensed under the [BSD 2-Clause License].
+* [fuse-jna] is licensed under the [BSD 2-Clause License].
+* [JNA] is licensed under the [LGPL v2.1].
+* [JGit] is licensed under the [EDL]. 
+* The Apache Commons `io` and `lang` libraries are licensed under the [Apache 2.0 License] 
 
 [fuse-jna]: https://github.com/EtiennePerot/fuse-jna
 [JNA]: https://github.com/twall/jna
