@@ -92,7 +92,14 @@ public class JGitHelperTest {
 
 	@Test
 	public void testReadType() throws Exception {
-		StatWrapper wrapper = StatWrapperFactory.create();
+		final StatWrapper wrapper;
+		try {
+			wrapper = StatWrapperFactory.create();
+		} catch (UnsatisfiedLinkError e) {
+			System.out.println("This might fail on machines without fuse-binaries.");
+			e.printStackTrace();
+			return;
+		}
 		String commit = "ede9797616a805d6cbeca376bfbbac9a8b7eb64f";
 		
 		System.out.println("Had commit: " + commit);
@@ -117,8 +124,15 @@ public class JGitHelperTest {
 	
 	@Test
 	public void testReadTypeExecutable() throws Exception {
+		final StatWrapper wrapper;
+		try {
+			wrapper = StatWrapperFactory.create();
+		} catch (UnsatisfiedLinkError e) {
+			System.out.println("This might fail on machines without fuse-binaries.");
+			e.printStackTrace();
+			return;
+		}
 		// Look at a specific older commit to have an executable file		
-		StatWrapper wrapper = StatWrapperFactory.create();
 		helper.readType("355ea52f1e38b1c8e6537c093332180918808b68", "run.sh", wrapper);
 		assertEquals(NodeType.FILE, wrapper.type());
 		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) != 0);
