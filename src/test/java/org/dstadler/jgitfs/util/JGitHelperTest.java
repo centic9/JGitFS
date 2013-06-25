@@ -2,6 +2,7 @@ package org.dstadler.jgitfs.util;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -13,10 +14,15 @@ import net.fusejna.types.TypeMode.NodeType;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.NoHeadException;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -24,6 +30,28 @@ import org.junit.Test;
 public class JGitHelperTest {
 	private JGitHelper helper;
 
+	@BeforeClass
+	public static void setUpClass() throws GitAPIException, IOException {
+		FileRepositoryBuilder builder = new FileRepositoryBuilder();
+		Repository repository = builder.setGitDir(new File(".git"))
+		  .readEnvironment() // scan environment GIT_* variables
+		  .findGitDir() // scan up the file system tree
+		  .build();
+		Git git = new Git(repository);
+		
+		List<Ref> tags = git.tagList().call();
+		boolean found = false;
+		for(Ref ref : tags) {
+			if(ref.getName().equals("refs/tags/testtag")) {
+				found = true;
+				break;
+			}
+		}
+		if(!found) {
+			git.tag().setName("testtag").call();
+		}
+	}
+	
 	@Before
 	public void setUp() throws IOException {
 		helper = new JGitHelper(".");
