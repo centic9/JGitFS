@@ -266,9 +266,7 @@ public class JGitHelper implements Closeable {
 	
 	@Override
 	public void close() throws IOException {
-		if(repository != null) {
-			repository.close();
-		}
+		repository.close();
 	}
 
 	public List<String> readElementsAt(String commit, String path) throws MissingObjectException, IncorrectObjectTypeException, IOException {

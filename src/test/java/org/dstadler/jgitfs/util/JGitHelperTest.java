@@ -21,6 +21,7 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -28,8 +29,10 @@ import org.junit.Test;
 
 
 public class JGitHelperTest {
-	private JGitHelper helper;
+	private final static String DEFAULT_COMMIT = "ede9797616a805d6cbeca376bfbbac9a8b7eb64f";
 
+	private JGitHelper helper;
+	
 	@BeforeClass
 	public static void setUpClass() throws GitAPIException, IOException {
 		FileRepositoryBuilder builder = new FileRepositoryBuilder();
@@ -77,6 +80,17 @@ public class JGitHelperTest {
 	}
 
 	@Test
+	public void testNotexistingDir() throws Exception {
+		try {
+			JGitHelper jGitHelper = new JGitHelper("notexisting");
+			assertNotNull(jGitHelper);
+			fail("Should catch exception here");
+		} catch (IllegalStateException e) {
+			assertTrue(e.getMessage().contains("notexisting"));
+		}
+	}
+
+	@Test
 	public void testReadCommit() throws Exception {
 		assertEquals("abcd", helper.readCommit("abcd"));
 		assertEquals("abcd", helper.readCommit("/commit/ab/cd"));
@@ -92,30 +106,22 @@ public class JGitHelperTest {
 
 	@Test
 	public void testReadType() throws Exception {
-		final StatWrapper wrapper;
-		try {
-			wrapper = StatWrapperFactory.create();
-		} catch (UnsatisfiedLinkError e) {
-			System.out.println("This might fail on machines without fuse-binaries.");
-			e.printStackTrace();
-			return;
-		}
-		String commit = "ede9797616a805d6cbeca376bfbbac9a8b7eb64f";
+		final StatWrapper wrapper = getStatsWrapper();
 		
-		System.out.println("Had commit: " + commit);
-		helper.readType(commit, "src", wrapper);
+		System.out.println("Had commit: " + DEFAULT_COMMIT);
+		helper.readType(DEFAULT_COMMIT, "src", wrapper);
 		assertEquals(NodeType.DIRECTORY, wrapper.type());
 		
-		helper.readType(commit, "src/main/java/org", wrapper);
+		helper.readType(DEFAULT_COMMIT, "src/main/java/org", wrapper);
 		assertEquals(NodeType.DIRECTORY, wrapper.type());
 		
-		helper.readType(commit, "README.md", wrapper);
+		helper.readType(DEFAULT_COMMIT, "README.md", wrapper);
 		assertEquals(NodeType.FILE, wrapper.type());
 		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) == 0);
 		assertTrue((wrapper.mode() & TypeMode.S_IXGRP) == 0);
 		assertTrue((wrapper.mode() & TypeMode.S_IXOTH) == 0);
 		
-		helper.readType(commit, "src/main/java/org/dstadler/jgitfs/JGitFS.java", wrapper);
+		helper.readType(DEFAULT_COMMIT, "src/main/java/org/dstadler/jgitfs/JGitFS.java", wrapper);
 		assertEquals(NodeType.FILE, wrapper.type());
 		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) == 0);
 		assertTrue((wrapper.mode() & TypeMode.S_IXGRP) == 0);
@@ -124,14 +130,7 @@ public class JGitHelperTest {
 	
 	@Test
 	public void testReadTypeExecutable() throws Exception {
-		final StatWrapper wrapper;
-		try {
-			wrapper = StatWrapperFactory.create();
-		} catch (UnsatisfiedLinkError e) {
-			System.out.println("This might fail on machines without fuse-binaries.");
-			e.printStackTrace();
-			return;
-		}
+		final StatWrapper wrapper = getStatsWrapper();
 		// Look at a specific older commit to have an executable file		
 		helper.readType("355ea52f1e38b1c8e6537c093332180918808b68", "run.sh", wrapper);
 		assertEquals(NodeType.FILE, wrapper.type());
@@ -140,21 +139,38 @@ public class JGitHelperTest {
 		assertTrue((wrapper.mode() & TypeMode.S_IXOTH) == 0);
 	}
 
+	private StatWrapper getStatsWrapper() {
+		final StatWrapper wrapper;
+		try {
+			wrapper = StatWrapperFactory.create();
+		} catch (UnsatisfiedLinkError e) {
+			System.out.println("This might fail on machines without fuse-binaries.");
+			e.printStackTrace();
+			Assume.assumeNoException(e);	// stop test silently
+			return null;
+		} catch(NoClassDefFoundError e) {
+			System.out.println("This might fail on machines without fuse-binaries.");
+			e.printStackTrace();
+			Assume.assumeNoException(e);	// stop test silently
+			return null;
+		}
+		return wrapper;
+	}
+
 	@Test
 	public void testOpenFile() throws Exception {
-		String commit = "ede9797616a805d6cbeca376bfbbac9a8b7eb64f";
-		System.out.println("Had commit: " + commit);
-		String runSh = IOUtils.toString(helper.openFile(commit, "README.md"));
+		System.out.println("Had commit: " + DEFAULT_COMMIT);
+		String runSh = IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "README.md"));
 		assertTrue("Had: " + runSh, StringUtils.isNotEmpty(runSh));
 
 		try {
-			IOUtils.toString(helper.openFile(commit, "src"));
+			IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "src"));
 			fail("Should catch exception here");
 		} catch (IllegalStateException e) {
 			assertTrue(e.getMessage().contains("src"));
 		}
 		try {
-			IOUtils.toString(helper.openFile(commit, "src/org"));
+			IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "src/org"));
 			fail("Should catch exception here");
 		} catch (IllegalStateException e) {
 			assertTrue(e.getMessage().contains("src/org"));
@@ -163,20 +179,18 @@ public class JGitHelperTest {
 
 	@Test
 	public void testReadElementsAt() throws Exception {
-		String commit = "ede9797616a805d6cbeca376bfbbac9a8b7eb64f";
-		
-		System.out.println("Had commit: " + commit);
-		assertEquals("[main, test]", helper.readElementsAt(commit, "src").toString());
-		assertEquals("[dstadler]", helper.readElementsAt(commit, "src/main/java/org").toString());
+		System.out.println("Had commit: " + DEFAULT_COMMIT);
+		assertEquals("[main, test]", helper.readElementsAt(DEFAULT_COMMIT, "src").toString());
+		assertEquals("[dstadler]", helper.readElementsAt(DEFAULT_COMMIT, "src/main/java/org").toString());
 
 		try {
-			helper.readElementsAt(commit, "run.sh");
+			helper.readElementsAt(DEFAULT_COMMIT, "run.sh");
 			fail("Should catch exception here");
 		} catch (IllegalStateException e) {
 			assertTrue(e.getMessage().contains("run.sh"));
 		}
 
-		String list = helper.readElementsAt(commit, "").toString();
+		String list = helper.readElementsAt(DEFAULT_COMMIT, "").toString();
 		assertTrue("Had: " + list, list.contains("src"));
 		assertTrue("Had: " + list, list.contains("README.md"));
 		assertTrue("Had: " + list, list.contains("build.gradle"));
