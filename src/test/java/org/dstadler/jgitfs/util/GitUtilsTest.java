@@ -11,21 +11,21 @@ import org.junit.Test;
 public class GitUtilsTest {
 
 	@Test
-	public void testIsCommitTupel() {
-		assertFalse(GitUtils.isCommitTupel(""));
-		assertFalse(GitUtils.isCommitTupel("/"));
-		assertFalse(GitUtils.isCommitTupel("/something"));
-		assertFalse(GitUtils.isCommitTupel("/branch"));
-		assertFalse(GitUtils.isCommitTupel("/tag"));
-		assertFalse(GitUtils.isCommitTupel("/commit"));
-		assertFalse(GitUtils.isCommitTupel("/commit/00/"));
-		assertFalse(GitUtils.isCommitTupel("/commit/0g"));
-		assertFalse(GitUtils.isCommitTupel("/commit/fg"));
-		assertFalse(GitUtils.isCommitTupel("/commit/zz"));
+	public void testIsCommitSub() {
+		assertFalse(GitUtils.isCommitSub(""));
+		assertFalse(GitUtils.isCommitSub("/"));
+		assertFalse(GitUtils.isCommitSub("/something"));
+		assertFalse(GitUtils.isCommitSub("/branch"));
+		assertFalse(GitUtils.isCommitSub("/tag"));
+		assertFalse(GitUtils.isCommitSub("/commit"));
+		assertFalse(GitUtils.isCommitSub("/commit/00/"));
+		assertFalse(GitUtils.isCommitSub("/commit/0g"));
+		assertFalse(GitUtils.isCommitSub("/commit/fg"));
+		assertFalse(GitUtils.isCommitSub("/commit/zz"));
 		
-		assertTrue(GitUtils.isCommitTupel("/commit/00"));
-		assertTrue(GitUtils.isCommitTupel("/commit/ff"));
-		assertTrue(GitUtils.isCommitTupel("/commit/ae"));
+		assertTrue(GitUtils.isCommitSub("/commit/00"));
+		assertTrue(GitUtils.isCommitSub("/commit/ff"));
+		assertTrue(GitUtils.isCommitSub("/commit/ae"));
 	}
 
 	@Test

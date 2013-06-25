@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import net.fusejna.StructStat.StatWrapper;
@@ -70,6 +71,7 @@ public class JGitHelper implements Closeable {
 		RevTree tree = revCommit.getTree();
 		//System.out.println("Having tree: " + tree + " for commit " + commit);
 		
+		// set time and user-id/group-id
 		stat.ctime(revCommit.getCommitTime());
 		stat.mtime(revCommit.getCommitTime());
 		stat.uid(GitUtils.UID);
@@ -79,7 +81,6 @@ public class JGitHelper implements Closeable {
 		TreeWalk treeWalk = buildTreeWalk(tree, path);
 		FileMode fileMode = treeWalk.getFileMode(0);
 		
-		// TODO: read file timestamp
 		if(fileMode.equals(FileMode.EXECUTABLE_FILE) ||
 				fileMode.equals(FileMode.REGULAR_FILE)) {
 			ObjectLoader loader = repository.open(treeWalk.getObjectId(0));
@@ -165,10 +166,10 @@ public class JGitHelper implements Closeable {
 	}
 
 	public List<String> getBranches() throws GitAPIException {
-		List<Ref> call = git.branchList().call();
+		List<Ref> brancheRefs = git.branchList().setListMode(null).call();
 		List<String> branches = new ArrayList<String>();
-		for(Ref rev : call) {
-			String name = adjustName(rev.getName());
+		for(Ref ref : brancheRefs) {
+			String name = adjustName(ref.getName());
 			branches.add(name);
 			if(name.startsWith("refs_heads_")) {
 				branches.add(StringUtils.removeStart(name, "refs_heads_"));
@@ -178,12 +179,12 @@ public class JGitHelper implements Closeable {
 	}
 	
 	public String getBranchHeadCommit(String branch) throws GitAPIException {
-		List<Ref> call = git.branchList().call();
-		for(Ref rev : call) {
-			String name = adjustName(rev.getName());
+		List<Ref> brancheRefs = git.branchList().setListMode(null).call();
+		for(Ref ref : brancheRefs) {
+			String name = adjustName(ref.getName());
 			//System.out.println("Had branch: " + name);
 			if(name.equals(branch) || name.equals("refs_heads_" + branch)) {
-				return rev.getObjectId().getName();
+				return ref.getObjectId().getName();
 			}
 		}
 		
@@ -191,10 +192,10 @@ public class JGitHelper implements Closeable {
 	}
 
 	public List<String> getTags() throws GitAPIException {
-		List<Ref> call = git.tagList().call();
+		List<Ref> tagRefs = git.tagList().call();
 		List<String> tags = new ArrayList<String>();
-		for(Ref rev : call) {
-			String name = adjustName(rev.getName());
+		for(Ref ref : tagRefs) {
+			String name = adjustName(ref.getName());
 			tags.add(name);
 			if(name.startsWith("refs_tags_")) {
 				tags.add(StringUtils.removeStart(name, "refs_tags_"));
@@ -208,56 +209,79 @@ public class JGitHelper implements Closeable {
 	}
 	
 	public String getTagHeadCommit(String tag) throws GitAPIException {
-		List<Ref> call = git.tagList().call();
-		for(Ref rev : call) {
-			String name = adjustName(rev.getName());
+		List<Ref> tagRefs = git.tagList().call();
+		for(Ref ref : tagRefs) {
+			String name = adjustName(ref.getName());
 			//System.out.println("Had tag: " + name);
 			if(name.equals(tag) || name.equals("refs_tags_" + tag)) {
-				return rev.getObjectId().getName();
+				return ref.getObjectId().getName();
 			}
 		}
 		
 		return null;
 	}
 	
-	public List<String> allCommitTupels() throws NoHeadException, GitAPIException, IOException {
-		List<String> commits = new ArrayList<String>();
-		
-		for(String commit : allCommits(null)) {
-			commits.add(commit.substring(0, 2));
-		}
-		
-		return commits;
-	}
-	
-	public Collection<String> allCommits(String tupel) throws NoHeadException, GitAPIException, IOException {
-		Set<String> commits = new HashSet<String>();
+	public Set<String> allCommitSubs() throws NoHeadException, GitAPIException, IOException {
+		Set<String> commitSubs = new HashSet<String>();
 
-		// TODO: we do not read all commits here and reading is done in an unperformant way as we likely read the same commits over and over again
-		
-		// as a workaround we currently use all branches (includes master) and all tags for finding commits quickly
+		// we currently use all refs for finding commits quickly
 		RevWalk walk = new RevWalk(repository);
-
-		List<Ref> branches = git.branchList().call();
-		for(Ref rev : branches) {
-			addCommits(commits, walk, rev.getName(), tupel);
+		Map<String, Ref> allRefs = repository.getAllRefs();
+		for(String ref : allRefs.keySet()) {
+			addCommitSubs(commitSubs, walk, ref);
 		}
-		List<Ref> tags = git.tagList().call();
-		for(Ref rev : tags) {
-			addCommits(commits, walk, rev.getName(), tupel);
-		}
-
-		return commits;
+		
+		return commitSubs;
 	}
 
-	private void addCommits(Collection<String> commits, RevWalk walk, String ref, String tupel) throws IOException, MissingObjectException,
-			IncorrectObjectTypeException {
+	private void addCommitSubs(Collection<String> commits, RevWalk walk, String ref) throws IOException, MissingObjectException, IncorrectObjectTypeException {
 		Ref head = repository.getRef(ref);
 		RevCommit commit = walk.parseCommit(head.getObjectId());
 		walk.markStart(commit);
+		try {
+			for(RevCommit rev : walk) {
+				String name = rev.getName();
+				commits.add(name.substring(0,2));
+	
+				// we can leave the loop as soon as we have all two-digit values, which is typically the case for large repositories
+				if(commits.size() >= 256) {
+					return;
+				}
+			}
+		} finally {
+			walk.reset();
+		}
+	}
+	
+	public Collection<String> allCommits(String sub) throws NoHeadException, GitAPIException, IOException {
+		Set<String> commits = new HashSet<String>();
+
+		RevWalk walk = new RevWalk(repository);
+
+		Set<String> seenHeadCommits = new HashSet<String>();
+		// TODO: we do not read unreferenced commits here and reading is done in an unperformant way as we likely read the same commits over and over again
+		// as a workaround we currently use all branches (includes master) and all tags for finding commits quickly
+		Map<String, Ref> allRefs = repository.getAllRefs();
+		for(String ref : allRefs.keySet()) {
+			Ref head = repository.getRef(ref);
+			RevCommit commit = walk.parseCommit(head.getObjectId());
+
+			// only read commits of this ref if we did not add parents of this commit already
+			if(seenHeadCommits.add(commit.getName())) {
+				addCommits(commits, walk, commit, sub);
+			}
+			//System.out.println("Having " + commits.size() + " commits after ref " + ref);
+		}
+
+		return commits;
+	}
+
+	private void addCommits(Collection<String> commits, RevWalk walk, RevCommit commit, String sub) throws IOException, MissingObjectException,
+			IncorrectObjectTypeException {
+		walk.markStart(commit);
 		for(RevCommit rev : walk) {
 			String name = rev.getId().getName();
-			if(tupel == null || name.startsWith(tupel)) {
+			if(sub == null || name.startsWith(sub)) {
 				commits.add(name);
 			}
 		}

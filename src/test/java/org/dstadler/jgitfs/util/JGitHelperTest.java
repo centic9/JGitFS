@@ -228,8 +228,10 @@ public class JGitHelperTest {
 	
 	@Test
 	public void testallCommitsNull() throws NoHeadException, GitAPIException, IOException {
-		int size = helper.allCommits(null).size();
+		Collection<String> allCommits = helper.allCommits(null);
+		int size = allCommits.size();
 		assertTrue("Had size: " + size, size > 3);
+		assertTrue(allCommits.contains(DEFAULT_COMMIT));
 	}
 
 	@Test
@@ -239,30 +241,76 @@ public class JGitHelperTest {
 		
 		Collection<String> allCommits = helper.allCommits(null);
 		assertTrue(allCommits.size() > 0);
+		assertTrue(allCommits.contains(DEFAULT_COMMIT));
 		
-		Collection<String> commits = helper.allCommits(allCommits.iterator().next().substring(0, 2));
-		assertTrue(commits.size() > 0);
+		allCommits = helper.allCommits(allCommits.iterator().next().substring(0, 2));
+		assertTrue(allCommits.size() > 0);
+		
+		allCommits = helper.allCommits("00");
+		assertFalse(allCommits.contains(DEFAULT_COMMIT));
+		
+		allCommits = helper.allCommits(DEFAULT_COMMIT.substring(0,2));
+		assertTrue(allCommits.contains(DEFAULT_COMMIT));
 	}
 
 	@Test
-	public void testAllCommitTupels() throws NoHeadException, GitAPIException, IOException {
-		List<String> tupels = helper.allCommitTupels();
-		int tupelSize = tupels.size();
-		assertTrue("Had: " + tupels, tupelSize > 3);
+	public void testAllCommitSubs() throws NoHeadException, GitAPIException, IOException {
+		Collection<String> subs = helper.allCommitSubs();
+		int subSize = subs.size();
+		assertTrue("Had: " + subs, subSize > 3);
 		
-		for(String tup : tupels) {
+		for(String tup : subs) {
 			assertEquals("Had: " + tup, 2, tup.length());
 			assertTrue("Had: " + tup, tup.matches("[a-f0-9]{2}"));
 		}
+		
+		assertTrue(subs.contains(DEFAULT_COMMIT.substring(0,2)));
 	}
 
-	@Ignore("Local test")
+	@Ignore("local test")
 	@Test
-	public void testAllCommitsPOI() throws NoHeadException, GitAPIException, IOException {
+	public void testAllCommitSubsJenkins() throws NoHeadException, GitAPIException, IOException {
 		helper.close();
-		helper = new JGitHelper("/opt/poi");
+		helper = new JGitHelper("/opt/jenkins/jenkins.git/.git");
 		
-		int size = helper.allCommits(null).size();
-		assertTrue("Had size: " + size, size > 3);
+		System.out.println("warmup old");
+		for(int i = 0;i < 3;i++) {
+			int size = helper.allCommitSubs().size();
+			assertTrue("Had size: " + size, size > 3);
+			System.out.print("." + size);
+		}
+
+		System.out.println("run old");
+		long start = System.currentTimeMillis();
+		for(int i = 0;i < 10;i++) {
+			int size = helper.allCommitSubs().size();
+			assertTrue("Had size: " + size, size > 3);
+			System.out.print("." + size);
+		}
+		System.out.println("avg.time old: " + (System.currentTimeMillis() - start)/10);
+	}
+
+	@Ignore("local test")
+	@Test
+	public void testAllCommitsJenkins() throws NoHeadException, GitAPIException, IOException {
+		helper.close();
+		helper = new JGitHelper("/opt/jenkins/jenkins.git/.git");
+		//helper = new JGitHelper("/opt/poi/.git");
+		
+		System.out.println("warmup");
+		for(int i = 0;i < 3;i++) {
+			int size = helper.allCommits(null).size();
+			assertTrue("Had size: " + size, size > 3);
+			System.out.print("." + size);
+		}
+
+		System.out.println("run");
+		long start = System.currentTimeMillis();
+		for(int i = 0;i < 10;i++) {
+			int size = helper.allCommits(null).size();
+			assertTrue("Had size: " + size, size > 3);
+			System.out.print("." + size);
+		}
+		System.out.println("avg.time old: " + (System.currentTimeMillis() - start)/10);
 	}
 }

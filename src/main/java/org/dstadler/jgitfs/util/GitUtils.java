@@ -26,7 +26,7 @@ public class GitUtils {
 		return path.matches("/branch/[^/]+") && !path.endsWith(".hidden");
 	}
 
-	public static boolean isCommitTupel(final String path) {
+	public static boolean isCommitSub(final String path) {
 		return path.matches("/commit/[a-f0-9]{2}");
 	}
 	

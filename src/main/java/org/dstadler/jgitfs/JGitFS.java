@@ -83,7 +83,7 @@ public class JGitFS extends FuseFilesystemAdapterFull
 	public int getattr(final String path, final StatWrapper stat)
 	{
 		// known entries and directories beneath /commit are always directories
-		if(DIRS.contains(path) || GitUtils.isCommitTupel(path) || GitUtils.isCommitDir(path)) {
+		if(DIRS.contains(path) || GitUtils.isCommitSub(path) || GitUtils.isCommitDir(path)) {
 			stat.setMode(NodeType.DIRECTORY, true, false, true, true, false, true, false, false, false);
 			return 0;
 		} else if (GitUtils.isCommitSubDir(path)) {
@@ -149,9 +149,9 @@ public class JGitFS extends FuseFilesystemAdapterFull
 
 			return 0;
 		} else if (path.equals("/commit")) {
-			// list two-char tupels for all commits
+			// list two-char subs for all commits
 			try {
-				List<String> items = jgitHelper.allCommitTupels();
+				Collection<String> items = jgitHelper.allCommitSubs();
 				for(String item : items) {
 					filler.add(item);
 				}
@@ -160,11 +160,12 @@ public class JGitFS extends FuseFilesystemAdapterFull
 			}
 
 			return 0;
-		} else if (GitUtils.isCommitTupel(path)) {
-			// list all commits for the requested tupel
-			String tupel = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH);
+		} else if (GitUtils.isCommitSub(path)) {
+			// get the sub that is requested here
+			String sub = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH);
 			try {
-				Collection<String> items = jgitHelper.allCommits(tupel);
+				// list all commits for the requested sub
+				Collection<String> items = jgitHelper.allCommits(sub);
 				for(String item : items) {
 					filler.add(item.substring(2));
 				}
