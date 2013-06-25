@@ -129,6 +129,17 @@ public class JGitHelperTest {
 	}
 	
 	@Test
+	public void testReadTypeFails() throws Exception {
+		final StatWrapper wrapper = getStatsWrapper();
+		try {
+			helper.readType(DEFAULT_COMMIT, "notexisting", wrapper);
+			fail("Should catch exception here");
+		} catch (IllegalStateException e) {
+			assertTrue(e.getMessage().contains("notexisting"));
+		}
+	}
+	
+	@Test
 	public void testReadTypeExecutable() throws Exception {
 		final StatWrapper wrapper = getStatsWrapper();
 		// Look at a specific older commit to have an executable file		
@@ -162,18 +173,29 @@ public class JGitHelperTest {
 		System.out.println("Had commit: " + DEFAULT_COMMIT);
 		String runSh = IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "README.md"));
 		assertTrue("Had: " + runSh, StringUtils.isNotEmpty(runSh));
+	}
 
+	@Test
+	public void testOpenFileFails() throws Exception {
 		try {
 			IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "src"));
 			fail("Should catch exception here");
 		} catch (IllegalStateException e) {
 			assertTrue(e.getMessage().contains("src"));
 		}
+
 		try {
 			IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "src/org"));
 			fail("Should catch exception here");
 		} catch (IllegalStateException e) {
 			assertTrue(e.getMessage().contains("src/org"));
+		}
+
+		try {
+			IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "notexisting"));
+			fail("Should catch exception here");
+		} catch (IllegalStateException e) {
+			assertTrue(e.getMessage().contains("notexisting"));
 		}
 	}
 
@@ -183,6 +205,14 @@ public class JGitHelperTest {
 		assertEquals("[main, test]", helper.readElementsAt(DEFAULT_COMMIT, "src").toString());
 		assertEquals("[dstadler]", helper.readElementsAt(DEFAULT_COMMIT, "src/main/java/org").toString());
 
+		String list = helper.readElementsAt(DEFAULT_COMMIT, "").toString();
+		assertTrue("Had: " + list, list.contains("src"));
+		assertTrue("Had: " + list, list.contains("README.md"));
+		assertTrue("Had: " + list, list.contains("build.gradle"));
+	}
+
+	@Test
+	public void testReadElementsAtFails() throws Exception {
 		try {
 			helper.readElementsAt(DEFAULT_COMMIT, "run.sh");
 			fail("Should catch exception here");
@@ -190,10 +220,12 @@ public class JGitHelperTest {
 			assertTrue(e.getMessage().contains("run.sh"));
 		}
 
-		String list = helper.readElementsAt(DEFAULT_COMMIT, "").toString();
-		assertTrue("Had: " + list, list.contains("src"));
-		assertTrue("Had: " + list, list.contains("README.md"));
-		assertTrue("Had: " + list, list.contains("build.gradle"));
+		try {
+			helper.readElementsAt(DEFAULT_COMMIT, "README.md");
+			fail("Should catch exception here");
+		} catch (IllegalStateException e) {
+			assertTrue(e.getMessage().contains("README.md"));
+		}
 	}
 	
 	@Test

@@ -123,40 +123,13 @@ public class JGitHelper implements Closeable {
 
 	private TreeWalk buildTreeWalk(RevTree tree, final String path) throws MissingObjectException,
 			IncorrectObjectTypeException, CorruptObjectException, IOException {
-		TreeWalk treeWalk = new TreeWalk(repository);
-		treeWalk.addTree(tree);
-		treeWalk.setRecursive(true);
-		treeWalk.setPostOrderTraversal(true);	// to get trees as well, not only files
+		TreeWalk treeWalk = TreeWalk.forPath(repository, path, tree);
 		
-		// TODO: how to filter for the exact path and no sub-pathes/files here?!?
-//		treeWalk.setFilter(new TreeFilter() {
-//			
-//			@Override
-//			public boolean shouldBeRecursive() {
-//				return true;
-//			}
-//			
-//			@Override
-//			public boolean include(TreeWalk walker) throws MissingObjectException, IncorrectObjectTypeException, IOException {
-//				return walker.getPathString().equals(path);
-//			}
-//			
-//			@Override
-//			public TreeFilter clone() {
-//				throw new UnsupportedOperationException();
-//			}
-//		});
-
-		// TODO: this is possibly very expensive, need to find a better way of doing this...
-		while(treeWalk.next()) {
-			String pathString = treeWalk.getPathString();
-			//System.out.println("Had: " + pathString);
-			if(pathString.equals(path)) {
-				return treeWalk;
-			}
+		if(treeWalk == null) {
+			throw new IllegalStateException("Did not find expected file '" + path + "' in tree '" + tree.getName() + "'");
 		}
 		
-		throw new IllegalStateException("Did not find expected file '" + path + "' in tree '" + tree.getName() + "'");
+		return treeWalk;
 	}
 
 	private RevCommit buildRevCommit(String commit) throws MissingObjectException, IncorrectObjectTypeException, IOException {
