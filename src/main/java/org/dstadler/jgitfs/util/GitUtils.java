@@ -5,19 +5,25 @@ import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
 
-
+/**
+ * Utilities for checking if pathes match certain patterns to
+ * decide at which level in the filesystem we are currently as
+ * well as other utilities and constants.
+ *
+ * @author cwat-dstadler
+ */
 public class GitUtils {
 	public final static String COMMIT_SLASH = "/commit/";
 	public final static int COMMIT_SLASH_LENGTH = COMMIT_SLASH.length();
-	
+
 	public final static String BRANCH_SLASH = "/branch/";
 	public final static String TAG_SLASH = "/tag/";
-	
+
 	private final static int SHA1_LENGTH = 40;
-	
+
 	public final static long UID = getUID();
 	public final static long GID = getGID();
-	
+
 	public static boolean isTagDir(final String path) {
 		return path.matches("/tag/[^/]+") && !path.endsWith(".hidden");
 	}
@@ -29,7 +35,7 @@ public class GitUtils {
 	public static boolean isCommitSub(final String path) {
 		return path.matches("/commit/[a-f0-9]{2}");
 	}
-	
+
 	public static boolean isCommitDir(final String path) {
 		// 8 for /commit/, 40 + 1 for commitish plus one slash
 		return path.startsWith(COMMIT_SLASH) && path.length() == (COMMIT_SLASH_LENGTH + SHA1_LENGTH + 1);
@@ -39,7 +45,7 @@ public class GitUtils {
 		// 8 for /commit/, 40 + 2 for commitish plus two slashes
 		return path.startsWith(COMMIT_SLASH) && path.length() > (COMMIT_SLASH_LENGTH + SHA1_LENGTH + 2) && !path.endsWith(".hidden");
 	}
-	
+
 	public static long getUID() {
 	    return getID(true);
 	}
@@ -53,7 +59,7 @@ public class GitUtils {
 		try {
 		    String command = "id -" + (user ? "u " : "g ") +userName;
 		    Process child = Runtime.getRuntime().exec(command);
-	
+
 		    // Get the input stream and read from it
 		    InputStream inputStream = child.getInputStream();
 		    try  {

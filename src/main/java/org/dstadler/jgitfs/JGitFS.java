@@ -21,13 +21,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.dstadler.jgitfs.util.FuseUtils;
 import org.dstadler.jgitfs.util.GitUtils;
 import org.dstadler.jgitfs.util.JGitHelper;
-import org.eclipse.jgit.api.errors.GitAPIException;
 
 public class JGitFS extends FuseFilesystemAdapterFull
 {
 	private final JGitHelper jgitHelper;
 
-	public static void main(final String... args) throws FuseException, IOException, GitAPIException
+	public static void main(final String... args) throws FuseException, IOException
 	{
 		if (args.length != 2) {
 			System.err.println("Usage: GitFS <git-repo> <mountpoint>");
@@ -193,8 +192,7 @@ public class JGitFS extends FuseFilesystemAdapterFull
 			try {
 				List<String> items = jgitHelper.getTags();
 				for(String item : items) {
-					// TODO: handle branches with slash, e.g. refs/heads/master
-					filler.add(jgitHelper.adjustName(item));
+					filler.add(item);
 				}
 			} catch (Exception e) {
 				throw new IllegalStateException("Error reading tags", e);
@@ -205,8 +203,7 @@ public class JGitFS extends FuseFilesystemAdapterFull
 			try {
 				List<String> items = jgitHelper.getBranches();
 				for(String item : items) {
-					// TODO: handle tags with slash as subdirs instead of replacing with underscore
-					filler.add(jgitHelper.adjustName(item));
+					filler.add(item);
 				}
 			} catch (Exception e) {
 				throw new IllegalStateException("Error reading branches", e);
