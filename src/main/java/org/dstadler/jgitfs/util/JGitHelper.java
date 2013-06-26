@@ -36,7 +36,7 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 public class JGitHelper implements Closeable {
 	private final Repository repository;
 	private final Git git;
-	
+
 	public JGitHelper(String gitDir) throws IOException {
 		if(!gitDir.endsWith(".git")) {
 			gitDir = gitDir + "/.git";
@@ -58,36 +58,36 @@ public class JGitHelper implements Closeable {
 		String commit = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH).replace("/", "");
 		return StringUtils.substring(commit, 0, 40);
 	}
-	
+
 	public String readPath(final String path) {
 		String file = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH);
 		return StringUtils.substring(file, 40 + 2);	// cut away commitish and two slashes
 	}
-	
+
 	public void readType(String commit, String path, StatWrapper stat) throws MissingObjectException, IncorrectObjectTypeException, IOException {
 		RevCommit revCommit = buildRevCommit(commit);
 
 		// and using commit's tree find the path
 		RevTree tree = revCommit.getTree();
 		//System.out.println("Having tree: " + tree + " for commit " + commit);
-		
+
 		// set time and user-id/group-id
 		stat.ctime(revCommit.getCommitTime());
 		stat.mtime(revCommit.getCommitTime());
 		stat.uid(GitUtils.UID);
 		stat.gid(GitUtils.GID);
-		
+
 		// now read the file/directory attributes
 		TreeWalk treeWalk = buildTreeWalk(tree, path);
 		FileMode fileMode = treeWalk.getFileMode(0);
-		
+
 		if(fileMode.equals(FileMode.EXECUTABLE_FILE) ||
 				fileMode.equals(FileMode.REGULAR_FILE)) {
 			ObjectLoader loader = repository.open(treeWalk.getObjectId(0));
 			stat.size(loader.getSize());
-			stat.setMode(NodeType.FILE, 
-					true, false, fileMode.equals(FileMode.EXECUTABLE_FILE), 
-					true, false, fileMode.equals(FileMode.EXECUTABLE_FILE), 
+			stat.setMode(NodeType.FILE,
+					true, false, fileMode.equals(FileMode.EXECUTABLE_FILE),
+					true, false, fileMode.equals(FileMode.EXECUTABLE_FILE),
 					false, false, false);
 			return;
 		} else if(fileMode.equals(FileMode.TREE)) {
@@ -96,10 +96,10 @@ public class JGitHelper implements Closeable {
 		} if(fileMode.equals(FileMode.SYMLINK)) {
 			stat.setMode(NodeType.SYMBOLIC_LINK, true, false, true, true, false, true, false, false, false);
 			return;
-		}  
+		}
 		throw new IllegalStateException("Found unknown FileMode in Git for commit '" + commit + "' and path '" + path + "': " + fileMode.getBits());
 	}
-	
+
 	public InputStream openFile(String commit, String path) throws MissingObjectException, IncorrectObjectTypeException, IOException {
 		RevCommit revCommit = buildRevCommit(commit);
 
@@ -109,26 +109,26 @@ public class JGitHelper implements Closeable {
 
 		// now try to find a specific file
 		TreeWalk treeWalk = buildTreeWalk(tree, path);
-		
+
 		if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_FILE) == 0) {
 			throw new IllegalStateException("Tried to read the contents of a non-file for commit '" + commit + "' and path '" + path + "', had filemode " + treeWalk.getFileMode(0).getBits());
 		}
-		
+
 		ObjectId objectId = treeWalk.getObjectId(0);
 		ObjectLoader loader = repository.open(objectId);
 
 		// finally open an InputStream for the file contents
-		return loader.openStream();		
+		return loader.openStream();
 	}
 
 	private TreeWalk buildTreeWalk(RevTree tree, final String path) throws MissingObjectException,
 			IncorrectObjectTypeException, CorruptObjectException, IOException {
 		TreeWalk treeWalk = TreeWalk.forPath(repository, path, tree);
-		
+
 		if(treeWalk == null) {
 			throw new IllegalStateException("Did not find expected file '" + path + "' in tree '" + tree.getName() + "'");
 		}
-		
+
 		return treeWalk;
 	}
 
@@ -150,7 +150,7 @@ public class JGitHelper implements Closeable {
 		}
 		return branches;
 	}
-	
+
 	public String getBranchHeadCommit(String branch) throws GitAPIException {
 		List<Ref> brancheRefs = git.branchList().setListMode(null).call();
 		for(Ref ref : brancheRefs) {
@@ -160,7 +160,7 @@ public class JGitHelper implements Closeable {
 				return ref.getObjectId().getName();
 			}
 		}
-		
+
 		return null;
 	}
 
@@ -176,11 +176,11 @@ public class JGitHelper implements Closeable {
 		}
 		return tags;
 	}
-	
+
 	public String adjustName(String name) {
 		return name.replace("/", "_");
 	}
-	
+
 	public String getTagHeadCommit(String tag) throws GitAPIException {
 		List<Ref> tagRefs = git.tagList().call();
 		for(Ref ref : tagRefs) {
@@ -190,10 +190,10 @@ public class JGitHelper implements Closeable {
 				return ref.getObjectId().getName();
 			}
 		}
-		
+
 		return null;
 	}
-	
+
 	public Set<String> allCommitSubs() throws NoHeadException, GitAPIException, IOException {
 		Set<String> commitSubs = new HashSet<String>();
 
@@ -203,19 +203,25 @@ public class JGitHelper implements Closeable {
 		for(String ref : allRefs.keySet()) {
 			addCommitSubs(commitSubs, walk, ref);
 		}
-		
+
 		return commitSubs;
 	}
 
 	private void addCommitSubs(Collection<String> commits, RevWalk walk, String ref) throws IOException, MissingObjectException, IncorrectObjectTypeException {
 		Ref head = repository.getRef(ref);
-		RevCommit commit = walk.parseCommit(head.getObjectId());
+		final RevCommit commit;
+		try {
+			commit = walk.parseCommit(head.getObjectId());
+		} catch (IncorrectObjectTypeException e) {
+			System.out.println("Invalid head-commit for ref " + ref + " and id: " + head.getObjectId().getName() + ": " + e);
+			return;
+		}
 		walk.markStart(commit);
 		try {
 			for(RevCommit rev : walk) {
 				String name = rev.getName();
 				commits.add(name.substring(0,2));
-	
+
 				// we can leave the loop as soon as we have all two-digit values, which is typically the case for large repositories
 				if(commits.size() >= 256) {
 					return;
@@ -225,7 +231,7 @@ public class JGitHelper implements Closeable {
 			walk.reset();
 		}
 	}
-	
+
 	public Collection<String> allCommits(String sub) throws NoHeadException, GitAPIException, IOException {
 		Set<String> commits = new HashSet<String>();
 
@@ -237,7 +243,13 @@ public class JGitHelper implements Closeable {
 		Map<String, Ref> allRefs = repository.getAllRefs();
 		for(String ref : allRefs.keySet()) {
 			Ref head = repository.getRef(ref);
-			RevCommit commit = walk.parseCommit(head.getObjectId());
+			final RevCommit commit;
+			try {
+				commit = walk.parseCommit(head.getObjectId());
+			} catch (IncorrectObjectTypeException e) {
+				System.out.println("Invalid head-commit for ref " + ref + " and id: " + head.getObjectId().getName() + ": " + e);
+				continue;
+			}
 
 			// only read commits of this ref if we did not add parents of this commit already
 			if(seenHeadCommits.add(commit.getName())) {
@@ -260,7 +272,7 @@ public class JGitHelper implements Closeable {
 		}
 		walk.reset();
 	}
-	
+
 	@Override
 	public void close() throws IOException {
 		repository.close();
@@ -272,7 +284,7 @@ public class JGitHelper implements Closeable {
 		// and using commit's tree find the path
 		RevTree tree = revCommit.getTree();
 		//System.out.println("Having tree: " + tree + " for commit " + commit);
-		
+
 		List<String> items = new ArrayList<String>();
 
 		// shortcut for root-path
@@ -288,7 +300,7 @@ public class JGitHelper implements Closeable {
 
 			return items;
 		}
-		
+
 		// now try to find a specific file
 		TreeWalk treeWalk = buildTreeWalk(tree, path);
 		if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_TREE) == 0) {
