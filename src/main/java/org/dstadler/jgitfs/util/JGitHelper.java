@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,10 +22,12 @@ import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectIdSubclassMap;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevObject;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
@@ -353,14 +356,17 @@ public class JGitHelper implements Closeable {
 	 * @throws IOException If access to the Git repository fails.
 	 */
 	public Collection<String> allCommits(String sub) throws IOException {
-		Set<String> commits = new HashSet<String>();
+		ObjectIdSubclassMap<RevCommit> map = new ObjectIdSubclassMap<RevCommit>();
 
 		RevWalk walk = new RevWalk(repository);
 
-		Set<String> seenHeadCommits = new HashSet<String>();
 		// TODO: we do not read unreferenced commits here and reading is done in an unperformant way as we likely read the same commits over and over again
 		// as a workaround we currently use all branches (includes master) and all tags for finding commits quickly
 		Map<String, Ref> allRefs = repository.getAllRefs();
+
+		//int seen = 0;
+		// Store commits directly, not the SHA1 as getName() is a somewhat costly operation on RevCommit via formatHexChar()
+		Set<RevCommit> seenHeadCommits = new HashSet<RevCommit>(allRefs.size());
 		for(String ref : allRefs.keySet()) {
 			Ref head = repository.getRef(ref);
 			final RevCommit commit;
@@ -372,23 +378,34 @@ public class JGitHelper implements Closeable {
 			}
 
 			// only read commits of this ref if we did not add parents of this commit already
-			if(seenHeadCommits.add(commit.getName())) {
-				addCommits(commits, walk, commit, sub);
-			}
+			if(seenHeadCommits.add(commit)) {
+				addCommits(map, walk, commit, sub);
+			} /*else {
+				seen++;
+			}*/
 			//System.out.println("Having " + commits.size() + " commits after ref " + ref);
+		}
+		//System.out.println("Had " + seen + " dupplicate commits");
+
+		List<String> commits = new ArrayList<String>(map.size());		// adding here is costly, but TreeSet is much worse!
+
+		Iterator<RevCommit> iterator = map.iterator();
+		while(iterator.hasNext()) {
+			RevObject commit = iterator.next();
+			commits.add(commit.getName());
 		}
 
 		return commits;
 	}
 
-	private void addCommits(Collection<String> commits, RevWalk walk, RevCommit commit, String sub) throws IOException, MissingObjectException,
+	private void addCommits(ObjectIdSubclassMap<RevCommit> map, RevWalk walk, RevCommit commit, String sub) throws IOException, MissingObjectException,
 			IncorrectObjectTypeException {
 		walk.markStart(commit);
 		try {
 			for(RevCommit rev : walk) {
-				String name = rev.getId().getName();
+				String name = rev.getName();
 				if(sub == null || name.startsWith(sub)) {
-					commits.add(name);
+					map.addIfAbsent(rev);
 				}
 			}
 		} finally {
