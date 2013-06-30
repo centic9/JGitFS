@@ -360,7 +360,7 @@ public class JGitHelper implements Closeable {
 
 		RevWalk walk = new RevWalk(repository);
 
-		// TODO: we do not read unreferenced commits here and reading is done in an unperformant way as we likely read the same commits over and over again
+		// TODO: we do not read unreferenced commits here
 		// as a workaround we currently use all branches (includes master) and all tags for finding commits quickly
 		Map<String, Ref> allRefs = repository.getAllRefs();
 

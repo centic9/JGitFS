@@ -39,10 +39,9 @@ On the Git side I had heard about [JGit] and wanted to give it a try anyway, usi
 
 #### Todos
 
-* Only commits reachable via refs or tags are listed currently as I could not yet get JGit to return me a list of all commits
-* Some operations are not performance-optimized yet, listing files in a directory sometimes results in high IO and CPU load, surely JGit can be used better in a few places
-* Especially reading information about a specific path as-of a specific commit is done in a bad way and causes lots of overhead, see comments in JGitHelper.buildTreeWalk() for details
+* Only commits reachable via refs or tags are listed currently as I could not yet get JGit to return me a list of all commits, so commits which still exist, but are unreferenced currently are not visible
 * Remote branches are not included yet, but should be fairly easy to add
+* Stashes are not listed yet
 * Would be nice to get this on Windows via cygwin as well, seems there is https://github.com/openunix/fuse-cygwin/, but could not get it to compile yet 
 
 #### How to hack on it
