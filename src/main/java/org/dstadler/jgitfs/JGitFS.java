@@ -8,6 +8,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import net.fusejna.DirectoryFiller;
 import net.fusejna.ErrorCodes;
@@ -21,6 +23,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.dstadler.jgitfs.util.FuseUtils;
 import org.dstadler.jgitfs.util.GitUtils;
 import org.dstadler.jgitfs.util.JGitHelper;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 public class JGitFS extends FuseFilesystemAdapterFull
 {
@@ -215,45 +221,63 @@ public class JGitFS extends FuseFilesystemAdapterFull
 		throw new IllegalStateException("Had unknown path " + path + " in readdir()");
 	}
 
+	/**
+	 * A cache for symlinks from branches/tags to commits, this is useful as queries for symlinks
+	 * are done very often as each access to a file on a branch also requires the symlink to the
+	 * actual commit to be resolved. This cache greatly improves the speed of these accesses.
+	 * 
+	 * This makes use of the Google Guava LoadingCache features to automatically populate
+	 * entries when they are missing which makes the usage of the cache very simple.
+	 */
+	private LoadingCache<String, byte[]> linkCache = CacheBuilder.newBuilder()
+		       .maximumSize(1000)
+		       .expireAfterWrite(1, TimeUnit.MINUTES)
+		       .build(
+		           new CacheLoader<String, byte[]>() {
+		             @Override
+					public byte[] load(String path) {
+		         		StringBuilder target = new StringBuilder(".." + GitUtils.COMMIT_SLASH);
+		        		try {
+		        			final String commit;
+		        			if(GitUtils.isBranchDir(path)) {
+		        				commit = jgitHelper.getBranchHeadCommit(StringUtils.removeStart(path, GitUtils.BRANCH_SLASH));
+		        			} else if (GitUtils.isTagDir(path)) {
+		        				commit = jgitHelper.getTagHeadCommit(StringUtils.removeStart(path, GitUtils.TAG_SLASH));
+		        			} else {
+		        				throw new IllegalStateException("Had unknown path " + path + " in readlink()");
+		        			}
+
+		        			if(commit == null) {
+		        				throw new IllegalStateException("Had unknown tag/branch " + path + " in readlink()");
+		        			}
+		        			target.append(commit.substring(0, 2)).append("/").append(commit.substring(2));
+
+		        			byte[] bytes = target.toString().getBytes();
+		        			
+		        			return bytes;
+		        		} catch (Exception e) {
+		        			throw new IllegalStateException("Error reading commit of tag/branch-path " + path, e);
+		        		}
+		             }
+		           }
+		    		   );
+	
 	@Override
 	public int readlink(String path, ByteBuffer buffer, long size) {
-		if(GitUtils.isBranchDir(path)) {
-			StringBuilder target = new StringBuilder(".." + GitUtils.COMMIT_SLASH);
-
-			try {
-				String commit = jgitHelper.getBranchHeadCommit(StringUtils.removeStart(path, GitUtils.BRANCH_SLASH));
-				if(commit == null) {
-					throw new IllegalStateException("Had unknown branch " + path + " in readlink()");
-				}
-				target.append(commit.substring(0, 2)).append("/").append(commit.substring(2));
-
-				buffer.put(target.toString().getBytes());
+		// use the cache to speed up access, symlinks are always queried also for sub-path access
+		byte[] cachedCommit;
+		try {
+			cachedCommit = linkCache.get(path);
+			if(cachedCommit != null) {
+				buffer.put(cachedCommit);
 				buffer.put((byte)0);
-			} catch (Exception e) {
-				throw new IllegalStateException("Error reading commit of branch-path " + path, e);
+
+				return 0;
 			}
-
-			return 0;
-		} else if (GitUtils.isTagDir(path)) {
-			StringBuilder target = new StringBuilder(".." + GitUtils.COMMIT_SLASH);
-
-			try {
-				String commit = jgitHelper.getTagHeadCommit(StringUtils.removeStart(path, GitUtils.TAG_SLASH));
-				if(commit == null) {
-					throw new IllegalStateException("Had unknown tag " + path + " in readlink()");
-				}
-
-				target.append(commit.substring(0, 2)).append("/").append(commit.substring(2));
-
-				buffer.put(target.toString().getBytes());
-				buffer.put((byte)0);
-			} catch (Exception e) {
-				throw new IllegalStateException("Error reading commit of branch-path " + path, e);
-			}
-
-			return 0;
+		} catch (ExecutionException e) {
+			throw new IllegalStateException("Error reading commit of tag/branch-path " + path, e);
 		}
 
-		throw new IllegalStateException("Had unknown path " + path + " in readlink()");
+		throw new IllegalStateException("Error reading commit of tag/branch-path " + path);
 	}
 }
