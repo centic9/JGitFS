@@ -261,9 +261,19 @@ public class JGitFS extends FuseFilesystemAdapterFull
 		             }
 		           }
 		    		   );
-	
+	private static final long CACHE_TIMEOUT = 60 * 1000;	// one minute
+	private long lastLinkCacheCleanup = System.currentTimeMillis();
+
 	@Override
 	public int readlink(String path, ByteBuffer buffer, long size) {
+		// ensure that we evict caches sometimes, Google Guava does not make guarantees that
+		// eviction happens automatically in a mostly read-only cache
+		if(System.currentTimeMillis() > (lastLinkCacheCleanup + CACHE_TIMEOUT)) {
+			lastLinkCacheCleanup = System.currentTimeMillis();
+			System.out.println("Perform manual cache maintenance");
+			linkCache.cleanUp();
+		}
+		
 		// use the cache to speed up access, symlinks are always queried also for sub-path access
 		byte[] cachedCommit;
 		try {
