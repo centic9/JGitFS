@@ -2,6 +2,7 @@ package org.dstadler.jgitfs.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 
@@ -23,17 +24,21 @@ public class GitUtils {
 
 	public final static long UID = getUID();
 	public final static long GID = getGID();
+	
+	private final static Pattern TAG_PATTERN = Pattern.compile("/tag/[^/]+");
+	private final static Pattern BRANCH_PATTERN = Pattern.compile("/branch/[^/]+");
+	private final static Pattern COMMIT_SUB_PATTERN = Pattern.compile("/commit/[a-f0-9]{2}");
 
 	public static boolean isTagDir(final String path) {
-		return path.matches("/tag/[^/]+") && !path.endsWith(".hidden");
+		return TAG_PATTERN.matcher(path).matches() && !path.endsWith(".hidden");
 	}
 
 	public static boolean isBranchDir(final String path) {
-		return path.matches("/branch/[^/]+") && !path.endsWith(".hidden");
+		return BRANCH_PATTERN.matcher(path).matches() && !path.endsWith(".hidden");
 	}
 
 	public static boolean isCommitSub(final String path) {
-		return path.matches("/commit/[a-f0-9]{2}");
+		return COMMIT_SUB_PATTERN.matcher(path).matches();
 	}
 
 	public static boolean isCommitDir(final String path) {

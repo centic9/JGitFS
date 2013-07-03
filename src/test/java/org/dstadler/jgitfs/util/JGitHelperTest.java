@@ -29,7 +29,7 @@ import org.junit.Test;
 
 
 public class JGitHelperTest {
-	private final static String DEFAULT_COMMIT = "ede9797616a805d6cbeca376bfbbac9a8b7eb64f";
+	public final static String DEFAULT_COMMIT = "ede9797616a805d6cbeca376bfbbac9a8b7eb64f";
 
 	private JGitHelper helper;
 
