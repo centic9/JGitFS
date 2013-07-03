@@ -37,7 +37,9 @@ public class JGitFilesystemTest {
 
 	@After
 	public void tearDown() throws IOException {
-		fs.close();
+		if(fs.isMounted()) {
+			fs.close();
+		}
 	}
 
 	@Test
