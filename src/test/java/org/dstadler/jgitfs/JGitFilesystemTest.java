@@ -62,7 +62,7 @@ public class JGitFilesystemTest {
 
 	@Test
 	public void testGetAttr() throws IOException, FuseException {
-		StatWrapper stat = StatWrapperFactory.create();
+		StatWrapper stat = getStatsWrapper();
 		assertEquals(0, fs.getattr("/", stat));
 		assertEquals(NodeType.DIRECTORY, stat.type());
 		assertEquals(0, fs.getattr("/commit", stat));
@@ -284,5 +284,23 @@ public class JGitFilesystemTest {
 		fs.unmount();
 
 		mountPoint.delete();
+	}
+
+	private StatWrapper getStatsWrapper() {
+		final StatWrapper wrapper;
+		try {
+			wrapper = StatWrapperFactory.create();
+		} catch (UnsatisfiedLinkError e) {
+			System.out.println("This might fail on machines without fuse-binaries.");
+			e.printStackTrace();
+			Assume.assumeNoException(e);	// stop test silently
+			return null;
+		} catch(NoClassDefFoundError e) {
+			System.out.println("This might fail on machines without fuse-binaries.");
+			e.printStackTrace();
+			Assume.assumeNoException(e);	// stop test silently
+			return null;
+		}
+		return wrapper;
 	}
 }
