@@ -18,6 +18,7 @@ import net.fusejna.types.TypeMode.NodeType;
 import org.dstadler.jgitfs.util.FuseUtils;
 import org.dstadler.jgitfs.util.JGitHelperTest;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,6 +39,7 @@ public class JGitFilesystemTest {
 	public void tearDown() throws IOException {
 		fs.close();
 	}
+
 	@Test
 	public void testConstructClose() throws IOException {
 		// do nothing here, just construct and close the fs in before/after...
@@ -52,8 +54,6 @@ public class JGitFilesystemTest {
 
 	@Test
 	public void testGetAttr() throws IOException, FuseException {
-		File mountPoint = mount();
-
 		StatWrapper stat = StatWrapperFactory.create();
 		assertEquals(0, fs.getattr("/", stat));
 		assertEquals(NodeType.DIRECTORY, stat.type());
@@ -85,8 +85,6 @@ public class JGitFilesystemTest {
 		}
 		// invalid top-level-dir causes ENOENT
 		assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/notexistingmain", stat));
-		
-		unmount(mountPoint);
 	}
 
 	@Test
@@ -262,8 +260,15 @@ public class JGitFilesystemTest {
 		assertTrue(mountPoint.delete());
 		
 		FuseUtils.prepareMountpoint(mountPoint);
-		
-		fs.mount(mountPoint, false);
+
+		try {
+			fs.mount(mountPoint, false);
+		} catch (UnsatisfiedLinkError e) {
+			System.out.println("This might fail on machines without fuse-binaries.");
+			e.printStackTrace();
+			Assume.assumeNoException(e);	// stop test silently
+			return null;
+		}
 		return mountPoint;
 	}
 
