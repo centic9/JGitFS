@@ -360,11 +360,11 @@ public class JGitHelper implements Closeable {
 
 		RevWalk walk = new RevWalk(repository);
 
-		// TODO: we do not read unreferenced commits here
+		// TODO: we do not read unreferenced commits here, it would be nice to be able to access these as well here
+		// see http://stackoverflow.com/questions/17178432/how-to-find-all-commits-using-jgit-not-just-referenceable-ones
 		// as a workaround we currently use all branches (includes master) and all tags for finding commits quickly
 		Map<String, Ref> allRefs = repository.getAllRefs();
 
-		//int seen = 0;
 		// Store commits directly, not the SHA1 as getName() is a somewhat costly operation on RevCommit via formatHexChar()
 		Set<RevCommit> seenHeadCommits = new HashSet<RevCommit>(allRefs.size());
 		for(String ref : allRefs.keySet()) {
@@ -380,14 +380,13 @@ public class JGitHelper implements Closeable {
 			// only read commits of this ref if we did not add parents of this commit already
 			if(seenHeadCommits.add(commit)) {
 				addCommits(map, walk, commit, sub);
-			} /*else {
-				seen++;
-			}*/
-			//System.out.println("Having " + commits.size() + " commits after ref " + ref);
+			}
 		}
 		//System.out.println("Had " + seen + " dupplicate commits");
 
-		List<String> commits = new ArrayList<String>(map.size());		// adding here is costly, but TreeSet is much worse!
+		// use the ObjectIdSubclassMap for quick map-insertion and only afterwards convert the resulting commits
+		// to Strings. ObjectIds can be compared much quicker as Strings as they only are 4 ints, not 40 character strings
+		List<String> commits = new ArrayList<String>(map.size());
 
 		Iterator<RevCommit> iterator = map.iterator();
 		while(iterator.hasNext()) {
