@@ -11,7 +11,7 @@ import org.dstadler.jgitfs.util.FuseUtils;
  * Main class which handles commandline parsing and starts up the {@link JGitFilesystem}.
  * 
  * It also ensures that the mountpoint is unmounted if there is still a FUSE-mount 
- * active.
+ * active on it.
  *
  * @author dominik.stadler
  */
@@ -21,8 +21,8 @@ public class JGitFS
 	 * Main method for JGitFS.
 	 *
 	 * @param args
-	 * @throws FuseException
-	 * @throws IOException
+	 * @throws FuseException If mounting fails.
+	 * @throws IOException If the given Git repository cannot be read or some other error happens during file access.
 	 */
 	public static void main(final String... args) throws FuseException, IOException
 	{
@@ -36,7 +36,7 @@ public class JGitFS
 
 		System.out.println("Mounting git repository at " + gitDir + " at mountpoint " + mountPoint);
 
-		//read GIT
+		// now create the Git filesystem
 		JGitFilesystem gitFS = new JGitFilesystem(gitDir, false);
 		try {
 			// ensure that we do not have a previous mount lingering on the mountpoint

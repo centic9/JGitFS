@@ -256,7 +256,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		// eviction happens automatically in a mostly read-only cache
 		if(System.currentTimeMillis() > (lastLinkCacheCleanup + CACHE_TIMEOUT)) {
 			lastLinkCacheCleanup = System.currentTimeMillis();
-			System.out.println("Perform manual cache maintenance");
+			System.out.println("Perform manual cache maintenance after " + (CACHE_TIMEOUT/1000) + " seconds");
 			linkCache.cleanUp();
 		}
 		
