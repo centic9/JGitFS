@@ -255,8 +255,8 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		// ensure that we evict caches sometimes, Google Guava does not make guarantees that
 		// eviction happens automatically in a mostly read-only cache
 		if(System.currentTimeMillis() > (lastLinkCacheCleanup + CACHE_TIMEOUT)) {
+			System.out.println("Perform manual cache maintenance after " + ((System.currentTimeMillis() - lastLinkCacheCleanup)/1000) + " seconds");
 			lastLinkCacheCleanup = System.currentTimeMillis();
-			System.out.println("Perform manual cache maintenance after " + (CACHE_TIMEOUT/1000) + " seconds");
 			linkCache.cleanUp();
 		}
 		
