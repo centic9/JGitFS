@@ -108,7 +108,9 @@ public class JGitFilesystemTest {
 			fs.read(DEFAULT_COMMIT_PATH + "/README.md", ByteBuffer.allocate(100000), Integer.MAX_VALUE, 0, null);
 			fail("Should throw exception as this should not occur");
 		} catch (OutOfMemoryError e) {
-			assertTrue(e.toString(), e.toString().contains("exceeds VM limit"));
+			assertTrue(e.toString(), 
+					e.toString().contains("exceeds VM limit") || 
+					e.toString().contains("Java heap space"));
 		}
 	}
 

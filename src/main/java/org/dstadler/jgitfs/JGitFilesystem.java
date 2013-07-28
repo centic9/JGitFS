@@ -142,6 +142,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 //			filler.add("/stash");
 //			filler.add("/index");
 //			filler.add("/workspace");
+//			filler.add("/git") => symbolic link to the source dir
 
 			return 0;
 		} else if (path.equals("/commit")) {

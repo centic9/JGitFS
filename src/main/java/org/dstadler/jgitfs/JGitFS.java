@@ -2,6 +2,8 @@ package org.dstadler.jgitfs;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import net.fusejna.FuseException;
 
@@ -26,26 +28,34 @@ public class JGitFS
 	 */
 	public static void main(final String... args) throws FuseException, IOException
 	{
-		if (args.length != 2) {
-			System.err.println("Usage: GitFS <git-repo> <mountpoint>");
+		if (args.length % 2 != 0 || args.length == 0) {
+			System.err.println("Usage: GitFS <git-repo> <mountpoint> ...");
 			System.exit(1);
 		}
 
-		String gitDir = args[0];
-		File mountPoint = new File(args[1]);
-
-		System.out.println("Mounting git repository at " + gitDir + " at mountpoint " + mountPoint);
-
-		// now create the Git filesystem
-		JGitFilesystem gitFS = new JGitFilesystem(gitDir, false);
+		List<JGitFilesystem> gitFSList = new ArrayList<JGitFilesystem>(args.length/2);
 		try {
+		for(int i = 0;i < args.length;i+=2) {
+			String gitDir = args[i];
+			File mountPoint = new File(args[i+1]);
+	
+			System.out.println("Mounting git repository at " + gitDir + " at mountpoint " + mountPoint);
+	
+			// now create the Git filesystem
+			JGitFilesystem gitFS = new JGitFilesystem(gitDir, false);
+			gitFSList.add(gitFS);
+
 			// ensure that we do not have a previous mount lingering on the mountpoint
 			FuseUtils.prepareMountpoint(mountPoint);
-
+	
 			// mount the filesystem. This actually blocks until the filesystem is unmounted
-			gitFS.mount(mountPoint);
+			gitFS.mount(mountPoint, i == (args.length-2));
+			}
 		} finally {
-			gitFS.close();
+			// ensure that we try to close all filesystems that we created
+			for(JGitFilesystem gitFS : gitFSList) {
+				gitFS.close();
+			}
 		}
 	}
 }
