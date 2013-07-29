@@ -11,7 +11,7 @@ userland filesystem.
 
 #### Build it and create the distribution files
 
-	gradle install
+	./gradlew install
 
 #### Run it
 
@@ -42,11 +42,11 @@ Implementation should be straightforward, the class `JGitFS` implements the comm
 
 Create matching Eclipse project files
 
-	gradle eclipse
+	./gradlew eclipse
 
 Run unit tests
 
-	gradle test
+	./gradlew test
 
 #### The idea
 
