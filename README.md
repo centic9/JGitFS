@@ -17,7 +17,15 @@ userland filesystem.
 
     build/install/JGitFS/bin/JGitFS <path-to-git> <location-for-filesystem>
 
-E.g. if you have a Git repository at /opt/project, then after calling 
+I.e. to get a view of the Git repository located at /opt/project mounted at /mnt/git, do
+ 
+    build/install/JGitFS/bin/JGitFS /opt/project /mnt/git
+
+## The longer stuff
+
+#### Details
+
+If you have a Git repository at /opt/project, then after calling 
  
     build/install/JGitFS/bin/JGitFS /opt/project /mnt/git
 
@@ -27,34 +35,38 @@ This allows to use a Git repository a bit like IBM/Rational ClearCase dynamic vi
 
 Note: Access is strictly read-only, no writing of new commits on branches is possible. Branches and Tags are actually implemented as symbolic links to the respective commit. The commit-directory uses the same two-byte directory-substructure like Git uses in .git/objects.
 
-## The longer stuff
-#### The idea
 
-I was looking for a way to visualize branches of my Git repositories as separate directories so I could easier compare different versions. I did find a number of projects, developed in native, python or caml and all of them were 
-either dormant or not fully working for some reason. 
+#### Change it
 
-As part of some further research I stumbled upon the great [fuse-jna] library which makes building a [FUSE][Linux-Fuse] userland filesystem in 100% pure Java very easy and straightforward by making use of [JNA]. No native code, no compile troubles, no nothing but full access to the [FUSE][Linux-Fuse] functionality! Amazing! 
-
-On the Git side I had heard about [JGit] and wanted to give it a try anyway, using it was a bit of a rough ride and in order to get to grips with it I ended up with a collection of code-snippets at [jgit-cookbook], but in the end pure-Java access to Git repositories worked fine as well.
-
-#### Todos
-
-* Only commits reachable via refs or tags are listed currently as I could not yet get JGit to return me a list of all commits, so commits which still exist, but are unreferenced currently are not visible
-* Remote branches are not included yet, but should be fairly easy to add
-* Stashes are not listed yet
-* Would be nice to get this on Windows via cygwin as well, seems there is https://github.com/openunix/fuse-cygwin/, but could not get it to compile yet 
-
-#### How to hack on it
-
-Implementation should be straightforward, the class `JGitFS` implements the filesystem interface, `JGitHelper` encapsulates access to Git, `GitUtils` are local utils for computing commits, ...
+Implementation should be straightforward, the class `JGitFS` implements the commandline handling, `JGitFilesystem` implements the filesystem interfaces that are neede for simple read-only access as well as some caching, `JGitHelper` encapsulates access to Git, `GitUtils` are local utils for computing commits, ...
 
 Create matching Eclipse project files
 
 	gradle eclipse
 
-Running unit tests
+Run unit tests
 
 	gradle test
+
+#### The idea
+
+I was looking for a way to visualize branches of my Git repositories as separate directories so I could easier compare different versions. There are ways to do a 2nd checkout from an existing repository to have two working copies, but this is cumbersome. 
+
+I did find a number of projects, developed in native, python or caml, but they were either dormant or not fully working for some reason. 
+
+As part of some further research I stumbled upon the great [fuse-jna] library which makes building a [FUSE][Linux-Fuse] userland filesystem in 100% pure Java very easy and straightforward by making use of [JNA] instead of using JNI compiled code. This means no native code, no compile troubles, no nothing but full access to the [FUSE][Linux-Fuse] functionality! Amazing! 
+
+On the Git side I had heard about [JGit] and wanted to give it a try anyway, using it was a bit of a rough ride and in order to get to grips with it I ended up putting together a collection of code-snippets at [jgit-cookbook], but in the end pure-Java access to Git repositories worked fine as well.
+
+Finally after some performance tuning sessions and adding some caching at the right spots I was also satisfied with the performance, naturally there is a bit of overhead but overall I am able to work with fairly large repositories without large delays, only some more CPU is used because of all the compression/format reading in JGit and this doesn't seem to be a big concern with fairly up-to-date hardware.
+
+#### Todos
+
+* On some repositories I see strange exceptions after a while when reading many different commits/branches, however access still seems to be fine! Getting access to branches/commits which do not even exist! It seems some memory overwriting is taking place, either missing synchronization or some hidden bug in fuse-jna, need to investigate more to find out
+* Only commits reachable via refs or tags are listed currently as I could not yet get JGit to return me a list of all commits, so commits which still exist, but are unreferenced currently are not visible
+* Remote branches are not included yet, but should be fairly easy to add
+* Stashes are not listed yet
+* Would be nice to get this on Windows via cygwin as well, seems there is https://github.com/openunix/fuse-cygwin/, but could not get it to compile yet 
 
 #### Compatibility
 
