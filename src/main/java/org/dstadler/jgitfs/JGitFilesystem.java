@@ -60,6 +60,17 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 	}
 
 	/**
+	 * Don't print out a warning for some directories which are queried by 
+	 * some apps, e.g. Nautilus on Gnome
+	 */
+	private static Set<String> IGNORED_DIRS = new HashSet<String>();
+	static {
+		IGNORED_DIRS.add("/.hidden");
+		IGNORED_DIRS.add("/.Trash");
+		IGNORED_DIRS.add("/.Trash-1000");
+	}
+
+	/**
 	 * Construct the filesystem and create internal helpers.
 	 *
 	 * @param gitDir The directory where the Git repository can be found.
@@ -103,7 +114,16 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 
 		// all others are reported as "not found"
 		// don't throw an exception here as we get requests for some files/directories, e.g. .hidden or .Trash
-		System.out.println("Had unknown path " + path + " in getattr()");
+		boolean show = true;
+		for(String ignore : IGNORED_DIRS) {
+			if(path.endsWith(ignore)) {
+				show = false;
+				break;
+			}
+		}
+		if(show) {
+			System.out.println("Had unknown path " + path + " in getattr()");
+		}
 		return -ErrorCodes.ENOENT();
 	}
 
