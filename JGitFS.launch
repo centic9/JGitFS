@@ -11,7 +11,7 @@
 <listEntry value="org.eclipse.debug.ui.launchGroup.run"/>
 </listAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.dstadler.jgitfs.JGitFS"/>
-<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="/opt/poi /fs/poi /opt/Subversion/git /fs/subversion"/>
+<stringAttribute key="org.eclipse.jdt.launching.PROGRAM_ARGUMENTS" value="/opt/Subversion/git /fs/subversion"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="JGitFS"/>
 <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xmx128m -Xms20m"/>
 </launchConfiguration>
