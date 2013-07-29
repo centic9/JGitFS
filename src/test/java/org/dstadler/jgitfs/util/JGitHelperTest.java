@@ -361,6 +361,58 @@ public class JGitHelperTest {
 		System.out.println("avg.time old: " + (System.currentTimeMillis() - start)/10);
 	}
 	
+	@Ignore("local test")
+	@Test
+	public void testSubversionEmptyFile() throws Exception {
+		JGitHelper jgitHelper = new JGitHelper("/opt/Subversion/git");
+		List<String> items = jgitHelper.getBranches();
+		assertNotNull(items);
+		assertTrue(items.contains("ppa_1.7.11"));
+		
+		String commit = jgitHelper.getBranchHeadCommit("ppa_1.7.11");
+		assertNotNull(commit);
+		
+		items = jgitHelper.readElementsAt(commit, "");
+		assertNotNull(items);
+		assertTrue(items.size() > 0);
+		
+		//subversion/branch/ppa_1.7.11/build/generator/__init__.py 
+		
+		items = jgitHelper.readElementsAt(commit, "build");
+		assertNotNull(items);
+		assertTrue(items.size() > 0);
+
+		items = jgitHelper.readElementsAt(commit, "build/generator");
+		assertNotNull(items);
+		assertTrue(items.size() > 0);
+		assertTrue("Had: " + items, items.contains("__init__.py"));
+		
+		InputStream openFile = jgitHelper.openFile(commit, "build/generator/__init__.py");
+		try {
+			String string = IOUtils.toString(openFile);
+			System.out.println("Having " + string.length() + " bytes: \n" + string);
+		} finally {
+			openFile.close();
+		}
+		
+		
+		openFile = jgitHelper.openFile(commit, "build/generator/__init__.py");
+
+		try {
+			// skip until we are at the offset
+			openFile.skip(0);
+
+			byte[] arr = new byte[4096];
+			int read = openFile.read(arr, 0, 4096);
+			System.out.println("Had: " + read);
+		} finally {
+			openFile.close();
+		}
+
+		
+		jgitHelper.close();
+	}
+
 	@Test
 	public void testWithTestdata() throws IOException {
 		String commit = helper.getBranchHeadCommit("master");
