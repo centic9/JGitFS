@@ -30,7 +30,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 /**
- * Implementation of the {@link FuseFilesystem} interfaces to 
+ * Implementation of the {@link FuseFilesystem} interfaces to
  * provide a view of branches/tags/commits of the given
  * Git repository.
  *
@@ -57,7 +57,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 //		DIRS.add("/.Trash");
 //		DIRS.add("/.Trash-1000");
 	}
-	
+
 	/**
 	 * Construct the filesystem and create internal helpers.
 	 *
@@ -217,7 +217,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 	 * A cache for symlinks from branches/tags to commits, this is useful as queries for symlinks
 	 * are done very often as each access to a file on a branch also requires the symlink to the
 	 * actual commit to be resolved. This cache greatly improves the speed of these accesses.
-	 * 
+	 *
 	 * This makes use of the Google Guava LoadingCache features to automatically populate
 	 * entries when they are missing which makes the usage of the cache very simple.
 	 */
@@ -260,12 +260,16 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 			lastLinkCacheCleanup = System.currentTimeMillis();
 			linkCache.cleanUp();
 		}
-		
+
 		// use the cache to speed up access, symlinks are always queried even for sub-path access, so we get lots of requests for these!
 		byte[] cachedCommit;
 		try {
 			cachedCommit = linkCache.get(path);
 			if(cachedCommit != null) {
+				// size checks are done by the buffer itself!
+				if(buffer.remaining() != size) {
+					throw new IllegalArgumentException("Had different size and buffer-size in readlink: size: " + size + ", buffer-size: " + buffer.remaining());
+				}
 				buffer.put(cachedCommit);
 				buffer.put((byte)0);
 

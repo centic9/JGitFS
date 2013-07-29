@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.dstadler.jgitfs.util.JGitHelperTest;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 
@@ -29,7 +31,7 @@ public class JGitFilesystemTest {
 	private static final String DEFAULT_COMMIT_PATH = "/commit/" + DEFAULT_COMMIT_SUB + "/" + DEFAULT_COMMIT_PREFIX;
 
 	private JGitFilesystem fs;
-	
+
 	@Before
 	public void setUp() throws IOException {
 		fs = new JGitFilesystem(".", false);
@@ -52,7 +54,7 @@ public class JGitFilesystemTest {
 		assertNotNull(getStatsWrapper());
 
 		File mountPoint = mount();
-		
+
 		unmount(mountPoint);
 	}
 
@@ -124,32 +126,15 @@ public class JGitFilesystemTest {
 			assertTrue(e.toString(), e.toString().contains("/somepath"));
 		}
 	}
-	
-	final List<String> filledFiles = new ArrayList<String>();
-	DirectoryFiller filler = new DirectoryFiller() {
-		
-		@Override
-		public boolean add(String... files) {
-			for(String file : files) {
-				filledFiles.add(file);
-			}
-			return true;
-		}
-		
-		@Override
-		public boolean add(Iterable<String> files) {
-			for(String file : files) {
-				filledFiles.add(file);
-			}
-			return true;
-		}
-	};
-	
+
 	@Test
 	public void testReadDir() {
+		final List<String> filledFiles = new ArrayList<String>();
+		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
+
 		fs.readdir("/", filler);
 		assertEquals("[/commit, /branch, /tag]", filledFiles.toString());
-		
+
 		filledFiles.clear();
 		fs.readdir("/tag", filler);
 		assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("testtag"));
@@ -174,9 +159,12 @@ public class JGitFilesystemTest {
 		fs.readdir(DEFAULT_COMMIT_PATH + "/src", filler);
 		assertEquals("Had: " + filledFiles.toString(), "[main, test]", filledFiles.toString());
 	}
-	
+
 	@Test
 	public void testReadDirPathFails() {
+		final List<String> filledFiles = new ArrayList<String>();
+		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
+
 		String path = DEFAULT_COMMIT_PATH + "/notexisting";
 		try {
 			filledFiles.clear();
@@ -187,15 +175,21 @@ public class JGitFilesystemTest {
 			assertTrue(e.toString(), e.toString().contains(path));
 		}
 	}
-	
+
 	@Test
 	public void testReadDirTag() {
+		final List<String> filledFiles = new ArrayList<String>();
+		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
+
 		fs.readdir("/tag", filler);
 		assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("testtag"));
 	}
 
 	@Test
 	public void testReadDirTagFails() throws IOException {
+		final List<String> filledFiles = new ArrayList<String>();
+		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
+
 		fs.close();
 		fs.close();
 
@@ -206,6 +200,9 @@ public class JGitFilesystemTest {
 
 	@Test
 	public void testReadDirBranch() {
+		final List<String> filledFiles = new ArrayList<String>();
+		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
+
 		fs.readdir("/branch", filler);
 		assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("master"));
 	}
@@ -225,18 +222,41 @@ public class JGitFilesystemTest {
 	public void testReadLinkTag() {
 		ByteBuffer buffer = ByteBuffer.allocate(100);
 		assertEquals(0, fs.readlink("/tag/testtag", buffer, 100));
-		
+
 		String target = new String(buffer.array());
 		assertTrue("Had: " + target, target.startsWith("../commit"));
 	}
-	
+
 	@Test
 	public void testReadLinkBranch() {
 		ByteBuffer buffer = ByteBuffer.allocate(100);
 		assertEquals(0, fs.readlink("/branch/master", buffer, 100));
-		
+
 		String target = new String(buffer.array());
 		assertTrue("Had: " + target, target.startsWith("../commit"));
+	}
+
+	@Test
+	public void testReadLinkExceedSize() {
+		ByteBuffer buffer = ByteBuffer.allocate(21);
+		try {
+			fs.readlink("/tag/testtag", buffer, 21);
+			fail("Should catch exception here");
+		} catch (BufferOverflowException e) {
+			// expected...
+		}
+	}
+
+	@Test
+	public void testReadLinkDifferentSize() {
+		ByteBuffer buffer = ByteBuffer.allocate(21);
+		try {
+			fs.readlink("/tag/testtag", buffer, 30);
+			fail("Should catch exception here");
+		} catch (IllegalArgumentException e) {
+			assertTrue(e.toString(), e.toString().contains(" 30"));
+			assertTrue(e.toString(), e.toString().contains(" 21"));
+		}
 	}
 
 	@Test
@@ -260,11 +280,11 @@ public class JGitFilesystemTest {
 			assertTrue(e.toString(), e.toString().contains("/somepath"));
 		}
 	}
-	
+
 	private File mount() throws IOException, UnsatisfiedLinkError, FuseException {
 		File mountPoint = File.createTempFile("git-fs-mount", ".test");
 		assertTrue(mountPoint.delete());
-		
+
 		FuseUtils.prepareMountpoint(mountPoint);
 
 		fs.mount(mountPoint, false);
@@ -294,5 +314,114 @@ public class JGitFilesystemTest {
 			return null;
 		}
 		return wrapper;
+	}
+
+	private static final int NUMBER_OF_THREADS = 7;
+	private static final int NUMBER_OF_TESTS = 500;
+
+	@Test
+	@Ignore("takes too long currently, need to revisit later")
+    public void testMultipleThreads() throws Throwable {
+        ThreadTestHelper helper =
+            new ThreadTestHelper(NUMBER_OF_THREADS, NUMBER_OF_TESTS);
+
+        helper.executeTest(new ThreadTestHelper.TestRunnable() {
+            @Override
+            public void doEnd(int threadnum) throws Exception {
+                // do stuff at the end ...
+            }
+
+            @Override
+            public void run(int threadnum, int iter) throws Exception {
+            	switch (threadnum) {
+					case 0:
+						testGetAttr();
+						break;
+					case 1:
+						testRead();
+						break;
+					case 2:
+						testReadDir();
+						break;
+					case 3:
+						testReadLinkBranch();
+						break;
+					case 4:
+						testReadLinkBranch();
+						break;
+					case 5:
+						testReadLinkTag();
+						break;
+					case 6:
+						testWalkRecursively();
+						break;
+					default:
+						throw new IllegalStateException("No work for thread " + threadnum);
+				}
+            }
+
+        });
+    }
+
+	@Test
+	public void testWalkRecursively() {
+		StatWrapper stat = getStatsWrapper();
+		assertEquals(0, fs.getattr("/", stat));
+
+		final List<String> filledFiles = new ArrayList<String>();
+		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
+
+		fs.readdir("/", filler);
+		assertEquals("[/commit, /branch, /tag]", filledFiles.toString());
+
+		for(String file : new ArrayList<String>(filledFiles)) {
+			fs.getattr(file, stat);
+			fs.readdir(file, filler);
+		}
+
+		filledFiles.clear();
+		fs.readdir("/commit", filler);
+		for(String file : new ArrayList<String>(filledFiles)) {
+			fs.getattr("/commit/" + file, stat);
+			filledFiles.clear();
+			fs.readdir("/commit/" + file, filler);
+			for(String subfile : new ArrayList<String>(filledFiles)) {
+				fs.getattr("/commit/" + file + "/" + subfile, stat);
+				filledFiles.clear();
+				fs.readdir("/commit/" + file + "/" + subfile, filler);
+			}
+		}
+
+		filledFiles.clear();
+		fs.readdir("/branch", filler);
+		for(String file : new ArrayList<String>(filledFiles)) {
+			fs.getattr("/branch/" + file, stat);
+			assertEquals(NodeType.SYMBOLIC_LINK, stat.type());
+			//fs.readlink("/branch/" + file, ByteBuffer.allocate(capacity), size)
+		}
+	}
+
+	private final class DirectoryFillerImplementation implements DirectoryFiller {
+		private final List<String> filledFiles;
+
+		private DirectoryFillerImplementation(List<String> filledFiles) {
+			this.filledFiles = filledFiles;
+		}
+
+		@Override
+		public boolean add(String... files) {
+			for(String file : files) {
+				filledFiles.add(file);
+			}
+			return true;
+		}
+
+		@Override
+		public boolean add(Iterable<String> files) {
+			for(String file : files) {
+				filledFiles.add(file);
+			}
+			return true;
+		}
 	}
 }
