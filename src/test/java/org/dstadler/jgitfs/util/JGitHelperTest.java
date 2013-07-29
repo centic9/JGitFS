@@ -3,7 +3,9 @@ package org.dstadler.jgitfs.util;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
@@ -134,7 +136,7 @@ public class JGitHelperTest {
 		try {
 			helper.readType(DEFAULT_COMMIT, "notexisting", wrapper);
 			fail("Should catch exception here");
-		} catch (IllegalStateException e) {
+		} catch (FileNotFoundException e) {
 			assertTrue(e.getMessage().contains("notexisting"));
 		}
 	}
@@ -187,14 +189,14 @@ public class JGitHelperTest {
 		try {
 			IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "src/org"));
 			fail("Should catch exception here");
-		} catch (IllegalStateException e) {
+		} catch (FileNotFoundException e) {
 			assertTrue(e.getMessage().contains("src/org"));
 		}
 
 		try {
 			IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "notexisting"));
 			fail("Should catch exception here");
-		} catch (IllegalStateException e) {
+		} catch (FileNotFoundException e) {
 			assertTrue(e.getMessage().contains("notexisting"));
 		}
 	}
@@ -216,7 +218,7 @@ public class JGitHelperTest {
 		try {
 			helper.readElementsAt(DEFAULT_COMMIT, "run.sh");
 			fail("Should catch exception here");
-		} catch (IllegalStateException e) {
+		} catch (FileNotFoundException e) {
 			assertTrue(e.getMessage().contains("run.sh"));
 		}
 
@@ -230,7 +232,7 @@ public class JGitHelperTest {
 		try {
 			helper.readElementsAt(DEFAULT_COMMIT, "notexisting");
 			fail("Should catch exception here");
-		} catch (IllegalStateException e) {
+		} catch (FileNotFoundException e) {
 			assertTrue(e.getMessage().contains("notexisting"));
 		}
 	}
@@ -357,5 +359,63 @@ public class JGitHelperTest {
 			System.out.print("." + size);
 		}
 		System.out.println("avg.time old: " + (System.currentTimeMillis() - start)/10);
+	}
+	
+	@Test
+	public void testWithTestdata() throws IOException {
+		String commit = helper.getBranchHeadCommit("master");
+		
+		// check that the test-data is there
+		List<String> elements = helper.readElementsAt(commit, "src/test/data");
+		assertEquals("Had: " + elements, 4, elements.size());
+		assertTrue(elements.contains("emptytestfile"));
+		assertTrue(elements.contains("one"));
+		assertTrue(elements.contains("symlink"));
+		assertTrue(elements.contains("rellink"));
+		
+		// check type of files
+		final StatWrapper wrapper = getStatsWrapper();
+		helper.readType(commit, "src/test/data", wrapper);
+		assertEquals(NodeType.DIRECTORY, wrapper.type());
+		helper.readType(commit, "src/test/data/emptytestfile", wrapper);
+		assertEquals(NodeType.FILE, wrapper.type());
+		helper.readType(commit, "src/test/data/one", wrapper);
+		assertEquals(NodeType.FILE, wrapper.type());		
+		helper.readType(commit, "src/test/data/symlink", wrapper);
+		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());		
+		helper.readType(commit, "src/test/data/rellink", wrapper);
+		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());		
+		
+		// check that the empty file is actually empty
+		InputStream stream = helper.openFile(commit, "src/test/data/emptytestfile");
+		try {
+			assertEquals("", IOUtils.toString(stream));
+		} finally {
+			stream.close();
+		}
+		
+		// check that the file has the correct content
+		stream = helper.openFile(commit, "src/test/data/one");
+		try {
+			assertEquals("1", IOUtils.toString(stream).trim());
+		} finally {
+			stream.close();
+		}
+		
+		// check that we can read the symlink
+		stream = helper.openFile(commit, "src/test/data/symlink");
+		try {
+			assertEquals("Should be 'one' as it contains the filename of the file pointed to!", 
+					"one", IOUtils.toString(stream).trim());
+		} finally {
+			stream.close();
+		}
+		stream = helper.openFile(commit, "src/test/data/rellink");
+		try {
+			assertEquals("Should be '../../../build.gradle' as it contains the filename of the file pointed to!", 
+					"../../../build.gradle", IOUtils.toString(stream).trim());
+		} finally {
+			stream.close();
+		}
 	}
 }

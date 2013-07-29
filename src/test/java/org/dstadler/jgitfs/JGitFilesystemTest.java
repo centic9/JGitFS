@@ -82,13 +82,7 @@ public class JGitFilesystemTest {
 
 		// invalid file-name causes IllegalStateException
 		String path = DEFAULT_COMMIT_PATH + "/notexist.txt";
-		try {
-			fs.getattr(path, stat);
-			fail("Should throw exception as this should not occur");
-		} catch (IllegalStateException e) {
-			assertTrue(e.toString(), e.toString().contains("Error reading type"));
-			assertTrue(e.toString(), e.toString().contains(path));
-		}
+		assertEquals(-ErrorCodes.ENOENT(), fs.getattr(path, stat));
 		// invalid top-level-dir causes ENOENT
 		assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/notexistingmain", stat));
 	}
@@ -224,7 +218,7 @@ public class JGitFilesystemTest {
 		int readlink = fs.readlink("/tag/testtag", buffer, 100);
 		assertEquals("Had: " + readlink + ": " + new String(buffer.array()), 0, readlink);
 
-		String target = new String(buffer.array());
+		String target = new String(buffer.array(), 0, buffer.position()-1);
 		assertTrue("Had: " + target, target.startsWith("../commit"));
 	}
 
@@ -234,7 +228,7 @@ public class JGitFilesystemTest {
 		int readlink = fs.readlink("/branch/master", buffer, 100);
 		assertEquals("Had: " + readlink + ": " + new String(buffer.array()), 0, readlink);
 
-		String target = new String(buffer.array());
+		String target = new String(buffer.array(), 0, buffer.position()-1);
 		assertTrue("Had: " + target, target.startsWith("../commit"));
 	}
 
@@ -372,34 +366,90 @@ public class JGitFilesystemTest {
 		final List<String> filledFiles = new ArrayList<String>();
 		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
-		fs.readdir("/", filler);
+		assertEquals(0, fs.readdir("/", filler));
 		assertEquals("[/commit, /branch, /tag]", filledFiles.toString());
 
 		for(String file : new ArrayList<String>(filledFiles)) {
-			fs.getattr(file, stat);
-			fs.readdir(file, filler);
+			assertEquals(0, fs.getattr(file, stat));
+			assertEquals(0, fs.readdir(file, filler));
 		}
 
 		filledFiles.clear();
-		fs.readdir("/commit", filler);
+		assertEquals(0, fs.readdir("/commit", filler));
 		for(String file : new ArrayList<String>(filledFiles)) {
-			fs.getattr("/commit/" + file, stat);
+			assertEquals(0, fs.getattr("/commit/" + file, stat));
 			filledFiles.clear();
-			fs.readdir("/commit/" + file, filler);
+			assertEquals(0, fs.readdir("/commit/" + file, filler));
 			for(String subfile : new ArrayList<String>(filledFiles)) {
-				fs.getattr("/commit/" + file + "/" + subfile, stat);
+				assertEquals(0, fs.getattr("/commit/" + file + "/" + subfile, stat));
 				filledFiles.clear();
-				fs.readdir("/commit/" + file + "/" + subfile, filler);
+				assertEquals(0, fs.readdir("/commit/" + file + "/" + subfile, filler));
 			}
 		}
 
 		filledFiles.clear();
-		fs.readdir("/branch", filler);
+		assertEquals(0, fs.readdir("/branch", filler));
 		for(String file : new ArrayList<String>(filledFiles)) {
-			fs.getattr("/branch/" + file, stat);
+			assertEquals(0, fs.getattr("/branch/" + file, stat));
 			assertEquals(NodeType.SYMBOLIC_LINK, stat.type());
 			//fs.readlink("/branch/" + file, ByteBuffer.allocate(capacity), size)
 		}
+	}
+
+	@Test
+	public void testWithTestData() {
+		ByteBuffer buffer = ByteBuffer.allocate(1000);
+		assertEquals(0, fs.readlink("/branch/master", buffer, 1000));
+		assertEquals("A commit-ish link should be written to the buffer, but had: " + new String(buffer.array(), 0, buffer.position()-1), 
+				1000-52, buffer.remaining());
+		// e.g. ../commit/43/27273e69afcd040ba1b4d3766ea1f43e0024f3
+		String commit = new String(buffer.array(), 0, buffer.position()-1).substring(2);
+		
+		// check that the test-data is there
+		final List<String> filledFiles = new ArrayList<String>();
+		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
+		assertEquals(0, fs.readdir(commit + "/src/test/data", filler));
+		assertEquals("Had: " + filledFiles, 4, filledFiles.size());
+		assertTrue(filledFiles.contains("emptytestfile"));
+		assertTrue(filledFiles.contains("one"));
+		assertTrue(filledFiles.contains("symlink"));
+		assertTrue(filledFiles.contains("rellink"));
+		
+		
+		// check type of files
+		final StatWrapper wrapper = getStatsWrapper();
+		assertEquals(0, fs.getattr(commit + "/src/test/data", wrapper));
+		assertEquals(NodeType.DIRECTORY, wrapper.type());
+		assertEquals(0, fs.getattr(commit + "/src/test/data/emptytestfile", wrapper));
+		assertEquals(NodeType.FILE, wrapper.type());
+		assertEquals(0, fs.getattr(commit + "/src/test/data/one", wrapper));
+		assertEquals(NodeType.FILE, wrapper.type());		
+		assertEquals(0, fs.getattr(commit + "/src/test/data/symlink", wrapper));
+		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());		
+		assertEquals(0, fs.getattr(commit + "/src/test/data/rellink", wrapper));
+		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());		
+		
+		// check that the empty file is actually empty
+		buffer = ByteBuffer.allocate(1000);
+		assertEquals(0, fs.read(commit + "/src/test/data/emptytestfile", buffer, 1000, 0, null));
+		assertEquals("No data should be written to the buffer", 1000, buffer.remaining());
+		
+		// check that the file has the correct content
+		buffer = ByteBuffer.allocate(1000);
+		assertEquals(2, fs.read(commit + "/src/test/data/one", buffer, 1000, 0, null));
+		assertEquals("Only two bytes should be written to the buffer", 998, buffer.remaining());
+		assertEquals("1", new String(buffer.array(), 0, 1));
+		
+		// check that we can read the symlink
+		buffer = ByteBuffer.allocate(1000);
+		assertEquals(3, fs.read(commit + "/src/test/data/symlink", buffer, 1000, 0, null));
+		assertEquals("Three bytes should be written to the buffer", 997, buffer.remaining());
+		assertEquals("one", new String(buffer.array(), 0, buffer.position()));
+		
+		buffer = ByteBuffer.allocate(1000);
+		assertEquals(21, fs.read(commit + "/src/test/data/rellink", buffer, 1000, 0, null));
+		assertEquals("Only two bytes should be written to the buffer", 979, buffer.remaining());
+		assertEquals("../../../build.gradle", new String(buffer.array(), 0, buffer.position()));
 	}
 
 	private final class DirectoryFillerImplementation implements DirectoryFiller {

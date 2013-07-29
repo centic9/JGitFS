@@ -2,6 +2,7 @@ package org.dstadler.jgitfs.util;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -174,7 +175,7 @@ public class JGitHelper implements Closeable {
 		TreeWalk treeWalk = TreeWalk.forPath(repository, path, tree);
 
 		if(treeWalk == null) {
-			throw new IllegalStateException("Did not find expected file '" + path + "' in tree '" + tree.getName() + "'");
+			throw new FileNotFoundException("Did not find expected file '" + path + "' in tree '" + tree.getName() + "'");
 		}
 
 		return treeWalk;

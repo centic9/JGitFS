@@ -1,6 +1,7 @@
 package org.dstadler.jgitfs;
 
 import java.io.Closeable;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -88,6 +89,8 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 
 			try {
 				jgitHelper.readType(commit, file, stat);
+			} catch (FileNotFoundException e) {
+				return -ErrorCodes.ENOENT();
 			} catch (Exception e) {
 				throw new IllegalStateException("Error reading type of path " + path + ", found commit " + commit + " and file " + file, e);
 			}
@@ -118,7 +121,12 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 
 				byte[] arr = new byte[(int)size];
 				int read = openFile.read(arr, 0, (int)size);
-				buffer.put(arr);
+				// -1 indicates EOF => nothing to put into the buffer
+				if(read == -1) {
+					return 0;
+				}
+				
+				buffer.put(arr, 0, read);
 
 				return read;
 			} finally {
