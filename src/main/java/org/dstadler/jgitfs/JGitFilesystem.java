@@ -266,13 +266,12 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		try {
 			cachedCommit = linkCache.get(path);
 			if(cachedCommit != null) {
-				// size checks are done by the buffer itself!
-				if(buffer.remaining() != size) {
-					throw new IllegalArgumentException("Had different size and buffer-size in readlink: size: " + size + ", buffer-size: " + buffer.remaining());
-				}
+				// buffer overflow checks are done by the calls to put() itself per javadoc,
+				// currently we will throw an exception to the outside, experiment showed that we support 4097 bytes of path-length on 64-bit Ubuntu this way
 				buffer.put(cachedCommit);
 				buffer.put((byte)0);
 
+				// returning the size as per readlink(2) spec causes fuse errors: return cachedCommit.length;
 				return 0;
 			}
 		} catch (UncheckedExecutionException e) {

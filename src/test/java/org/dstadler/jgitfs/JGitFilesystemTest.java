@@ -110,8 +110,8 @@ public class JGitFilesystemTest {
 			fs.read(DEFAULT_COMMIT_PATH + "/README.md", ByteBuffer.allocate(100000), Integer.MAX_VALUE, 0, null);
 			fail("Should throw exception as this should not occur");
 		} catch (OutOfMemoryError e) {
-			assertTrue(e.toString(), 
-					e.toString().contains("exceeds VM limit") || 
+			assertTrue(e.toString(),
+					e.toString().contains("exceeds VM limit") ||
 					e.toString().contains("Java heap space"));
 		}
 	}
@@ -221,7 +221,8 @@ public class JGitFilesystemTest {
 	@Test
 	public void testReadLinkTag() {
 		ByteBuffer buffer = ByteBuffer.allocate(100);
-		assertEquals(0, fs.readlink("/tag/testtag", buffer, 100));
+		int readlink = fs.readlink("/tag/testtag", buffer, 100);
+		assertEquals("Had: " + readlink + ": " + new String(buffer.array()), 0, readlink);
 
 		String target = new String(buffer.array());
 		assertTrue("Had: " + target, target.startsWith("../commit"));
@@ -230,7 +231,8 @@ public class JGitFilesystemTest {
 	@Test
 	public void testReadLinkBranch() {
 		ByteBuffer buffer = ByteBuffer.allocate(100);
-		assertEquals(0, fs.readlink("/branch/master", buffer, 100));
+		int readlink = fs.readlink("/branch/master", buffer, 100);
+		assertEquals("Had: " + readlink + ": " + new String(buffer.array()), 0, readlink);
 
 		String target = new String(buffer.array());
 		assertTrue("Had: " + target, target.startsWith("../commit"));
@@ -253,9 +255,8 @@ public class JGitFilesystemTest {
 		try {
 			fs.readlink("/tag/testtag", buffer, 30);
 			fail("Should catch exception here");
-		} catch (IllegalArgumentException e) {
-			assertTrue(e.toString(), e.toString().contains(" 30"));
-			assertTrue(e.toString(), e.toString().contains(" 21"));
+		} catch (BufferOverflowException e) {
+			// expected...
 		}
 	}
 
