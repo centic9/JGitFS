@@ -62,7 +62,6 @@ Finally after some performance tuning sessions and adding some caching at the ri
 
 #### Todos
 
-* On some repositories I see strange exceptions after a while when reading many different commits/branches, however access still seems to be fine! Getting access to branches/commits which do not even exist! It seems some memory overwriting is taking place, either missing synchronization or some hidden bug in fuse-jna, need to investigate more to find out
 * Only commits reachable via refs or tags are listed currently as I could not yet get JGit to return me a list of all commits, so commits which still exist, but are unreferenced currently are not visible
 * Remote branches are not included yet, but should be fairly easy to add
 * Stashes are not listed yet
