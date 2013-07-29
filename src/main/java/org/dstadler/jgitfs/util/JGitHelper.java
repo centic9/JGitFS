@@ -16,6 +16,7 @@ import java.util.Set;
 import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode.NodeType;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -100,8 +101,9 @@ public class JGitHelper implements Closeable {
 	 * @param path The path to the file/directory
 	 * @param stat The StatWrapper instance to populate
 	 *
-	 * @throws IllegalStateException If the path or the commit cannot be found or an unknown type of file is encountered
+	 * @throws IllegalStateException If the path or the commit cannot be found or an unknown type is encountered
 	 * @throws IOException If access to the Git repository fails
+	 * @throws FileNotFoundException If the given path cannot be found as part of the given commit-id
 	 */
 	public void readType(String commit, String path, StatWrapper stat) throws IOException {
 		RevCommit revCommit = buildRevCommit(commit);
@@ -140,6 +142,38 @@ public class JGitHelper implements Closeable {
 	}
 
 	/**
+	 * Read the target file for the given symlink as part of the given commit.
+	 *
+	 * @param commit the commit-id as-of which we read the symlink
+	 * @param path the path to the symlink
+	 * @return the target of the symlink, relative to the directory of the symlink itself
+	 * @throws IOException If an error occurs while reading from the Git repository
+	 * @throws FileNotFoundException If the given path cannot be found in the given commit-id
+	 * @throws IllegalArgumentException If the given path does not denote a symlink
+	 */
+	public String readSymlink(String commit, String path) throws IOException {
+		RevCommit revCommit = buildRevCommit(commit);
+
+		// and using commit's tree find the path
+		RevTree tree = revCommit.getTree();
+
+		// now read the file/directory attributes
+		TreeWalk treeWalk = buildTreeWalk(tree, path);
+		FileMode fileMode = treeWalk.getFileMode(0);
+		if(!fileMode.equals(FileMode.SYMLINK)) {
+			throw new IllegalArgumentException("Had request for symlink-target which is not a symlink, commit '" + commit + "' and path '" + path + "': " + fileMode.getBits());
+		}
+		
+		// try to read the file-data as it contains the symlink target
+		InputStream openFile = openFile(commit, path);
+		try {
+			return IOUtils.toString(openFile);
+		} finally {
+			openFile.close();
+		}
+	}
+	
+	/**
 	 * Retrieve the contents of the given file as-of the given commit.
 	 *
 	 * @param commit The commit-id as-of which we read the data
@@ -148,7 +182,8 @@ public class JGitHelper implements Closeable {
 	 * @return An InputStream which can be used to read the contents of the file.
 	 *
 	 * @throws IllegalStateException If the path or the commit cannot be found or does not denote a file
-	 * @throws IOException If access to the Git repository fails.
+	 * @throws IOException If access to the Git repository fails
+	 * @throws FileNotFoundException If the given path cannotbe found in the given commit-id
 	 */
 	public InputStream openFile(String commit, String path) throws IOException {
 		RevCommit revCommit = buildRevCommit(commit);
@@ -322,7 +357,7 @@ public class JGitHelper implements Closeable {
 		return commitSubs;
 	}
 
-	private void addCommitSubs(Collection<String> commits, RevWalk walk, String ref) throws IOException, MissingObjectException, IncorrectObjectTypeException {
+	private void addCommitSubs(Collection<String> commits, RevWalk walk, String ref) throws IOException {
 		Ref head = repository.getRef(ref);
 		final RevCommit commit;
 		try {
@@ -413,6 +448,11 @@ public class JGitHelper implements Closeable {
 		}
 	}
 
+	/**
+	 * Free resources held in thie instance, i.e. by releasing the Git repository resources held internally.
+	 * 
+	 * The instance is not useable after this call any more.
+	 */
 	@Override
 	public void close() throws IOException {
 		repository.close();
@@ -428,6 +468,7 @@ public class JGitHelper implements Closeable {
 	 *
 	 * @throws IllegalStateException If the path or the commit cannot be found or does not denote a directory
 	 * @throws IOException If access to the Git repository fails
+	 * @throws FileNotFoundException If the given path cannot be found as part of the commit-id
 	 */
 	public List<String> readElementsAt(String commit, String path) throws IOException {
 		RevCommit revCommit = buildRevCommit(commit);

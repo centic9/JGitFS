@@ -448,8 +448,19 @@ public class JGitFilesystemTest {
 		
 		buffer = ByteBuffer.allocate(1000);
 		assertEquals(21, fs.read(commit + "/src/test/data/rellink", buffer, 1000, 0, null));
-		assertEquals("Only two bytes should be written to the buffer", 979, buffer.remaining());
+		assertEquals("21 bytes should be written to the buffer", 979, buffer.remaining());
 		assertEquals("../../../build.gradle", new String(buffer.array(), 0, buffer.position()));
+		
+		// reading the link-target of symlinks should return the correct link
+		buffer = ByteBuffer.allocate(1000);
+		assertEquals(0, fs.readlink(commit + "/src/test/data/symlink", buffer, 1000));
+		assertEquals("Four bytes should be written to the buffer (including zero termination)", 996, buffer.remaining());
+		assertEquals("one", new String(buffer.array(), 0, buffer.position()-1));
+
+		buffer = ByteBuffer.allocate(1000);
+		assertEquals(0, fs.readlink(commit + "/src/test/data/rellink", buffer, 1000));
+		assertEquals("22 bytes should be written to the buffer (including zero termination)", 978, buffer.remaining());
+		assertEquals("../../../build.gradle", new String(buffer.array(), 0, buffer.position()-1));
 	}
 
 	private final class DirectoryFillerImplementation implements DirectoryFiller {

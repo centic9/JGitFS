@@ -417,5 +417,22 @@ public class JGitHelperTest {
 		} finally {
 			stream.close();
 		}
+		
+		// read the symlinks
+		assertEquals("one", helper.readSymlink(commit, "src/test/data/symlink"));
+		assertEquals("../../../build.gradle", helper.readSymlink(commit, "src/test/data/rellink"));
+		try {
+			helper.readSymlink(commit, "src/test/data/one");
+			fail("Should not be able to read symlink for normal file");
+		} catch (IllegalArgumentException e) {
+			assertTrue(e.getMessage().contains("src/test/data/one"));
+		}
+		try {
+			helper.readSymlink(commit, "src/test/data");
+			fail("Should not be able to read symlink for directory");
+		} catch (IllegalArgumentException e) {
+			assertTrue(e.getMessage().contains("src/test/data"));
+		}
+		
 	}
 }

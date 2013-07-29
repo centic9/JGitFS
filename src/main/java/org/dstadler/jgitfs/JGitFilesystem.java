@@ -244,7 +244,10 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		        			} else if (GitUtils.isTagDir(path)) {
 		        				commit = jgitHelper.getTagHeadCommit(StringUtils.removeStart(path, GitUtils.TAG_SLASH));
 		        			} else {
-		        				throw new IllegalStateException("Had unknown path " + path + " in readlink()");
+		        				String lcommit = jgitHelper.readCommit(path);
+		        				String dir = jgitHelper.readPath(path);
+
+		        				return jgitHelper.readSymlink(lcommit, dir).getBytes();
 		        			}
 
 		        			if(commit == null) {
@@ -253,6 +256,8 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		        			target.append(commit.substring(0, 2)).append("/").append(commit.substring(2));
 
 		        			return target.toString().getBytes();
+		        		} catch (IllegalStateException e) {
+		        			throw e;
 		        		} catch (Exception e) {
 		        			throw new IllegalStateException("Error reading commit of tag/branch-path " + path, e);
 		        		}
