@@ -30,6 +30,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 
+
 public class JGitHelperTest {
 	public final static String DEFAULT_COMMIT = "ede9797616a805d6cbeca376bfbbac9a8b7eb64f";
 
@@ -316,21 +317,21 @@ public class JGitHelperTest {
 		//helper = new JGitHelper("G:\\workspaces\\linux\\.git");
 		//helper = new JGitHelper("/opt/poi/.git");
 
-		System.out.println("warmup old");
+		System.out.println("warmup");
 		for(int i = 0;i < 3;i++) {
 			int size = helper.allCommitSubs().size();
 			assertTrue("Had size: " + size, size > 3);
 			System.out.print("." + size);
 		}
 
-		System.out.println("run old");
+		System.out.println("run");
 		long start = System.currentTimeMillis();
 		for(int i = 0;i < 10;i++) {
 			int size = helper.allCommitSubs().size();
 			assertTrue("Had size: " + size, size > 3);
 			System.out.print("." + size);
 		}
-		System.out.println("avg.time old: " + (System.currentTimeMillis() - start)/10);
+		System.out.println("avg.time: " + (System.currentTimeMillis() - start)/10);
 	}
 
 	@Ignore("local test")
@@ -360,7 +361,7 @@ public class JGitHelperTest {
 		}
 		System.out.println("avg.time old: " + (System.currentTimeMillis() - start)/10);
 	}
-	
+
 	@Ignore("local test")
 	@Test
 	public void testSubversionEmptyFile() throws Exception {
@@ -368,16 +369,16 @@ public class JGitHelperTest {
 		List<String> items = jgitHelper.getBranches();
 		assertNotNull(items);
 		assertTrue(items.contains("ppa_1.7.11"));
-		
+
 		String commit = jgitHelper.getBranchHeadCommit("ppa_1.7.11");
 		assertNotNull(commit);
-		
+
 		items = jgitHelper.readElementsAt(commit, "");
 		assertNotNull(items);
 		assertTrue(items.size() > 0);
-		
-		//subversion/branch/ppa_1.7.11/build/generator/__init__.py 
-		
+
+		//subversion/branch/ppa_1.7.11/build/generator/__init__.py
+
 		items = jgitHelper.readElementsAt(commit, "build");
 		assertNotNull(items);
 		assertTrue(items.size() > 0);
@@ -386,7 +387,7 @@ public class JGitHelperTest {
 		assertNotNull(items);
 		assertTrue(items.size() > 0);
 		assertTrue("Had: " + items, items.contains("__init__.py"));
-		
+
 		InputStream openFile = jgitHelper.openFile(commit, "build/generator/__init__.py");
 		try {
 			String string = IOUtils.toString(openFile);
@@ -394,8 +395,8 @@ public class JGitHelperTest {
 		} finally {
 			openFile.close();
 		}
-		
-		
+
+
 		openFile = jgitHelper.openFile(commit, "build/generator/__init__.py");
 
 		try {
@@ -409,14 +410,14 @@ public class JGitHelperTest {
 			openFile.close();
 		}
 
-		
+
 		jgitHelper.close();
 	}
 
 	@Test
 	public void testWithTestdata() throws IOException {
 		String commit = helper.getBranchHeadCommit("master");
-		
+
 		// check that the test-data is there
 		List<String> elements = helper.readElementsAt(commit, "src/test/data");
 		assertEquals("Had: " + elements, 4, elements.size());
@@ -424,7 +425,7 @@ public class JGitHelperTest {
 		assertTrue(elements.contains("one"));
 		assertTrue(elements.contains("symlink"));
 		assertTrue(elements.contains("rellink"));
-		
+
 		// check type of files
 		final StatWrapper wrapper = getStatsWrapper();
 		helper.readType(commit, "src/test/data", wrapper);
@@ -432,12 +433,12 @@ public class JGitHelperTest {
 		helper.readType(commit, "src/test/data/emptytestfile", wrapper);
 		assertEquals(NodeType.FILE, wrapper.type());
 		helper.readType(commit, "src/test/data/one", wrapper);
-		assertEquals(NodeType.FILE, wrapper.type());		
+		assertEquals(NodeType.FILE, wrapper.type());
 		helper.readType(commit, "src/test/data/symlink", wrapper);
-		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());		
+		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
 		helper.readType(commit, "src/test/data/rellink", wrapper);
-		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());		
-		
+		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
+
 		// check that the empty file is actually empty
 		InputStream stream = helper.openFile(commit, "src/test/data/emptytestfile");
 		try {
@@ -445,7 +446,7 @@ public class JGitHelperTest {
 		} finally {
 			stream.close();
 		}
-		
+
 		// check that the file has the correct content
 		stream = helper.openFile(commit, "src/test/data/one");
 		try {
@@ -453,23 +454,23 @@ public class JGitHelperTest {
 		} finally {
 			stream.close();
 		}
-		
+
 		// check that we can read the symlink
 		stream = helper.openFile(commit, "src/test/data/symlink");
 		try {
-			assertEquals("Should be 'one' as it contains the filename of the file pointed to!", 
+			assertEquals("Should be 'one' as it contains the filename of the file pointed to!",
 					"one", IOUtils.toString(stream).trim());
 		} finally {
 			stream.close();
 		}
 		stream = helper.openFile(commit, "src/test/data/rellink");
 		try {
-			assertEquals("Should be '../../../build.gradle' as it contains the filename of the file pointed to!", 
+			assertEquals("Should be '../../../build.gradle' as it contains the filename of the file pointed to!",
 					"../../../build.gradle", IOUtils.toString(stream).trim());
 		} finally {
 			stream.close();
 		}
-		
+
 		// read the symlinks
 		assertEquals("one", helper.readSymlink(commit, "src/test/data/symlink"));
 		assertEquals("../../../build.gradle", helper.readSymlink(commit, "src/test/data/rellink"));
@@ -485,6 +486,6 @@ public class JGitHelperTest {
 		} catch (IllegalArgumentException e) {
 			assertTrue(e.getMessage().contains("src/test/data"));
 		}
-		
+
 	}
 }

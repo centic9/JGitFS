@@ -349,6 +349,10 @@ public class JGitHelper implements Closeable {
 
 		// we currently use all refs for finding commits quickly
 		RevWalk walk = new RevWalk(repository);
+
+		// optimization: we only need the commit-ids here, so we can discard the contents right away
+		walk.setRetainBody(false);
+
 		Map<String, Ref> allRefs = repository.getAllRefs();
 		for(String ref : allRefs.keySet()) {
 			addCommitSubs(commitSubs, walk, ref);
@@ -395,6 +399,9 @@ public class JGitHelper implements Closeable {
 		ObjectIdSubclassMap<RevCommit> map = new ObjectIdSubclassMap<RevCommit>();
 
 		RevWalk walk = new RevWalk(repository);
+
+		// optimization: we only need the commit-ids here, so we can discard the contents right away
+		walk.setRetainBody(false);
 
 		// TODO: we do not read unreferenced commits here, it would be nice to be able to access these as well here
 		// see http://stackoverflow.com/questions/17178432/how-to-find-all-commits-using-jgit-not-just-referenceable-ones
