@@ -103,7 +103,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 			} catch (FileNotFoundException e) {
 				return -ErrorCodes.ENOENT();
 			} catch (Exception e) {
-				throw new IllegalStateException("Error reading type of path " + path + ", found commit " + commit + " and file " + file, e);
+				throw new IllegalStateException("Error reading type of path " + path + ", commit " + commit + " and file " + file, e);
 			}
 			return 0;
 		} else if (GitUtils.isBranchDir(path) || GitUtils.isTagDir(path)) {
@@ -153,7 +153,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 				openFile.close();
 			}
 		} catch (Exception e) {
-			throw new IllegalStateException("Error reading contents of path " + path + ", found commit " + commit + " and file " + file, e);
+			throw new IllegalStateException("Error reading contents of path " + path + ", commit " + commit + " and file " + file, e);
 		}
 	}
 
@@ -210,7 +210,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 					filler.add(item);
 				}
 			} catch (Exception e) {
-				throw new IllegalStateException("Error reading elements of path " + path + ", found commit " + commit + " and directory " + dir, e);
+				throw new IllegalStateException("Error reading elements of path " + path + ", commit " + commit + " and directory " + dir, e);
 			}
 
 			return 0;
