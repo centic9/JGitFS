@@ -271,6 +271,15 @@ public class JGitFilesystemTest {
 	}
 
 	@Test
+	public void testReadLinkRemoteFails() {
+		ByteBuffer buffer = ByteBuffer.allocate(100);
+		int readlink = fs.readlink("/remote/nonexisting_master", buffer, 100);
+		assertEquals("Had: " + readlink + ": " + new String(buffer.array()), -ErrorCodes.ENOENT(), readlink);
+
+		assertEquals(0, buffer.position());
+	}
+
+	@Test
 	public void testReadLinkExceedSize() {
 		ByteBuffer buffer = ByteBuffer.allocate(21);
 		try {
@@ -294,13 +303,11 @@ public class JGitFilesystemTest {
 
 	@Test
 	public void testReadLinkUnknown() {
-		try {
-			fs.readlink("/branch/notexisting", null, 0);
-			fail("Should throw exception as this should not occur");
-		} catch (IllegalStateException e) {
-			assertTrue(e.toString(), e.toString().contains("Error reading commit"));
-			assertTrue(e.toString(), e.toString().contains("/branch/notexisting"));
-		}
+		ByteBuffer buffer = ByteBuffer.allocate(100);
+		int readlink = fs.readlink("/branch/notexisting", null, 0);
+		assertEquals("Had: " + readlink + ": " + new String(buffer.array()), -ErrorCodes.ENOENT(), readlink);
+
+		assertEquals(0, buffer.position());
 	}
 
 	@Test

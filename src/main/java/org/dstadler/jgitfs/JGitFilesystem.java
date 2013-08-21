@@ -284,13 +284,11 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		        			}
 
 		        			if(commit == null) {
-		        				throw new IllegalStateException("Had unknown tag/branch " + path + " in readlink()");
+		        				throw new FileNotFoundException("Had unknown tag/branch/remote " + path + " in readlink()");
 		        			}
 		        			target.append(commit.substring(0, 2)).append("/").append(commit.substring(2));
 
 		        			return target.toString().getBytes();
-		        		} catch (IllegalStateException e) {
-		        			throw e;
 		        		} catch (Exception e) {
 		        			throw new IllegalStateException("Error reading commit of tag/branch-path " + path, e);
 		        		}
@@ -321,6 +319,9 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 				return 0;
 			}
 		} catch (UncheckedExecutionException e) {
+			if(e.getCause().getCause() instanceof FileNotFoundException) {
+				return -ErrorCodes.ENOENT();
+			}
 			throw new IllegalStateException("Error reading commit of tag/branch-path " + path, e);
 		} catch (ExecutionException e) {
 			throw new IllegalStateException("Error reading commit of tag/branch-path " + path, e);
