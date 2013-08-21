@@ -50,8 +50,9 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 	private static Set<String> DIRS = new HashSet<String>();
 	static {
 		DIRS.add("/");
-		DIRS.add("/commit");
 		DIRS.add("/branch");
+		DIRS.add("/commit");
+		DIRS.add("/remote");
 		DIRS.add("/tag");
 
 		// directories looked for by gnome/Linux/..., do not list them, but rather return ENOENT immediately
@@ -106,7 +107,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 				throw new IllegalStateException("Error reading type of path " + path + ", commit " + commit + " and file " + file, e);
 			}
 			return 0;
-		} else if (GitUtils.isBranchDir(path) || GitUtils.isTagDir(path)) {
+		} else if (GitUtils.isBranchDir(path) || GitUtils.isTagDir(path) || GitUtils.isRemoteDir(path)) {
 			// entries under /branch and /tag are always symbolic links
 			stat.setMode(NodeType.SYMBOLIC_LINK, true, true, true, true, true, true, true, true, true);
 			return 0;
@@ -161,12 +162,12 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 	public int readdir(final String path, final DirectoryFiller filler) {
 		if(path.equals("/")) {
 			// populate top-level directory with all supported sub-directories
-			filler.add("/commit");
 			filler.add("/branch");
+			filler.add("/commit");
+			filler.add("/remote");
 			filler.add("/tag");
 
 			// TODO: implement later
-//			filler.add("/remotes");
 //			filler.add("/stash");
 //			filler.add("/index");
 //			filler.add("/workspace");
@@ -236,8 +237,18 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 			}
 
 			return 0;
-		}
+		} else if (path.equals("/remote")) {
+			try {
+				List<String> items = jgitHelper.getRemotes();
+				for(String item : items) {
+					filler.add(item);
+				}
+			} catch (Exception e) {
+				throw new IllegalStateException("Error reading remotes", e);
+			}
 
+			return 0;
+				 		}
 		throw new IllegalStateException("Error reading directories in path " + path);
 	}
 
@@ -263,6 +274,8 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		        				commit = jgitHelper.getBranchHeadCommit(StringUtils.removeStart(path, GitUtils.BRANCH_SLASH));
 		        			} else if (GitUtils.isTagDir(path)) {
 		        				commit = jgitHelper.getTagHeadCommit(StringUtils.removeStart(path, GitUtils.TAG_SLASH));
+		        			} else if(GitUtils.isRemoteDir(path)) {
+		        				commit = jgitHelper.getRemoteHeadCommit(StringUtils.removeStart(path, GitUtils.REMOTE_SLASH));
 		        			} else {
 		        				String lcommit = jgitHelper.readCommit(path);
 		        				String dir = jgitHelper.readPath(path);

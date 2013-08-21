@@ -19,6 +19,7 @@ import net.fusejna.types.TypeMode.NodeType;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
@@ -225,7 +226,7 @@ public class JGitHelper implements Closeable {
 	/**
 	 * Return all local branches, excluding any remote branches.
 	 *
-	 * To easy implementation, slashes in branch-names are replaced by underscore. Also
+	 * To ease implementation, slashes in branch-names are replaced by underscore. Also
 	 * entries starting with refs/heads/ are listed with their short name as well
 	 *
 	 * @return A list of branch-names
@@ -247,7 +248,7 @@ public class JGitHelper implements Closeable {
 	/**
 	 * Return the commit-id for the given branch.
 	 *
-	 * To easy implementation, slashes in branch-names are replaced by underscore. Also
+	 * To ease implementation, slashes in branch-names are replaced by underscore. Also
 	 * entries starting with refs/heads/ are listed with their short name as well
 	 *
 	 * @param branch The branch to read data for, both the short-name and the name with refs/heads/... is possible
@@ -277,10 +278,66 @@ public class JGitHelper implements Closeable {
 		return branchRefs;
 	}
 
+
+	/**
+	 * Return all remote branches and tags.
+	 *
+	 * To ease implementation, slashes in names are replaced by underscore. Also
+	 * entries starting with refs/remotes/ are listed with their short name as well
+	 *
+	 * @return A list of remote-names
+	 * @throws IOException If accessing the Git repository fails
+	 */
+	public List<String> getRemotes() throws IOException {
+		final List<Ref> remoteRefs = readRemotes();
+		List<String> remotes = new ArrayList<String>();
+		for(Ref ref : remoteRefs) {
+			String name = adjustName(ref.getName());
+			remotes.add(name);
+			if(name.startsWith("refs_remotes_")) {
+				remotes.add(StringUtils.removeStart(name, "refs_remotes_"));
+			}
+		}
+		return remotes;
+	}
+
+	/**
+	 * Return the commit-id for the given remote.
+	 *
+	 * To ease implementation, slashes in names are replaced by underscore. Also
+	 * entries starting with refs/remotes/ are listed with their short name as well
+	 *
+	 * @param remote The remote name to read data for, both the short-name and the name with refs/remotes/... is possible
+	 * @return A commit-id if found or null if not found.
+	 * @throws IOException If accessing the Git repository fails
+	 */
+	public String getRemoteHeadCommit(String remote) throws IOException {
+		final List<Ref> remoteRefs = readRemotes();
+		for(Ref ref : remoteRefs) {
+			String name = adjustName(ref.getName());
+			//System.out.println("Had branch: " + name);
+			if(name.equals(remote) || name.equals("refs_remotes_" + remote)) {
+				return ref.getObjectId().getName();
+			}
+		}
+
+		return null;
+	}
+
+	private List<Ref> readRemotes() throws IOException {
+		final List<Ref> remoteRefs;
+		try {
+			remoteRefs = git.branchList().setListMode(ListMode.REMOTE).call();
+		} catch (GitAPIException e) {
+			throw new IOException("Had error while reading the list of remote branches/tags from the Git repository", e);
+		}
+		return remoteRefs;
+	}
+
 	/**
 	 * Return all tags.
 	 *
-	 * To easy implementation, slashes in branch-names are replaced by underscore. Also
+	 * To ease implementation, slashes in branch-names are replaced by underscore. Also
 	 * entries starting with refs/tags/ are listed with their short name as well
 	 *
 	 * @return A list of branch-names
@@ -302,7 +359,7 @@ public class JGitHelper implements Closeable {
 	/**
 	 * Return the commit-id for the given tag.
 	 *
-	 * To easy implementation, slashes in tag-names are replaced by underscore. Also
+	 * To ease implementation, slashes in tag-names are replaced by underscore. Also
 	 * entries starting with refs/tags/ are listed with their short name as well
 	 *
 	 * @param tag The tag to read data for, both the short-name and the name with refs/tags/... is possible

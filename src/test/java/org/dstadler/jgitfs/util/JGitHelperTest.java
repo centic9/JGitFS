@@ -246,11 +246,26 @@ public class JGitHelperTest {
 	}
 
 	@Test
+	public void testGetRemoteHeadCommit() throws IOException {
+		assertNull(helper.getRemoteHeadCommit("somebranch"));
+		assertNotNull(helper.getRemoteHeadCommit("origin_master"));
+		assertNotNull(helper.getRemoteHeadCommit("refs_remotes_origin_master"));
+	}
+
+	@Test
 	public void testGetBranches() throws IOException {
 		List<String> branches = helper.getBranches();
 		assertTrue(branches.size() > 0);
 		assertTrue("Had: " + branches.toString(), branches.contains("master"));
 		assertTrue("Had: " + branches.toString(), branches.contains("refs_heads_master"));
+	}
+
+	@Test
+	public void testGetRemotes() throws IOException {
+		List<String> remotes = helper.getRemotes();
+		assertTrue(remotes.size() > 0);
+		assertTrue("Had: " + remotes.toString(), remotes.contains("origin_master"));
+		assertTrue("Had: " + remotes.toString(), remotes.contains("refs_remotes_origin_master"));
 	}
 
 	@Test

@@ -69,6 +69,8 @@ public class JGitFilesystemTest {
 		assertEquals(NodeType.DIRECTORY, stat.type());
 		assertEquals(0, fs.getattr("/branch", stat));
 		assertEquals(NodeType.DIRECTORY, stat.type());
+		assertEquals(0, fs.getattr("/remote", stat));
+		assertEquals(NodeType.DIRECTORY, stat.type());
 		assertEquals(0, fs.getattr("/commit/0a", stat));
 		assertEquals(NodeType.DIRECTORY, stat.type());
 		assertEquals(0, fs.getattr(DEFAULT_COMMIT_PATH, stat));
@@ -79,6 +81,8 @@ public class JGitFilesystemTest {
 		assertEquals(NodeType.SYMBOLIC_LINK, stat.type());
 		assertEquals(0, fs.getattr("/tag/testtag", stat));
 		assertEquals(NodeType.SYMBOLIC_LINK, stat.type());
+		assertEquals(0, fs.getattr("/remote/origin_master", stat));
+		assertEquals(NodeType.SYMBOLIC_LINK, stat.type());
 
 		// invalid file-name causes IllegalStateException
 		String path = DEFAULT_COMMIT_PATH + "/notexist.txt";
@@ -88,7 +92,9 @@ public class JGitFilesystemTest {
 		
 		// hidden dirs are not found and not printed to stdout
 		assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/.Trash", stat));
+		assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/tag/123/.hidden", stat));
 		assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/branch/123/.hidden", stat));
+		assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/remote/123/.hidden", stat));
 		assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/master/some/file/direct/.hidden", stat));
 	}
 
@@ -132,7 +138,7 @@ public class JGitFilesystemTest {
 		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
 		fs.readdir("/", filler);
-		assertEquals("[/commit, /branch, /tag]", filledFiles.toString());
+		assertEquals("[/branch, /commit, /remote, /tag]", filledFiles.toString());
 
 		filledFiles.clear();
 		fs.readdir("/tag", filler);
@@ -141,6 +147,12 @@ public class JGitFilesystemTest {
 		filledFiles.clear();
 		fs.readdir("/branch", filler);
 		assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("master"));
+		assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("refs_heads_master"));
+
+		filledFiles.clear();
+		fs.readdir("/remote", filler);
+		assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("origin_master"));
+		assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("refs_remotes_origin_master"));
 
 		filledFiles.clear();
 		fs.readdir("/commit", filler);
@@ -204,6 +216,17 @@ public class JGitFilesystemTest {
 
 		fs.readdir("/branch", filler);
 		assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("master"));
+		assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("refs_heads_master"));
+	}
+
+	@Test
+	public void testReadDirRemote() {
+		final List<String> filledFiles = new ArrayList<String>();
+		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
+
+		fs.readdir("/remote", filler);
+		assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("origin_master"));
+		assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("refs_remotes_origin_master"));
 	}
 
 	@Test
@@ -231,6 +254,16 @@ public class JGitFilesystemTest {
 	public void testReadLinkBranch() {
 		ByteBuffer buffer = ByteBuffer.allocate(100);
 		int readlink = fs.readlink("/branch/master", buffer, 100);
+		assertEquals("Had: " + readlink + ": " + new String(buffer.array()), 0, readlink);
+
+		String target = new String(buffer.array(), 0, buffer.position()-1);
+		assertTrue("Had: " + target, target.startsWith("../commit"));
+	}
+
+	@Test
+	public void testReadLinkRemote() {
+		ByteBuffer buffer = ByteBuffer.allocate(100);
+		int readlink = fs.readlink("/remote/origin_master", buffer, 100);
 		assertEquals("Had: " + readlink + ": " + new String(buffer.array()), 0, readlink);
 
 		String target = new String(buffer.array(), 0, buffer.position()-1);
@@ -372,7 +405,7 @@ public class JGitFilesystemTest {
 		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
 		assertEquals(0, fs.readdir("/", filler));
-		assertEquals("[/commit, /branch, /tag]", filledFiles.toString());
+		assertEquals("[/branch, /commit, /remote, /tag]", filledFiles.toString());
 
 		for(String file : new ArrayList<String>(filledFiles)) {
 			assertEquals(0, fs.getattr(file, stat));
@@ -399,12 +432,87 @@ public class JGitFilesystemTest {
 			assertEquals(NodeType.SYMBOLIC_LINK, stat.type());
 			//fs.readlink("/branch/" + file, ByteBuffer.allocate(capacity), size)
 		}
+
+		filledFiles.clear();
+		assertEquals(0, fs.readdir("/remote", filler));
+		for(String file : new ArrayList<String>(filledFiles)) {
+			assertEquals(0, fs.getattr("/remote/" + file, stat));
+			assertEquals(NodeType.SYMBOLIC_LINK, stat.type());
+			//fs.readlink("/branch/" + file, ByteBuffer.allocate(capacity), size)
+		}
 	}
 
 	@Test
 	public void testWithTestData() {
 		ByteBuffer buffer = ByteBuffer.allocate(1000);
 		assertEquals(0, fs.readlink("/branch/master", buffer, 1000));
+		assertEquals("A commit-ish link should be written to the buffer, but had: " + new String(buffer.array(), 0, buffer.position()-1), 
+				1000-52, buffer.remaining());
+		// e.g. ../commit/43/27273e69afcd040ba1b4d3766ea1f43e0024f3
+		String commit = new String(buffer.array(), 0, buffer.position()-1).substring(2);
+		
+		// check that the test-data is there
+		final List<String> filledFiles = new ArrayList<String>();
+		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
+		assertEquals(0, fs.readdir(commit + "/src/test/data", filler));
+		assertEquals("Had: " + filledFiles, 4, filledFiles.size());
+		assertTrue(filledFiles.contains("emptytestfile"));
+		assertTrue(filledFiles.contains("one"));
+		assertTrue(filledFiles.contains("symlink"));
+		assertTrue(filledFiles.contains("rellink"));
+		
+		
+		// check type of files
+		final StatWrapper wrapper = getStatsWrapper();
+		assertEquals(0, fs.getattr(commit + "/src/test/data", wrapper));
+		assertEquals(NodeType.DIRECTORY, wrapper.type());
+		assertEquals(0, fs.getattr(commit + "/src/test/data/emptytestfile", wrapper));
+		assertEquals(NodeType.FILE, wrapper.type());
+		assertEquals(0, fs.getattr(commit + "/src/test/data/one", wrapper));
+		assertEquals(NodeType.FILE, wrapper.type());		
+		assertEquals(0, fs.getattr(commit + "/src/test/data/symlink", wrapper));
+		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());		
+		assertEquals(0, fs.getattr(commit + "/src/test/data/rellink", wrapper));
+		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());		
+		
+		// check that the empty file is actually empty
+		buffer = ByteBuffer.allocate(1000);
+		assertEquals(0, fs.read(commit + "/src/test/data/emptytestfile", buffer, 1000, 0, null));
+		assertEquals("No data should be written to the buffer", 1000, buffer.remaining());
+		
+		// check that the file has the correct content
+		buffer = ByteBuffer.allocate(1000);
+		assertEquals(2, fs.read(commit + "/src/test/data/one", buffer, 1000, 0, null));
+		assertEquals("Only two bytes should be written to the buffer", 998, buffer.remaining());
+		assertEquals("1", new String(buffer.array(), 0, 1));
+		
+		// check that we can read the symlink
+		buffer = ByteBuffer.allocate(1000);
+		assertEquals(3, fs.read(commit + "/src/test/data/symlink", buffer, 1000, 0, null));
+		assertEquals("Three bytes should be written to the buffer", 997, buffer.remaining());
+		assertEquals("one", new String(buffer.array(), 0, buffer.position()));
+		
+		buffer = ByteBuffer.allocate(1000);
+		assertEquals(21, fs.read(commit + "/src/test/data/rellink", buffer, 1000, 0, null));
+		assertEquals("21 bytes should be written to the buffer", 979, buffer.remaining());
+		assertEquals("../../../build.gradle", new String(buffer.array(), 0, buffer.position()));
+		
+		// reading the link-target of symlinks should return the correct link
+		buffer = ByteBuffer.allocate(1000);
+		assertEquals(0, fs.readlink(commit + "/src/test/data/symlink", buffer, 1000));
+		assertEquals("Four bytes should be written to the buffer (including zero termination)", 996, buffer.remaining());
+		assertEquals("one", new String(buffer.array(), 0, buffer.position()-1));
+
+		buffer = ByteBuffer.allocate(1000);
+		assertEquals(0, fs.readlink(commit + "/src/test/data/rellink", buffer, 1000));
+		assertEquals("22 bytes should be written to the buffer (including zero termination)", 978, buffer.remaining());
+		assertEquals("../../../build.gradle", new String(buffer.array(), 0, buffer.position()-1));
+	}
+
+	@Test
+	public void testWithTestDataRemote() {
+		ByteBuffer buffer = ByteBuffer.allocate(1000);
+		assertEquals(0, fs.readlink("/remote/origin_master", buffer, 1000));
 		assertEquals("A commit-ish link should be written to the buffer, but had: " + new String(buffer.array(), 0, buffer.position()-1), 
 				1000-52, buffer.remaining());
 		// e.g. ../commit/43/27273e69afcd040ba1b4d3766ea1f43e0024f3
