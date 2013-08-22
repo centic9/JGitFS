@@ -61,7 +61,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 	}
 
 	/**
-	 * Don't print out a warning for some directories which are queried by 
+	 * Don't print out a warning for some directories which are queried by
 	 * some apps, e.g. Nautilus on Gnome
 	 */
 	private static Set<String> IGNORED_DIRS = new HashSet<String>();
@@ -146,7 +146,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 				if(read == -1) {
 					return 0;
 				}
-				
+
 				buffer.put(arr, 0, read);
 
 				return read;
@@ -169,8 +169,8 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 
 			// TODO: implement later
 //			filler.add("/stash");
-//			filler.add("/index");
-//			filler.add("/workspace");
+//			filler.add("/index");	- use DirCache?
+//			filler.add("/workspace"); - use WorkingTreeIterator?
 //			filler.add("/git") => symbolic link to the source dir
 
 			return 0;
