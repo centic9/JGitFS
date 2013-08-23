@@ -41,6 +41,7 @@ public class ValidateGitRepository {
 	}
 
 	private static long readRecursive(final StatWrapper wrapper, long count, JGitHelper jgitHelper, String commit, String path) throws IOException {
+		long lCount = count;
 		List<String> items = jgitHelper.readElementsAt(commit, path);
 		//System.out.println("Found " + items.size() + " items in commit " + commit);
 		for(String item : items) {
@@ -60,12 +61,12 @@ public class ValidateGitRepository {
 					throw new IllegalStateException("Had unkonwn type: " + wrapper.type());
 			}
 			System.out.print(".");
-			if(count % 100 == 0) {
-				System.out.println(count);
+			if(lCount % 100 == 0) {
+				System.out.println(lCount);
 			}
-			count++;
+			lCount++;
 		}
-		return count;
+		return lCount;
 	}
 
 	private static StatWrapper getStatsWrapper() {

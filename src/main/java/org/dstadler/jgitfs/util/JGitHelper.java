@@ -54,7 +54,8 @@ public class JGitHelper implements Closeable {
 	 * @throws IllegalStateException If the .git directory is not found
 	 * @throws IOException If opening the Git repository fails
 	 */
-	public JGitHelper(String gitDir) throws IOException {
+	public JGitHelper(String pGitDir) throws IOException {
+		String gitDir = pGitDir;
 		if(!gitDir.endsWith(".git")) {
 			gitDir = gitDir + "/.git";
 		}
