@@ -246,7 +246,7 @@ public class JGitFilesystemTest {
 		int readlink = fs.readlink("/tag/testtag", buffer, 100);
 		assertEquals("Had: " + readlink + ": " + new String(buffer.array()), 0, readlink);
 
-		String target = new String(buffer.array(), 0, buffer.position()-1);
+		String target = new String(buffer.array(), 0, buffer.position());
 		assertTrue("Had: " + target, target.startsWith("../commit"));
 	}
 
@@ -256,7 +256,7 @@ public class JGitFilesystemTest {
 		int readlink = fs.readlink("/branch/master", buffer, 100);
 		assertEquals("Had: " + readlink + ": " + new String(buffer.array()), 0, readlink);
 
-		String target = new String(buffer.array(), 0, buffer.position()-1);
+		String target = new String(buffer.array(), 0, buffer.position());
 		assertTrue("Had: " + target, target.startsWith("../commit"));
 	}
 
@@ -266,7 +266,7 @@ public class JGitFilesystemTest {
 		int readlink = fs.readlink("/remote/origin_master", buffer, 100);
 		assertEquals("Had: " + readlink + ": " + new String(buffer.array()), 0, readlink);
 
-		String target = new String(buffer.array(), 0, buffer.position()-1);
+		String target = new String(buffer.array(), 0, buffer.position());
 		assertTrue("Had: " + target, target.startsWith("../commit"));
 	}
 
@@ -453,10 +453,10 @@ public class JGitFilesystemTest {
 	public void testWithTestData() {
 		ByteBuffer buffer = ByteBuffer.allocate(1000);
 		assertEquals(0, fs.readlink("/branch/master", buffer, 1000));
-		assertEquals("A commit-ish link should be written to the buffer, but had: " + new String(buffer.array(), 0, buffer.position()-1), 
-				1000-52, buffer.remaining());
+		assertEquals("A commit-ish link should be written to the buffer, but had: " + new String(buffer.array(), 0, buffer.position()), 
+				1000-51, buffer.remaining());
 		// e.g. ../commit/43/27273e69afcd040ba1b4d3766ea1f43e0024f3
-		String commit = new String(buffer.array(), 0, buffer.position()-1).substring(2);
+		String commit = new String(buffer.array(), 0, buffer.position()).substring(2);
 		
 		// check that the test-data is there
 		final List<String> filledFiles = new ArrayList<String>();
@@ -507,23 +507,23 @@ public class JGitFilesystemTest {
 		// reading the link-target of symlinks should return the correct link
 		buffer = ByteBuffer.allocate(1000);
 		assertEquals(0, fs.readlink(commit + "/src/test/data/symlink", buffer, 1000));
-		assertEquals("Four bytes should be written to the buffer (including zero termination)", 996, buffer.remaining());
-		assertEquals("one", new String(buffer.array(), 0, buffer.position()-1));
+		assertEquals("Three bytes should be written to the buffer", 997, buffer.remaining());
+		assertEquals("one", new String(buffer.array(), 0, buffer.position()));
 
 		buffer = ByteBuffer.allocate(1000);
 		assertEquals(0, fs.readlink(commit + "/src/test/data/rellink", buffer, 1000));
-		assertEquals("22 bytes should be written to the buffer (including zero termination)", 978, buffer.remaining());
-		assertEquals("../../../build.gradle", new String(buffer.array(), 0, buffer.position()-1));
+		assertEquals("21 bytes should be written to the buffer", 979, buffer.remaining());
+		assertEquals("../../../build.gradle", new String(buffer.array(), 0, buffer.position()));
 	}
 
 	@Test
 	public void testWithTestDataRemote() {
 		ByteBuffer buffer = ByteBuffer.allocate(1000);
 		assertEquals(0, fs.readlink("/remote/origin_master", buffer, 1000));
-		assertEquals("A commit-ish link should be written to the buffer, but had: " + new String(buffer.array(), 0, buffer.position()-1), 
-				1000-52, buffer.remaining());
+		assertEquals("A commit-ish link should be written to the buffer, but had: " + new String(buffer.array(), 0, buffer.position()), 
+				1000-51, buffer.remaining());
 		// e.g. ../commit/43/27273e69afcd040ba1b4d3766ea1f43e0024f3
-		String commit = new String(buffer.array(), 0, buffer.position()-1).substring(2);
+		String commit = new String(buffer.array(), 0, buffer.position()).substring(2);
 		
 		// check that the test-data is there
 		final List<String> filledFiles = new ArrayList<String>();
@@ -574,13 +574,13 @@ public class JGitFilesystemTest {
 		// reading the link-target of symlinks should return the correct link
 		buffer = ByteBuffer.allocate(1000);
 		assertEquals(0, fs.readlink(commit + "/src/test/data/symlink", buffer, 1000));
-		assertEquals("Four bytes should be written to the buffer (including zero termination)", 996, buffer.remaining());
-		assertEquals("one", new String(buffer.array(), 0, buffer.position()-1));
+		assertEquals("Three bytes should be written to the buffer", 997, buffer.remaining());
+		assertEquals("one", new String(buffer.array(), 0, buffer.position()));
 
 		buffer = ByteBuffer.allocate(1000);
 		assertEquals(0, fs.readlink(commit + "/src/test/data/rellink", buffer, 1000));
-		assertEquals("22 bytes should be written to the buffer (including zero termination)", 978, buffer.remaining());
-		assertEquals("../../../build.gradle", new String(buffer.array(), 0, buffer.position()-1));
+		assertEquals("21 bytes should be written to the buffer", 979, buffer.remaining());
+		assertEquals("../../../build.gradle", new String(buffer.array(), 0, buffer.position()));
 	}
 
 	private final class DirectoryFillerImplementation implements DirectoryFiller {

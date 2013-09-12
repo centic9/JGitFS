@@ -313,7 +313,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 				// buffer overflow checks are done by the calls to put() itself per javadoc,
 				// currently we will throw an exception to the outside, experiment showed that we support 4097 bytes of path-length on 64-bit Ubuntu this way
 				buffer.put(cachedCommit);
-				buffer.put((byte)0);
+				// zero-byte is appended by fuse-jna itself
 
 				// returning the size as per readlink(2) spec causes fuse errors: return cachedCommit.length;
 				return 0;
