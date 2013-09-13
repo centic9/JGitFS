@@ -1,0 +1,3 @@
+sun.security.jca.ProviderConfig.doLoadProvider
+com.sun.jna.Native.extractFromResourcePath
+org.eclipse.jgit.internal.storage.file.WindowCursor.open

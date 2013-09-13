@@ -407,16 +407,19 @@ public class JGitHelper implements Closeable {
 
 		// we currently use all refs for finding commits quickly
 		RevWalk walk = new RevWalk(repository);
-
-		// optimization: we only need the commit-ids here, so we can discard the contents right away
-		walk.setRetainBody(false);
-
-		Map<String, Ref> allRefs = repository.getAllRefs();
-		for(String ref : allRefs.keySet()) {
-			addCommitSubs(commitSubs, walk, ref);
+		try {
+			// optimization: we only need the commit-ids here, so we can discard the contents right away
+			walk.setRetainBody(false);
+	
+			Map<String, Ref> allRefs = repository.getAllRefs();
+			for(String ref : allRefs.keySet()) {
+				addCommitSubs(commitSubs, walk, ref);
+			}
+	
+			return commitSubs;
+		} finally {
+			walk.dispose();
 		}
-
-		return commitSubs;
 	}
 
 	private void addCommitSubs(Collection<String> commits, RevWalk walk, String ref) throws IOException {
@@ -456,34 +459,38 @@ public class JGitHelper implements Closeable {
 	public Collection<String> allCommits(String sub) throws IOException {
 		ObjectIdSubclassMap<RevCommit> map = new ObjectIdSubclassMap<RevCommit>();
 
-		RevWalk walk = new RevWalk(repository);
-
-		// optimization: we only need the commit-ids here, so we can discard the contents right away
-		walk.setRetainBody(false);
-
 		// TODO: we do not read unreferenced commits here, it would be nice to be able to access these as well here
 		// see http://stackoverflow.com/questions/17178432/how-to-find-all-commits-using-jgit-not-just-referenceable-ones
 		// as a workaround we currently use all branches (includes master) and all tags for finding commits quickly
 		Map<String, Ref> allRefs = repository.getAllRefs();
 
-		// Store commits directly, not the SHA1 as getName() is a somewhat costly operation on RevCommit via formatHexChar()
-		Set<RevCommit> seenHeadCommits = new HashSet<RevCommit>(allRefs.size());
-		for(String ref : allRefs.keySet()) {
-			Ref head = repository.getRef(ref);
-			final RevCommit commit;
-			try {
-				commit = walk.parseCommit(head.getObjectId());
-			} catch (IncorrectObjectTypeException e) {
-				System.out.println("Invalid head-commit for ref " + ref + " and id: " + head.getObjectId().getName() + ": " + e);
-				continue;
+		RevWalk walk = new RevWalk(repository);
+		
+		// optimization: we only need the commit-ids here, so we can discard the contents right away
+		walk.setRetainBody(false);
+		
+		try {
+			// Store commits directly, not the SHA1 as getName() is a somewhat costly operation on RevCommit via formatHexChar()
+			Set<RevCommit> seenHeadCommits = new HashSet<RevCommit>(allRefs.size());
+			for(String ref : allRefs.keySet()) {
+				Ref head = repository.getRef(ref);
+				final RevCommit commit;
+				try {
+					commit = walk.parseCommit(head.getObjectId());
+				} catch (IncorrectObjectTypeException e) {
+					System.out.println("Invalid head-commit for ref " + ref + " and id: " + head.getObjectId().getName() + ": " + e);
+					continue;
+				}
+	
+				// only read commits of this ref if we did not add parents of this commit already
+				if(seenHeadCommits.add(commit)) {
+					addCommits(map, walk, commit, sub);
+				}
 			}
-
-			// only read commits of this ref if we did not add parents of this commit already
-			if(seenHeadCommits.add(commit)) {
-				addCommits(map, walk, commit, sub);
-			}
+			//System.out.println("Had " + seen + " dupplicate commits");
+		} finally {
+			walk.dispose();
 		}
-		//System.out.println("Had " + seen + " dupplicate commits");
 
 		// use the ObjectIdSubclassMap for quick map-insertion and only afterwards convert the resulting commits
 		// to Strings. ObjectIds can be compared much quicker as Strings as they only are 4 ints, not 40 character strings
