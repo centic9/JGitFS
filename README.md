@@ -63,8 +63,11 @@ Finally after some performance tuning sessions and adding some caching at the ri
 #### Todos
 
 * Only commits reachable via refs or tags are listed currently as I could not yet get JGit to return me a list of all commits, so commits which still exist, but are unreferenced currently are not visible
-* Remote branches are not included yet, but should be fairly easy to add
 * Stashes are not listed yet
+* We could show the state of the index as separate folder-hierarchy via DirCache
+* Is there a way to include the current workspace via WorkingTreeIterator?
+* JGit also supports Notes, how could we show these?	
+* Sometimes the history of a single file is needed, what about having dirs perfile/branch, perfile/commit, perfile/tag, ...
 * Would be nice to get this on Windows via cygwin as well, seems there is https://github.com/openunix/fuse-cygwin/, but could not get it to compile yet 
 
 #### Compatibility
