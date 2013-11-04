@@ -503,4 +503,21 @@ public class JGitHelperTest {
 		}
 
 	}
+
+	@Test
+    public void testToString() throws Exception {
+        // toString should not return null
+        assertNotNull("A derived toString() should not return null!", helper.toString());
+
+        // toString should not return an empty string
+        assertFalse("A derived toString() should not return an empty string!", helper.toString().equals(""));
+
+        // check that calling it multiple times leads to the same value
+        String value = helper.toString();
+        for (int i = 0; i < 10; i++) {
+            assertEquals("toString() is expected to result in the same result across repeated calls!", value,
+                    helper.toString());
+        }
+	    
+    }
 }

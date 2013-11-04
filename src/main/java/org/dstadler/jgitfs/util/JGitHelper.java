@@ -580,4 +580,10 @@ public class JGitHelper implements Closeable {
 
 		return items;
 	}
+
+    @Override
+    public String toString() {
+        // just return toString() from Repository as it prints out the git-directory
+        return repository.toString();
+    }	
 }
