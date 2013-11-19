@@ -54,11 +54,6 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		DIRS.add("/commit");
 		DIRS.add("/remote");
 		DIRS.add("/tag");
-		
-
-		// directories looked for by gnome/Linux/..., do not list them, but rather return ENOENT immediately
-//		DIRS.add("/.Trash");
-//		DIRS.add("/.Trash-1000");
 	}
 
 	/**

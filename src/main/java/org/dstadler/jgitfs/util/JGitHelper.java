@@ -50,7 +50,7 @@ public class JGitHelper implements Closeable {
 	/**
 	 * Construct the helper with the given directory as Git repository.
 	 *
-	 * @param gitDir A Git repository, either the root-dir or the .git directory directly.
+	 * @param pGitDir A Git repository, either the root-dir or the .git directory directly.
 	 * @throws IllegalStateException If the .git directory is not found
 	 * @throws IOException If opening the Git repository fails
 	 */
