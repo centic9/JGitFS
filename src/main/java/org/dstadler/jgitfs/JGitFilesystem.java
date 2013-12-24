@@ -54,6 +54,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		DIRS.add("/commit");
 		DIRS.add("/remote");
 		DIRS.add("/tag");
+		
 
 		// directories looked for by gnome/Linux/..., do not list them, but rather return ENOENT immediately
 //		DIRS.add("/.Trash");
@@ -177,6 +178,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 //			filler.add("/perfile/commit"); - history per file
 //			filler.add("/perfile/remote"); - history per file
 //			filler.add("/perfile/tag"); - history per file
+//          filler.add("/date"); - commits sorted by date, i.e. 2013/03/04/34:23/...
 
 			return 0;
 		} else if (path.equals("/commit")) {
