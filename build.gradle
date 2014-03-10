@@ -12,16 +12,15 @@ repositories {
 
 dependencies {
 	compile 'commons-io:commons-io:2.4'
-	compile 'org.apache.commons:commons-lang3:3.1'
+	compile 'org.apache.commons:commons-lang3:3.3'
 	compile 'net.java.dev.jna:jna:3.5.2'
-	compile 'org.eclipse.jgit:org.eclipse.jgit:3.0.0.201306101825-r'
-// not found yet?	compile 'org.eclipse.jgit:org.eclipse.jgit:3.0.3.201309161630-r'	
-	compile 'com.google.guava:guava:14.0.1'
+	compile 'org.eclipse.jgit:org.eclipse.jgit:3.3.0.201403021825-r'
+	compile 'com.google.guava:guava:16.0.1'
 	compile name: 'fuse-jna'
 
 	testCompile 'junit:junit:4.11'
 }
 
 task wrapper(type: Wrapper) {
-	gradleVersion = '1.8'
+	gradleVersion = '1.11'
 }
