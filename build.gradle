@@ -2,6 +2,7 @@ apply plugin: 'java'
 //apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin:'application'
+apply plugin:'jacoco'
 
 mainClassName = "org.dstadler.jgitfs.JGitFS"
 

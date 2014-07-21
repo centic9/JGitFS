@@ -46,7 +46,7 @@ Create matching Eclipse project files
 
 Run unit tests
 
-	./gradlew test
+	./gradlew test jacocoTestReport
 
 #### The idea
 
