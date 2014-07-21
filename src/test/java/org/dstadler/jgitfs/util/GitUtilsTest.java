@@ -1,7 +1,6 @@
 package org.dstadler.jgitfs.util;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 
@@ -10,6 +9,11 @@ import org.junit.Test;
 
 public class GitUtilsTest {
 
+    @Test
+    public void testCoverage() {
+        assertNotNull(new GitUtils());
+    }
+    
 	@Test
 	public void testIsCommitSub() {
 		assertFalse(GitUtils.isCommitSub(""));
@@ -75,6 +79,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isBranchDir("/tag"));
 		assertFalse(GitUtils.isBranchDir("/commit"));
 		assertFalse(GitUtils.isBranchDir("/branch"));
+        assertFalse(GitUtils.isBranchDir("ae/.hidden"));
 		assertFalse(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "00/"));
 		assertFalse(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "asdfasd/sjwekw"));
 		assertFalse(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "asdfasd_aldsjfasd asdlkjasdj.,.;_:;:öÖLP\"=)==\"§\"§%/\"!§)$§\""));
@@ -97,6 +102,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isTagDir("/branch"));
 		assertFalse(GitUtils.isTagDir("/commit"));
 		assertFalse(GitUtils.isTagDir("/tag"));
+        assertFalse(GitUtils.isTagDir("ae/.hidden"));
 		assertFalse(GitUtils.isTagDir(GitUtils.TAG_SLASH + "00/"));
 		assertFalse(GitUtils.isTagDir(GitUtils.TAG_SLASH + "asdfasd/sjwekw"));
 		assertFalse(GitUtils.isTagDir(GitUtils.TAG_SLASH + "asdfasd_aldsjfasd asdlkjasdj.,.;_:;:öÖLP\"=)==\"§\"§%/\"!§)$§\""));
@@ -119,6 +125,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isRemoteDir("/branch"));
 		assertFalse(GitUtils.isRemoteDir("/commit"));
 		assertFalse(GitUtils.isRemoteDir("/tag"));
+        assertFalse(GitUtils.isRemoteDir("ae/.hidden"));
 		assertFalse(GitUtils.isRemoteDir(GitUtils.REMOTE_SLASH + "00/"));
 		assertFalse(GitUtils.isRemoteDir(GitUtils.REMOTE_SLASH + "asdfasd/sjwekw"));
 		assertFalse(GitUtils.isRemoteDir(GitUtils.REMOTE_SLASH + "asdfasd_aldsjfasd asdlkjasdj.,.;_:;:öÖLP\"=)==\"§\"§%/\"!§)$§\""));

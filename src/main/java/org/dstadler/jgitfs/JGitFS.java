@@ -49,7 +49,7 @@ public class JGitFS
 				// ensure that we do not have a previous mount lingering on the mountpoint
 				FuseUtils.prepareMountpoint(mountPoint);
 
-				// mount the filesystem. This actually blocks until the filesystem is unmounted
+				// mount the filesystem. If this is the last mount-point that was specified, block until the filesystem is unmounted
 				gitFS.mount(mountPoint, i == (args.length - 2));
 			}
 		} finally {
