@@ -44,7 +44,7 @@ public class JGitFSTest {
         try {
             // if we have one that works and the last one an invalid one we get an exception, but did the mounting
             // for the first one
-            JGitFS.main(new String[] {".", "/fs/testrepo", "invalidrepo", "somemountpoint"});
+            JGitFS.main(new String[] {".", System.getProperty("java.io.tmpdir") + "/testrepo", "invalidrepo", "somemountpoint"});
             fail("Should throw exception with invalid git repository");
         } catch (IllegalStateException e) {
             assertTrue("Had: " + e.getMessage(), e.getMessage().contains("invalidrepo"));
