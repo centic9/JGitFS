@@ -308,18 +308,20 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		}
 
 		// use the cache to speed up access, symlinks are always queried even for sub-path access, so we get lots of requests for these!
-		byte[] cachedCommit;
+		byte[] linkTarget;
 		try {
-			cachedCommit = linkCache.get(path);
-			if(cachedCommit != null) {
-				// buffer overflow checks are done by the calls to put() itself per javadoc,
-				// currently we will throw an exception to the outside, experiment showed that we support 4097 bytes of path-length on 64-bit Ubuntu this way
-				buffer.put(cachedCommit);
-				// zero-byte is appended by fuse-jna itself
-
-				// returning the size as per readlink(2) spec causes fuse errors: return cachedCommit.length;
-				return 0;
+			linkTarget = linkCache.get(path);
+			if(linkTarget == null) {
+			     throw new IllegalStateException("Error reading commit of tag/branch-path " + path);
 			}
+
+			// buffer overflow checks are done by the calls to put() itself per javadoc,
+			// currently we will throw an exception to the outside, experiment showed that we support 4097 bytes of path-length on 64-bit Ubuntu this way
+			buffer.put(linkTarget);
+			// zero-byte is appended by fuse-jna itself
+
+			// returning the size as per readlink(2) spec causes fuse errors: return cachedCommit.length;
+			return 0;
 		} catch (UncheckedExecutionException e) {
 			if(e.getCause().getCause() instanceof FileNotFoundException) {
 				return -ErrorCodes.ENOENT();
@@ -328,8 +330,6 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		} catch (ExecutionException e) {
 			throw new IllegalStateException("Error reading commit of tag/branch-path " + path, e);
 		}
-
-		throw new IllegalStateException("Error reading commit of tag/branch-path " + path);
 	}
 
 	/**

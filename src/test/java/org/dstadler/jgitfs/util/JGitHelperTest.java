@@ -528,4 +528,30 @@ public class JGitHelperTest {
         }
 	    
     }
+	
+	@Test
+    public void testReadSymlink() throws Exception {
+	    String link = helper.readSymlink("e81ba32d8d51cdd1463e9a0b704059bd8ccbfd19", "src/test/data/symlink");
+	    assertEquals("one", link);
+	    
+	    link = helper.readSymlink("e81ba32d8d51cdd1463e9a0b704059bd8ccbfd19", "src/test/data/rellink");
+        assertEquals("../../../build.gradle", link);
+
+        // TODO: add full support for Submodules
+        try {
+            link = helper.readSymlink("ca1767dc76fe104d0b94fb2a5c962c82121be3da", "fuse-jna");
+            //assertEquals("one", link);
+        } catch (UnsupportedOperationException e) {
+            // expected for now...
+        }
+        
+        try {
+            helper.readSymlink(DEFAULT_COMMIT, "build.gradle");
+            fail("Should catch exception here");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("build.gradle"));
+            assertTrue(e.getMessage().contains(DEFAULT_COMMIT));
+        }
+    }
+
 }

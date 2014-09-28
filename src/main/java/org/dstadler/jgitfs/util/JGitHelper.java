@@ -166,10 +166,15 @@ public class JGitHelper implements Closeable {
 		// now read the file/directory attributes
 		TreeWalk treeWalk = buildTreeWalk(tree, path);
 		FileMode fileMode = treeWalk.getFileMode(0);
-		if(!fileMode.equals(FileMode.SYMLINK)) {
+		if(!fileMode.equals(FileMode.SYMLINK) && !fileMode.equals(FileMode.GITLINK)) {
 			throw new IllegalArgumentException("Had request for symlink-target which is not a symlink, commit '" + commit + "' and path '" + path + "': " + fileMode.getBits());
 		}
 		
+        // TODO: add full support for Submodules
+		if(fileMode.equals(FileMode.GITLINK)) {
+		    throw new UnsupportedOperationException("Support for git submodules is not yet available, cannot read path " + path + " of commit " + commit);
+		}
+
 		// try to read the file-data as it contains the symlink target
 		InputStream openFile = openFile(commit, path);
 		try {
