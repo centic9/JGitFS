@@ -1,3 +1,6 @@
 [submodule "lib/fuse-jna"]
 	path = lib/fuse-jna
 	url = https://github.com/EtiennePerot/fuse-jna.git
+[submodule "fuse-jna"]
+	path = fuse-jna
+	url = https://github.com/EtiennePerot/fuse-jna.git
