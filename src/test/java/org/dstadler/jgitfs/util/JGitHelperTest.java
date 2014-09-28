@@ -129,6 +129,14 @@ public class JGitHelperTest {
 		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) == 0);
 		assertTrue((wrapper.mode() & TypeMode.S_IXGRP) == 0);
 		assertTrue((wrapper.mode() & TypeMode.S_IXOTH) == 0);
+
+		// need a newer commit for gitlink/symlink
+		helper.readType("e81ba32d8d51cdd1463e9a0b704059bd8ccbfd19", "src/test/data/symlink", wrapper);
+		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
+		helper.readType("e81ba32d8d51cdd1463e9a0b704059bd8ccbfd19", "src/test/data/rellink", wrapper);
+		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
+		helper.readType("ca1767dc76fe104d0b94fb2a5c962c82121be3da", "fuse-jna", wrapper);
+		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
 	}
 
 	@Test

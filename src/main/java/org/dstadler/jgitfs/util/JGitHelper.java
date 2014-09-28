@@ -135,12 +135,16 @@ public class JGitHelper implements Closeable {
 		} else if(fileMode.equals(FileMode.TREE)) {
 			stat.setMode(NodeType.DIRECTORY, true, false, true, true, false, true, false, false, false);
 			return;
-		} if(fileMode.equals(FileMode.SYMLINK)) {
+		} else if(fileMode.equals(FileMode.SYMLINK)) {
+			stat.setMode(NodeType.SYMBOLIC_LINK, true, false, true, true, false, true, false, false, false);
+			return;
+		} else if(fileMode.equals(FileMode.GITLINK)) {
 			stat.setMode(NodeType.SYMBOLIC_LINK, true, false, true, true, false, true, false, false, false);
 			return;
 		}
 
-		throw new IllegalStateException("Found unknown FileMode in Git for commit '" + commit + "' and path '" + path + "': " + fileMode.getBits());
+		throw new IllegalStateException("Found unknown FileMode 0o" + Integer.toOctalString(fileMode.getBits()) + "/" + fileMode.getClass() + 
+		        " in Git for commit '" + commit + "' and path '" + path + "'");
 	}
 
 	/**
