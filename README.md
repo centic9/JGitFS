@@ -13,6 +13,7 @@ Note: The "--recursive" is necessary to clone necessary submodules as well!
 
 #### Build it and create the distribution files
 
+	cd JGitFS
 	./gradlew install
 
 #### Run it
