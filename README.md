@@ -7,7 +7,9 @@ userland filesystem.
 
 #### Grab it
 
-    git clone git://github.com/centic9/JGitFS
+    git clone --recursive git://github.com/centic9/JGitFS
+
+Note: The "--recursive" is necessary to clone necessary submodules as well!
 
 #### Build it and create the distribution files
 
