@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import net.fusejna.StructStat.StatWrapper;
@@ -34,6 +35,7 @@ import org.eclipse.jgit.revwalk.RevObject;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
 /**
@@ -147,6 +149,28 @@ public class JGitHelper implements Closeable {
 		        " in Git for commit '" + commit + "' and path '" + path + "'");
 	}
 
+	/**
+	 * Check if the given path in the given commit denotes a git link to a submodule.
+	 *
+     * @param commit The commit-id as-of which we read the data
+     * @param path The path to the file/directory
+	 * @return true if the path in the given commit denotes a git submodule, false otherwise.
+     * @throws IOException If access to the Git repository fails
+	 */
+    public boolean isGitLink(String commit, String path) throws IOException {
+        RevCommit revCommit = buildRevCommit(commit);
+
+        // and using commit's tree find the path
+        RevTree tree = revCommit.getTree();
+        //System.out.println("Having tree: " + tree + " for commit " + commit);
+
+        // now read the file/directory attributes
+        TreeWalk treeWalk = buildTreeWalk(tree, path);
+        FileMode fileMode = treeWalk.getFileMode(0);
+
+        return fileMode.equals(FileMode.GITLINK);
+    }
+    
 	/**
 	 * Read the target file for the given symlink as part of the given commit.
 	 *
@@ -405,6 +429,62 @@ public class JGitHelper implements Closeable {
 	}
 
 	/**
+	 * Returns a collection of all submodules in the current repository.
+	 *
+	 * @return A collection containing the name of all known submodules.
+     * @throws IOException If accessing the Git repository fails
+	 */
+	public Collection<String> allSubmodules() throws IOException {
+        try {
+            return git.submoduleStatus().call().keySet();
+        } catch (GitAPIException e) {
+            throw new IOException(e);
+        }
+	}
+
+	/**
+	 * Returns the name of the git submodule linked at the given path. 
+	 *
+	 * @param path the path where the git submodule is linked in. 
+	 * @return The name of the git submodule.
+	 * @throws NoSuchElementException if the given path does not point to a git submodule
+     * @throws IOException If accessing the Git repository fails
+	 */
+	public String getSubmoduleAt(String path) throws IOException {
+        try {
+            Map<String, SubmoduleStatus> set = git.submoduleStatus().addPath(path).call();
+            if(set.isEmpty()) {
+                throw new NoSuchElementException("Could not read submodule at path " + path);
+            }
+            return set.keySet().iterator().next();
+        } catch (GitAPIException e) {
+            throw new IOException(e);
+        }
+	}
+	
+    /**
+     * Returns the path where the given submodule is linked. 
+     *
+     * @param name the name of the Git submodule. 
+     * @return The path where the Git submodule is linked.
+     * @throws NoSuchElementException if the given name is not known.
+     * @throws IOException If accessing the Git repository fails
+     */
+    public String getSubmodulePath(String name) throws IOException {
+        try {
+            Map<String, SubmoduleStatus> set = git.submoduleStatus().call();
+            for(Map.Entry<String, SubmoduleStatus> entry : set.entrySet()) {
+                if(entry.getKey().equals(name)) {
+                    return entry.getValue().getPath();
+                }
+            }
+            throw new NoSuchElementException("Could not read submodule " + name);
+        } catch (GitAPIException e) {
+            throw new IOException(e);
+        }
+    }
+
+    /**
 	 * Retrieve a list of all two-digit commit-subs which allow to build the first directory level
 	 * of a commit-file-structure.
 	 *

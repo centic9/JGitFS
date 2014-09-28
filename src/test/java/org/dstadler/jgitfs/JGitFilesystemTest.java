@@ -138,7 +138,7 @@ public class JGitFilesystemTest {
 		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
 		fs.readdir("/", filler);
-		assertEquals("[/branch, /commit, /remote, /tag]", filledFiles.toString());
+		assertEquals("[/branch, /commit, /remote, /tag, /submodule]", filledFiles.toString());
 
 		filledFiles.clear();
 		fs.readdir("/tag", filler);
@@ -169,6 +169,10 @@ public class JGitFilesystemTest {
 		filledFiles.clear();
 		fs.readdir(DEFAULT_COMMIT_PATH + "/src", filler);
 		assertEquals("Had: " + filledFiles.toString(), "[main, test]", filledFiles.toString());
+
+        filledFiles.clear();
+        fs.readdir("/submodule", filler);
+        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("fuse-jna"));
 	}
 
 	@Test
@@ -412,7 +416,7 @@ public class JGitFilesystemTest {
 		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
 		assertEquals(0, fs.readdir("/", filler));
-		assertEquals("[/branch, /commit, /remote, /tag]", filledFiles.toString());
+		assertEquals("[/branch, /commit, /remote, /tag, /submodule]", filledFiles.toString());
 
 		for(String file : new ArrayList<String>(filledFiles)) {
 			assertEquals(0, fs.getattr(file, stat));
@@ -480,7 +484,9 @@ public class JGitFilesystemTest {
 		assertEquals(0, fs.getattr(commit + "/src/test/data/symlink", wrapper));
 		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());		
 		assertEquals(0, fs.getattr(commit + "/src/test/data/rellink", wrapper));
-		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());		
+		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
+		assertEquals(0, fs.getattr(commit + "/fuse-jna", wrapper));
+        assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
 		
 		// check that the empty file is actually empty
 		buffer = ByteBuffer.allocate(1000);
@@ -514,6 +520,30 @@ public class JGitFilesystemTest {
 		assertEquals(0, fs.readlink(commit + "/src/test/data/rellink", buffer, 1000));
 		assertEquals("21 bytes should be written to the buffer", 979, buffer.remaining());
 		assertEquals("../../../build.gradle", new String(buffer.array(), 0, buffer.position()));
+    }
+
+    @Test
+    public void testSubmodulesGitLink() {
+        ByteBuffer buffer = ByteBuffer.allocate(1000);
+
+        assertEquals(0, fs.readlink("/branch/master", buffer, 1000));
+        assertEquals("A commit-ish link should be written to the buffer, but had: " + new String(buffer.array(), 0, buffer.position()), 
+                1000-51, buffer.remaining());
+        // e.g. ../commit/43/27273e69afcd040ba1b4d3766ea1f43e0024f3
+        String commit = new String(buffer.array(), 0, buffer.position()).substring(2);
+        
+        // check that we can read the gitlink
+        buffer = ByteBuffer.allocate(1000);
+        assertEquals(0, fs.readlink(commit + "/fuse-jna", buffer, 1000));
+        assertEquals("Incorrect number of bytes written to the buffer", 979, buffer.remaining());
+        assertEquals("../submodule/fuse-jna", new String(buffer.array(), 0, buffer.position()));
+
+        StatWrapper stat = getStatsWrapper();
+        assertEquals(0, fs.getattr("/submodule/fuse-jna", stat));
+        assertEquals(NodeType.DIRECTORY, stat.type());
+
+        assertEquals(0, fs.getattr("/submodule/fuse-jna/commit/0f/a3ca5246abc9553f97212232b07ea76bf74596/build.gradle", stat));
+        assertEquals(NodeType.FILE, stat.type());
 	}
 
 	@Test

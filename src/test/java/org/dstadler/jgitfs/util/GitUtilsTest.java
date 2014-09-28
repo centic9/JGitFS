@@ -3,7 +3,9 @@ package org.dstadler.jgitfs.util;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.util.NoSuchElementException;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 
@@ -49,7 +51,39 @@ public class GitUtilsTest {
 		
 		assertTrue(GitUtils.isCommitDir(GitUtils.COMMIT_SLASH + "12/34567890123456789012345678901234567890"));
 	}
-	
+
+	@Test
+	public void testSplitSubmodule() {
+	    assertTrue(GitUtils.isSubmodulePath("/submodule/name/file"));
+	    Pair<String,String> ret = GitUtils.splitSubmodule("/submodule/name/file");
+	    assertEquals("name", ret.getLeft());
+	    assertEquals("/file", ret.getRight());
+	    
+	    assertTrue(GitUtils.isSubmodulePath("/submodule/name/"));
+        ret = GitUtils.splitSubmodule("/submodule/name/");
+        assertEquals("name", ret.getLeft());
+        assertEquals("/", ret.getRight());
+
+        assertTrue(GitUtils.isSubmodulePath("/submodule/name"));
+        ret = GitUtils.splitSubmodule("/submodule/name");
+        assertEquals("name", ret.getLeft());
+        assertEquals("", ret.getRight());
+
+        assertFalse(GitUtils.isSubmodulePath("/submodule/"));
+        try {
+            GitUtils.splitSubmodule("/submodule/");
+        } catch (NoSuchElementException e) {
+            assertTrue(e.getMessage().contains("/submodule/"));
+        }
+
+        assertFalse(GitUtils.isSubmodulePath("/branches/master/"));
+        try {
+            GitUtils.splitSubmodule("/branches/master/");
+        } catch (NoSuchElementException e) {
+            assertTrue(e.getMessage().contains("/branches/master/"));
+        }
+	}
+
 	@Test
 	public void testIsCommitSubDir() {
 		assertFalse(GitUtils.isCommitSubDir(""));
@@ -74,62 +108,44 @@ public class GitUtilsTest {
 
     @Test
     public void testIsSubmoduleSub() {
-        assertFalse(GitUtils.isSubmoduleSub(""));
-        assertFalse(GitUtils.isSubmoduleSub("/"));
-        assertFalse(GitUtils.isSubmoduleSub("/something"));
-        assertFalse(GitUtils.isSubmoduleSub("/branch"));
-        assertFalse(GitUtils.isSubmoduleSub("/tag"));
-        assertFalse(GitUtils.isSubmoduleSub("/commit"));
-        assertFalse(GitUtils.isSubmoduleSub(GitUtils.SUBMODULE_SLASH + "00/"));
-        assertFalse(GitUtils.isSubmoduleSub(GitUtils.SUBMODULE_SLASH + "0g"));
-        assertFalse(GitUtils.isSubmoduleSub(GitUtils.SUBMODULE_SLASH + "fg"));
-        assertFalse(GitUtils.isSubmoduleSub(GitUtils.SUBMODULE_SLASH + "zz"));
+        assertFalse(GitUtils.isSubmoduleName(""));
+        assertFalse(GitUtils.isSubmoduleName("/"));
+        assertFalse(GitUtils.isSubmoduleName("/something"));
+        assertFalse(GitUtils.isSubmoduleName("/branch"));
+        assertFalse(GitUtils.isSubmoduleName("/tag"));
+        assertFalse(GitUtils.isSubmoduleName("/commit"));
+        assertFalse(GitUtils.isSubmoduleName(GitUtils.SUBMODULE_SLASH + "00/"));
+        assertFalse(GitUtils.isSubmoduleName(GitUtils.SUBMODULE_SLASH + "zz/123"));
         
-        assertTrue(GitUtils.isSubmoduleSub(GitUtils.SUBMODULE_SLASH + "sub1/00"));
-        assertTrue(GitUtils.isSubmoduleSub(GitUtils.SUBMODULE_SLASH + "sub2/ff"));
-        assertTrue(GitUtils.isSubmoduleSub(GitUtils.SUBMODULE_SLASH + "sub43/ae"));
+        assertTrue(GitUtils.isSubmoduleName(GitUtils.SUBMODULE_SLASH + "sub1"));
+        assertTrue(GitUtils.isSubmoduleName(GitUtils.SUBMODULE_SLASH + "sub2"));
+        assertTrue(GitUtils.isSubmoduleName(GitUtils.SUBMODULE_SLASH + "sub43"));
     }
 
     @Test
-    public void testIsSubmoduleDir() {
-        assertFalse(GitUtils.isSubmoduleDir(""));
-        assertFalse(GitUtils.isSubmoduleDir("/"));
-        assertFalse(GitUtils.isSubmoduleDir("/something"));
-        assertFalse(GitUtils.isSubmoduleDir("/branch"));
-        assertFalse(GitUtils.isSubmoduleDir("/tag"));
-        assertFalse(GitUtils.isSubmoduleDir("/commit"));
-        assertFalse(GitUtils.isSubmoduleDir(GitUtils.SUBMODULE_SLASH + "00/"));
-        assertFalse(GitUtils.isSubmoduleDir(GitUtils.SUBMODULE_SLASH + "0g"));
-        assertFalse(GitUtils.isSubmoduleDir(GitUtils.SUBMODULE_SLASH + "fg"));
-        assertFalse(GitUtils.isSubmoduleDir(GitUtils.SUBMODULE_SLASH + "zz"));
-        assertFalse(GitUtils.isSubmoduleDir(GitUtils.SUBMODULE_SLASH + "00"));
-        assertFalse(GitUtils.isSubmoduleDir(GitUtils.SUBMODULE_SLASH + "ab"));
-        
-        assertTrue(GitUtils.isSubmoduleDir(GitUtils.SUBMODULE_SLASH + "sub234/12/34567890123456789012345678901234567890"));
-    }
-    
-    @Test
-    public void testIsSubmoduleSubDir() {
-        assertFalse(GitUtils.isSubmoduleSubDir(""));
-        assertFalse(GitUtils.isSubmoduleSubDir("/"));
-        assertFalse(GitUtils.isSubmoduleSubDir("/something"));
-        assertFalse(GitUtils.isSubmoduleSubDir("/branch"));
-        assertFalse(GitUtils.isSubmoduleSubDir("/tag"));
-        assertFalse(GitUtils.isSubmoduleSubDir("/commit"));
-        assertFalse(GitUtils.isSubmoduleSubDir(GitUtils.SUBMODULE_SLASH + "00/"));
-        assertFalse(GitUtils.isSubmoduleSubDir(GitUtils.SUBMODULE_SLASH + "0g"));
-        assertFalse(GitUtils.isSubmoduleSubDir(GitUtils.SUBMODULE_SLASH + "fg"));
-        assertFalse(GitUtils.isSubmoduleSubDir(GitUtils.SUBMODULE_SLASH + "zz"));
-        assertFalse(GitUtils.isSubmoduleSubDir(GitUtils.SUBMODULE_SLASH + "00"));
-        assertFalse(GitUtils.isSubmoduleSubDir(GitUtils.SUBMODULE_SLASH + "ab"));
-        assertFalse(GitUtils.isSubmoduleSubDir(GitUtils.SUBMODULE_SLASH + "12/34567890123456789012345678901234567890/file123"));
-        assertFalse(GitUtils.isSubmoduleSubDir(GitUtils.SUBMODULE_SLASH + "12/34567890123456789012345678901234567890"));
-        assertFalse(GitUtils.isSubmoduleSubDir(GitUtils.SUBMODULE_SLASH + "12/34567890123456789012345678901234567890/"));
-        assertFalse(GitUtils.isSubmoduleSubDir(GitUtils.SUBMODULE_SLASH + "sub123/12/34567890123456789012345678901234567890"));
-        assertFalse(GitUtils.isSubmoduleSubDir(GitUtils.SUBMODULE_SLASH + "sub123/12/34567890123456789012345678901234567890/"));
-        assertFalse(GitUtils.isSubmoduleSubDir(GitUtils.SUBMODULE_SLASH + "sub123/12/34567890123456789012345678901234567890/file123/.hidden"));
-        
-        assertTrue(GitUtils.isSubmoduleSubDir(GitUtils.SUBMODULE_SLASH + "sub123/12/34567890123456789012345678901234567890/file123"));
+    public void testIsSubmodule() {
+        assertFalse(GitUtils.isSubmodulePath(""));
+        assertFalse(GitUtils.isSubmodulePath("/"));
+        assertFalse(GitUtils.isSubmodulePath("/something"));
+        assertFalse(GitUtils.isSubmodulePath("/branch"));
+        assertFalse(GitUtils.isSubmodulePath("/tag"));
+        assertFalse(GitUtils.isSubmodulePath("/commit"));
+
+        assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "00/"));
+        assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "12/34567890123456789012345678901234567890/file123"));
+        assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "12/34567890123456789012345678901234567890"));
+        assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "12/34567890123456789012345678901234567890/"));
+        assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "sub123/12/34567890123456789012345678901234567890"));
+        assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "sub123/12/34567890123456789012345678901234567890/"));
+        assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "sub123/12/34567890123456789012345678901234567890/file123/.hidden"));
+        assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "sub123/12/34567890123456789012345678901234567890/file123"));
+
+        assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "some submodule name with some special character203921q§$\"§=$ÖÄ"));
+        assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "0g"));
+        assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "fg"));
+        assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "zz"));
+        assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "00"));
+        assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "ab"));
     }
 
     @Test

@@ -2,9 +2,13 @@ package org.dstadler.jgitfs.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.NoSuchElementException;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Utilities for checking if pathes match certain patterns to
@@ -21,7 +25,7 @@ public class GitUtils {
 	public final static String REMOTE_SLASH = "/remote/";
 	public final static String TAG_SLASH = "/tag/";
     public final static String SUBMODULE_SLASH = "/submodule/";
-    public final static int SUBMODULE_SLASH_LENGTH = COMMIT_SLASH.length();
+    public final static int SUBMODULE_SLASH_LENGTH = SUBMODULE_SLASH.length();
 
 	private final static int SHA1_LENGTH = 40;
 
@@ -32,9 +36,8 @@ public class GitUtils {
 	private final static Pattern BRANCH_PATTERN = Pattern.compile("/branch/[^/]+");
 	private final static Pattern REMOTE_PATTERN = Pattern.compile("/remote/[^/]+");
 	private final static Pattern COMMIT_SUB_PATTERN = Pattern.compile("/commit/[a-f0-9]{2}");
-    private final static Pattern SUBMODULE_SUB_PATTERN = Pattern.compile("/submodule/[^/]+/[a-f0-9]{2}");
-    private final static Pattern SUBMODULE_SUB_SUB_PATTERN = Pattern.compile("/submodule/[^/]+/[a-f0-9]{2}/[a-f0-9]{38}");
-    private final static Pattern SUBMODULE_SUB_FILE_PATTERN = Pattern.compile("/submodule/[^/]+/[a-f0-9]{2}/[a-f0-9]{38}/.+");
+	private final static Pattern SUBMODULE_PATTERN = Pattern.compile("/submodule/([^/]+)(.*)");
+    private final static Pattern SUBMODULE_NAME_PATTERN = Pattern.compile("/submodule/[^/]+");
 
 	public static boolean isTagDir(final String path) {
 		return TAG_PATTERN.matcher(path).matches() && !path.endsWith(".hidden");
@@ -62,22 +65,24 @@ public class GitUtils {
 		return path.startsWith(COMMIT_SLASH) && path.length() > (COMMIT_SLASH_LENGTH + SHA1_LENGTH + 2) && !path.endsWith(".hidden");
 	}
 
-    public static boolean isSubmoduleSub(final String path) {
-        return SUBMODULE_SUB_PATTERN.matcher(path).matches();
+	public static boolean isSubmoduleName(final String path) {
+	    return SUBMODULE_NAME_PATTERN.matcher(path).matches();
+	}
+
+    public static boolean isSubmodulePath(final String path) {
+        return path.startsWith(SUBMODULE_SLASH) && path.length() > SUBMODULE_SLASH_LENGTH;
     }
 
-    public static boolean isSubmoduleDir(final String path) {
-        // 11 for /submodule/, 40 + 1 for commitish plus one slash
-        return path.startsWith(SUBMODULE_SLASH) && SUBMODULE_SUB_SUB_PATTERN.matcher(path).matches();
+    public static Pair<String, String> splitSubmodule(final String path) {
+        Matcher matcher = SUBMODULE_PATTERN.matcher(path);
+        if(!matcher.find()) {
+            throw new NoSuchElementException("Could not read submodule name from " + path);
+        }
+        
+        return ImmutablePair.of(matcher.group(1), matcher.group(2));
     }
 
-    public static boolean isSubmoduleSubDir(final String path) {
-        // 11 for /submodule/, 40 + 2 for commitish plus two slashes
-        return path.startsWith(SUBMODULE_SLASH) && !path.endsWith(".hidden") && SUBMODULE_SUB_FILE_PATTERN.matcher(path).matches();
-    }
-
-	
-	public static long getUID() {
+    public static long getUID() {
 	    return getID(true);
 	}
 
