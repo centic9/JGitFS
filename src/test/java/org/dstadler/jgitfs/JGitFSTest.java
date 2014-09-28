@@ -18,7 +18,7 @@ public class JGitFSTest {
     public void testMainOneArg() throws Exception {
         // calls System.exit(): JGitFS.main(new String[] {"some"});
     }
-    
+
     @Test
     public void testConstruct() throws Exception {
         assertNotNull(new JGitFS());

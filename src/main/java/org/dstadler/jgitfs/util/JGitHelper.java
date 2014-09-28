@@ -164,7 +164,7 @@ public class JGitHelper implements Closeable {
 			return;
 		}
 
-		throw new IllegalStateException("Found unknown FileMode 0o" + Integer.toOctalString(fileMode.getBits()) + "/" + fileMode.getClass() + 
+		throw new IllegalStateException("Found unknown FileMode 0o" + Integer.toOctalString(fileMode.getBits()) + "/" + fileMode.getClass() +
 		        " in Git for commit '" + commit + "' and path '" + path + "'");
 	}
 
@@ -188,7 +188,7 @@ public class JGitHelper implements Closeable {
 
         return fileMode.equals(FileMode.GITLINK);
     }
-    
+
 	/**
 	 * Read the target file for the given symlink as part of the given commit.
 	 *
@@ -211,7 +211,7 @@ public class JGitHelper implements Closeable {
 		if(!fileMode.equals(FileMode.SYMLINK) && !fileMode.equals(FileMode.GITLINK)) {
 			throw new IllegalArgumentException("Had request for symlink-target which is not a symlink, commit '" + commit + "' and path '" + path + "': " + fileMode.getBits());
 		}
-		
+
         // TODO: add full support for Submodules
 		if(fileMode.equals(FileMode.GITLINK)) {
 		    throw new UnsupportedOperationException("Support for git submodules is not yet available, cannot read path " + path + " of commit " + commit);
@@ -225,7 +225,7 @@ public class JGitHelper implements Closeable {
 			openFile.close();
 		}
 	}
-	
+
 	/**
 	 * Retrieve the contents of the given file as-of the given commit.
 	 *
@@ -461,9 +461,9 @@ public class JGitHelper implements Closeable {
 	}
 
 	/**
-	 * Returns the name of the git submodule linked at the given path. 
+	 * Returns the name of the git submodule linked at the given path.
 	 *
-	 * @param path the path where the git submodule is linked in. 
+	 * @param path the path where the git submodule is linked in.
 	 * @return The name of the git submodule.
 	 * @throws NoSuchElementException if the given path does not point to a git submodule
      * @throws IOException If accessing the Git repository fails
@@ -479,11 +479,11 @@ public class JGitHelper implements Closeable {
             throw new IOException(e);
         }
 	}
-	
+
     /**
-     * Returns the path where the given submodule is linked. 
+     * Returns the path where the given submodule is linked.
      *
-     * @param name the name of the Git submodule. 
+     * @param name the name of the Git submodule.
      * @return The path where the Git submodule is linked.
      * @throws NoSuchElementException if the given name is not known.
      * @throws IOException If accessing the Git repository fails
@@ -503,9 +503,9 @@ public class JGitHelper implements Closeable {
     }
 
     /**
-     * Returns the path where the given submodule is linked. 
+     * Returns the path where the given submodule is linked.
      *
-     * @param name the name of the Git submodule. 
+     * @param name the name of the Git submodule.
      * @return The path where the Git submodule is linked.
      * @throws NoSuchElementException if the given name is not known.
      * @throws IOException If accessing the Git repository fails
@@ -539,12 +539,12 @@ public class JGitHelper implements Closeable {
 		try {
 			// optimization: we only need the commit-ids here, so we can discard the contents right away
 			walk.setRetainBody(false);
-	
+
 			Map<String, Ref> allRefs = repository.getAllRefs();
 			for(String ref : allRefs.keySet()) {
 				addCommitSubs(commitSubs, walk, ref);
 			}
-	
+
 			return commitSubs;
 		} finally {
 			walk.dispose();
@@ -594,10 +594,10 @@ public class JGitHelper implements Closeable {
 		Map<String, Ref> allRefs = repository.getAllRefs();
 
 		RevWalk walk = new RevWalk(repository);
-		
+
 		// optimization: we only need the commit-ids here, so we can discard the contents right away
 		walk.setRetainBody(false);
-		
+
 		try {
 			// Store commits directly, not the SHA1 as getName() is a somewhat costly operation on RevCommit via formatHexChar()
 			Set<RevCommit> seenHeadCommits = new HashSet<RevCommit>(allRefs.size());
@@ -610,7 +610,7 @@ public class JGitHelper implements Closeable {
 					System.out.println("Invalid head-commit for ref " + ref + " and id: " + head.getObjectId().getName() + ": " + e);
 					continue;
 				}
-	
+
 				// only read commits of this ref if we did not add parents of this commit already
 				if(seenHeadCommits.add(commit)) {
 					addCommits(map, walk, commit, sub);
@@ -651,7 +651,7 @@ public class JGitHelper implements Closeable {
 
 	/**
 	 * Free resources held in thie instance, i.e. by releasing the Git repository resources held internally.
-	 * 
+	 *
 	 * The instance is not useable after this call any more.
 	 */
 	@Override
@@ -714,5 +714,5 @@ public class JGitHelper implements Closeable {
     public String toString() {
         // just return toString() from Repository as it prints out the git-directory
         return repository.toString();
-    }	
+    }
 }

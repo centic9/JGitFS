@@ -87,7 +87,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		log(enableLogging);
 
 		jgitHelper = new JGitHelper(gitDir);
-		
+
 		// open a separate JGitFilesystem for any submodule found in the Git repository
 		for(String subName : jgitHelper.allSubmodules()) {
 			String subPath = jgitHelper.getSubmodulePath(subName);
@@ -95,7 +95,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 			jgitSubmodules.put(subName, new JGitFilesystem(this, subPath, enableLogging));
 		}
 	}
-	
+
 	/**
 	 * Creates a JGitFilesystem for a Git submodule.
 	 *
@@ -138,9 +138,9 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 			stat.setMode(NodeType.SYMBOLIC_LINK, true, true, true, true, true, true, true, true, true);
 			return 0;
 		} else if (GitUtils.isSubmodulePath(path)) {
-			// delegate submodule-requests to the separate filesystem 
+			// delegate submodule-requests to the separate filesystem
 			Pair<String,String> sub = GitUtils.splitSubmodule(path);
-			
+
 			return jgitSubmodules.get(sub.getLeft()).getattr(sub.getRight(), stat);
 		}
 
@@ -161,13 +161,13 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 
 	@Override
 	public int read(final String path, final ByteBuffer buffer, final long size, final long offset, final FileInfoWrapper info) {
-		// delegate submodule-requests to the separate filesystem 
+		// delegate submodule-requests to the separate filesystem
 		if (GitUtils.isSubmodulePath(path)) {
 			Pair<String,String> sub = GitUtils.splitSubmodule(path);
-			
+
 			return jgitSubmodules.get(sub.getLeft()).read(sub.getRight(), buffer, size, offset, info);
 		}
-		
+
 		String commit = jgitHelper.readCommit(path);
 		String file = jgitHelper.readPath(path);
 
@@ -211,7 +211,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 //			filler.add("/index");	- use DirCache?
 //			filler.add("/workspace"); - use WorkingTreeIterator?
 //			filler.add("/git") => symbolic link to the source dir
-//			filler.add("/notes"); - notes	
+//			filler.add("/notes"); - notes
 //			filler.add("/perfile/branch"); - history per file
 //			filler.add("/perfile/commit"); - history per file
 //			filler.add("/perfile/remote"); - history per file
@@ -342,13 +342,13 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		        				String lcommit = jgitHelper.readCommit(path);
 		        				String dir = jgitHelper.readPath(path);
 
-		        				// for symlinks that are actually git-links for a submodule, we need to redirect back to the 
+		        				// for symlinks that are actually git-links for a submodule, we need to redirect back to the
 		        				// separate submodule-folder with the correct submodule name filled in
 		        				if(jgitHelper.isGitLink(lcommit, dir)) {
-		        				    // TODO: does this still work with submodules in directories further down? 
+		        				    // TODO: does this still work with submodules in directories further down?
 	                                String subName = jgitHelper.getSubmoduleAt(dir);
                                     String subHead = jgitHelper.getSubmoduleHead(subName);
-                                    return ("../../.." + GitUtils.SUBMODULE_SLASH + subName + GitUtils.COMMIT_SLASH + 
+                                    return ("../../.." + GitUtils.SUBMODULE_SLASH + subName + GitUtils.COMMIT_SLASH +
 	                                        subHead.substring(0,2) + "/" + subHead.substring(2)).getBytes();
 		        				}
 
@@ -374,7 +374,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 	    if (GitUtils.isSubmodulePath(path)) {
             // delegate submodule-requests to the separate filesystem
             Pair<String, String> sub = GitUtils.splitSubmodule(path);
-    
+
             return jgitSubmodules.get(sub.getLeft()).readlink(sub.getRight(), buffer, size);
         }
 

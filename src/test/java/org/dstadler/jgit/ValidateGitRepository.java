@@ -22,7 +22,7 @@ public class ValidateGitRepository {
 		long count = 0;
 		for(String arg : args) {
 			JGitHelper jgitHelper = new JGitHelper(arg);
-			
+
 			Set<String> allCommitSubs = jgitHelper.allCommitSubs();
 			System.out.println("Found " + allCommitSubs.size() + " subs");
 			Collection<String> allCommits = jgitHelper.allCommits(null);
@@ -30,11 +30,11 @@ public class ValidateGitRepository {
 			for(String commit : allCommits) {
 				// commit and sub match
 				assertTrue(allCommitSubs.contains(commit.substring(0, 2)));
-				
+
 				// list all files recursively
 				count = readRecursive(wrapper, count, jgitHelper, commit, "");
 			}
-			
+
 			System.out.println("Directory " + arg + " validated");
 			jgitHelper.close();
 		}

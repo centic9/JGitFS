@@ -31,7 +31,7 @@ public class GitUtils {
 
 	public final static long UID = getUID();
 	public final static long GID = getGID();
-	
+
 	private final static Pattern TAG_PATTERN = Pattern.compile("/tag/[^/]+");
 	private final static Pattern BRANCH_PATTERN = Pattern.compile("/branch/[^/]+");
 	private final static Pattern REMOTE_PATTERN = Pattern.compile("/remote/[^/]+");
@@ -50,7 +50,7 @@ public class GitUtils {
 	public static boolean isRemoteDir(final String path) {
 		return REMOTE_PATTERN.matcher(path).matches() && !path.endsWith(".hidden");
 	}
-	
+
     public static boolean isCommitSub(final String path) {
 		return COMMIT_SUB_PATTERN.matcher(path).matches();
 	}
@@ -78,7 +78,7 @@ public class GitUtils {
         if(!matcher.find()) {
             throw new NoSuchElementException("Could not read submodule name from " + path);
         }
-        
+
         String name = matcher.group(1);
         String dir = matcher.group(2);
         return ImmutablePair.of(name, dir.isEmpty() ? "/" : dir);

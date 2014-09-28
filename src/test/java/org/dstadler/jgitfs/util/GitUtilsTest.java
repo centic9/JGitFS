@@ -15,7 +15,7 @@ public class GitUtilsTest {
     public void testCoverage() {
         assertNotNull(new GitUtils());
     }
-    
+
 	@Test
 	public void testIsCommitSub() {
 		assertFalse(GitUtils.isCommitSub(""));
@@ -28,7 +28,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isCommitSub(GitUtils.COMMIT_SLASH + "0g"));
 		assertFalse(GitUtils.isCommitSub(GitUtils.COMMIT_SLASH + "fg"));
 		assertFalse(GitUtils.isCommitSub(GitUtils.COMMIT_SLASH + "zz"));
-		
+
 		assertTrue(GitUtils.isCommitSub(GitUtils.COMMIT_SLASH + "00"));
 		assertTrue(GitUtils.isCommitSub(GitUtils.COMMIT_SLASH + "ff"));
 		assertTrue(GitUtils.isCommitSub(GitUtils.COMMIT_SLASH + "ae"));
@@ -48,7 +48,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isCommitDir(GitUtils.COMMIT_SLASH + "zz"));
 		assertFalse(GitUtils.isCommitDir(GitUtils.COMMIT_SLASH + "00"));
 		assertFalse(GitUtils.isCommitDir(GitUtils.COMMIT_SLASH + "ab"));
-		
+
 		assertTrue(GitUtils.isCommitDir(GitUtils.COMMIT_SLASH + "12/34567890123456789012345678901234567890"));
 	}
 
@@ -58,7 +58,7 @@ public class GitUtilsTest {
 	    Pair<String,String> ret = GitUtils.splitSubmodule("/submodule/name/file");
 	    assertEquals("name", ret.getLeft());
 	    assertEquals("/file", ret.getRight());
-	    
+
 	    assertTrue(GitUtils.isSubmodulePath("/submodule/name/"));
         ret = GitUtils.splitSubmodule("/submodule/name/");
         assertEquals("name", ret.getLeft());
@@ -101,7 +101,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isCommitSubDir(GitUtils.COMMIT_SLASH + "12/34567890123456789012345678901234567890"));
 		assertFalse(GitUtils.isCommitSubDir(GitUtils.COMMIT_SLASH + "12/34567890123456789012345678901234567890/"));
 		assertFalse(GitUtils.isCommitSubDir(GitUtils.COMMIT_SLASH + "12/34567890123456789012345678901234567890/file123/.hidden"));
-		
+
 		assertTrue(GitUtils.isCommitSubDir(GitUtils.COMMIT_SLASH + "12/34567890123456789012345678901234567890/file123"));
 	}
 
@@ -116,7 +116,7 @@ public class GitUtilsTest {
         assertFalse(GitUtils.isSubmoduleName("/commit"));
         assertFalse(GitUtils.isSubmoduleName(GitUtils.SUBMODULE_SLASH + "00/"));
         assertFalse(GitUtils.isSubmoduleName(GitUtils.SUBMODULE_SLASH + "zz/123"));
-        
+
         assertTrue(GitUtils.isSubmoduleName(GitUtils.SUBMODULE_SLASH + "sub1"));
         assertTrue(GitUtils.isSubmoduleName(GitUtils.SUBMODULE_SLASH + "sub2"));
         assertTrue(GitUtils.isSubmoduleName(GitUtils.SUBMODULE_SLASH + "sub43"));
@@ -164,7 +164,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "ae/.hidden"));
         assertFalse(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "asdfasd/.hidden"));
         assertFalse(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + ".hidden"));
-		
+
 		assertTrue(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "asdfasd"));
 		assertTrue(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "fg"));
 		assertTrue(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "zz"));

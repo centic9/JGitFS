@@ -17,7 +17,7 @@ public class FuseUtils {
 			if(!mountPoint.mkdirs()) {
 				throw new IOException("Could not create mountpoint at " + mountPoint.getAbsolutePath());
 			}
-			
+
 			// done, cannot be mounted
 			return;
 		}

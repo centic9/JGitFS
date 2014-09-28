@@ -539,14 +539,14 @@ public class JGitHelperTest {
             assertEquals("toString() is expected to result in the same result across repeated calls!", value,
                     helper.toString());
         }
-	    
+
     }
-	
+
 	@Test
     public void testReadSymlink() throws Exception {
 	    String link = helper.readSymlink(SYMLINK_COMMIT, "src/test/data/symlink");
 	    assertEquals("one", link);
-	    
+
 	    link = helper.readSymlink(SYMLINK_COMMIT, "src/test/data/rellink");
         assertEquals("../../../build.gradle", link);
 
@@ -557,7 +557,7 @@ public class JGitHelperTest {
         } catch (UnsupportedOperationException e) {
             // expected for now...
         }
-        
+
         try {
             helper.readSymlink(DEFAULT_COMMIT, "build.gradle");
             fail("Should catch exception here");
@@ -615,15 +615,15 @@ public class JGitHelperTest {
     public void testConstructForSubmodule() throws Exception {
         try (JGitHelper subHelper = new JGitHelper(helper, "fuse-jna")) {
             final StatWrapper wrapper = getStatsWrapper();
-    
+
             subHelper.readType(SUBMODULE_COMMIT, "build.gradle", wrapper);
             assertEquals(NodeType.FILE, wrapper.type());
-            
+
             subHelper.readType(SUBMODULE_COMMIT, "src", wrapper);
             assertEquals(NodeType.DIRECTORY, wrapper.type());
         }
     }
-    
+
     @Test
     public void testConstructForInvalidSubmodule() throws Exception {
         try {
@@ -649,19 +649,19 @@ public class JGitHelperTest {
 //        assertFalse("Repo should not be bare", repository.isBare());
 
         System.out.println("Found submodules" + helper.allSubmodules());
-        
+
         Repository subRepo = SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna");
-        
+
 //        Repository subRepo = builder.setGitDir(new File("/opt/git-fs/JGitFS/fuse-jna/.git"))
 //                .readEnvironment() // scan environment GIT_* variables
 //                .findGitDir() // scan up the file system tree
 //                .build();
-        
-        
+
+
         assertFalse(subRepo.isBare());
         Map<String, Ref> allRefs = subRepo.getAllRefs();
         assertFalse("We should find some refs via submodule-repository", allRefs.isEmpty());
-        
+
 //        {
 //            SubmoduleWalk walk = SubmoduleWalk.forIndex( repository );
 //            boolean found = false;
@@ -669,25 +669,25 @@ public class JGitHelperTest {
 //              Repository submoduleRepository = walk.getRepository();
 //              //Git.wrap( submoduleRepository ).checkout().call();
 //              //listSubs(submoduleRepository);
-//              
+//
 //              Map<String, Ref> allRefs = submoduleRepository.getAllRefs();
 //              assertFalse("We should find some refs via submodule-repository", allRefs.isEmpty());
 //              for(String ref : allRefs.keySet()) {
 //                  System.out.println(ref);
 //              }
-//    
+//
 //              submoduleRepository.close();
 //            }
 //            assertTrue("Should find some submodules", found);
 //            walk.release();
 //        }
-        
+
         //listSubs(SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna"));
         {
             for(String ref : allRefs.keySet()) {
                 System.out.println(ref);
             }
-        }        
+        }
 
         // find the commit
         ObjectId lastCommitId = subRepo.resolve(SUBMODULE_COMMIT);
@@ -697,7 +697,7 @@ public class JGitHelperTest {
 //        for(RevCommit commit : commits) {
 //            System.out.println("Commit: " + commit.getId());
 //        }
-        
+
 
         // a RevWalk allows to walk over commits based on some filtering that is defined
         RevWalk revWalk = new RevWalk(subRepo);
@@ -719,7 +719,7 @@ public class JGitHelperTest {
         loader.copyTo(System.out);
         revWalk.dispose();
 
-        
+
 //        try (JGitHelper linkHelper = new JGitHelper("fuse-jna")) {
 //            Set<String> allCommitSubs = linkHelper.allCommitSubs();
 //            assertNotNull(allCommitSubs);
