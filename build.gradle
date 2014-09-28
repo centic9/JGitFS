@@ -24,9 +24,3 @@ dependencies {
 task wrapper(type: Wrapper) {
 	gradleVersion = '2.1'
 }
-
-task submoduleUpdate(type:Exec) {
-  workingDir '.'
-
-  commandLine 'git', 'submodule', 'update'
-}
