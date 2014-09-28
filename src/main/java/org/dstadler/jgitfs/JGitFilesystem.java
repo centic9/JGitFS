@@ -341,10 +341,12 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 	public void close() throws IOException {
 		jgitHelper.close();
 
-		try {
-			unmount();
-		} catch (FuseException e) {
-			throw new IOException(e);
+		if(isMounted()) {
+			try {
+				unmount();
+			} catch (FuseException e) {
+				throw new IOException(e);
+			}
 		}
 	}
 }
