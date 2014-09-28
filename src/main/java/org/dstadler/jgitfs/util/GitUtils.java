@@ -79,7 +79,9 @@ public class GitUtils {
             throw new NoSuchElementException("Could not read submodule name from " + path);
         }
         
-        return ImmutablePair.of(matcher.group(1), matcher.group(2));
+        String name = matcher.group(1);
+        String dir = matcher.group(2);
+        return ImmutablePair.of(name, dir.isEmpty() ? "/" : dir);
     }
 
     public static long getUID() {

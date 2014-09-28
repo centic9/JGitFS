@@ -36,6 +36,7 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
+import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
 /**
@@ -75,6 +76,25 @@ public class JGitHelper implements Closeable {
 	}
 
 	/**
+	 * Initialize a JGitHelper for a Git submodule, this requires the
+	 * parent JGitHelper object in order to correct open the repository
+	 * for the submodule.
+	 *
+	 * @param parent The JGitHelper object for the parent Git repository
+	 * @param submodulePath The path where the submodule is linked in
+	 * @throws IllegalArgumentException If no submodule can be opened at the given path
+     * @throws IOException If opening the Git repository fails
+	 */
+	public JGitHelper(JGitHelper parent, String submodulePath) throws IOException {
+        System.out.println("Using submodule at " + submodulePath + " via git repository at " + parent.repository.getDirectory());
+        repository = SubmoduleWalk.getSubmoduleRepository(parent.repository, submodulePath);
+        if(repository == null) {
+            throw new IllegalArgumentException("Could not open submodule at path " + submodulePath);
+        }
+        git = new Git(repository);
+	}
+
+    /**
 	 * For a path to a commit, i.e. something like "/commit/00/123456..." return the
 	 * actual commit-id, i.e. 00123456...
 	 *
@@ -112,15 +132,14 @@ public class JGitHelper implements Closeable {
 	public void readType(String commit, String path, StatWrapper stat) throws IOException {
 		RevCommit revCommit = buildRevCommit(commit);
 
-		// and using commit's tree find the path
-		RevTree tree = revCommit.getTree();
-		//System.out.println("Having tree: " + tree + " for commit " + commit);
-
 		// set time and user-id/group-id
 		stat.ctime(revCommit.getCommitTime());
 		stat.mtime(revCommit.getCommitTime());
 		stat.uid(GitUtils.UID);
 		stat.gid(GitUtils.GID);
+
+        // and using commit's tree find the path
+        RevTree tree = revCommit.getTree();
 
 		// now read the file/directory attributes
 		TreeWalk treeWalk = buildTreeWalk(tree, path);
@@ -162,7 +181,6 @@ public class JGitHelper implements Closeable {
 
         // and using commit's tree find the path
         RevTree tree = revCommit.getTree();
-        //System.out.println("Having tree: " + tree + " for commit " + commit);
 
         // now read the file/directory attributes
         TreeWalk treeWalk = buildTreeWalk(tree, path);
@@ -476,6 +494,28 @@ public class JGitHelper implements Closeable {
             for(Map.Entry<String, SubmoduleStatus> entry : set.entrySet()) {
                 if(entry.getKey().equals(name)) {
                     return entry.getValue().getPath();
+                }
+            }
+            throw new NoSuchElementException("Could not read submodule " + name);
+        } catch (GitAPIException e) {
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * Returns the path where the given submodule is linked. 
+     *
+     * @param name the name of the Git submodule. 
+     * @return The path where the Git submodule is linked.
+     * @throws NoSuchElementException if the given name is not known.
+     * @throws IOException If accessing the Git repository fails
+     */
+    public String getSubmoduleHead(String name) throws IOException {
+        try {
+            Map<String, SubmoduleStatus> set = git.submoduleStatus().call();
+            for(Map.Entry<String, SubmoduleStatus> entry : set.entrySet()) {
+                if(entry.getKey().equals(name)) {
+                    return entry.getValue().getHeadId().getName();
                 }
             }
             throw new NoSuchElementException("Could not read submodule " + name);

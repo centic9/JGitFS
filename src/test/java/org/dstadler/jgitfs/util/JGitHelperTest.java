@@ -29,6 +29,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.junit.After;
@@ -44,6 +45,7 @@ public class JGitHelperTest {
     public final static String DEFAULT_COMMIT = "ede9797616a805d6cbeca376bfbbac9a8b7eb64f";
     private static final String SYMLINK_COMMIT = "e81ba32d8d51cdd1463e9a0b704059bd8ccbfd19";
     private static final String GITLINK_COMMIT = "ca1767dc76fe104d0b94fb2a5c962c82121be3da";
+    private static final String SUBMODULE_COMMIT = "39c1c4b78ff751b0b9e28f4fb35148a1acd6646f";
 
 	private JGitHelper helper;
 
@@ -591,48 +593,120 @@ public class JGitHelperTest {
     public void testGetSubmodulePath() throws IOException {
         assertEquals("fuse-jna", helper.getSubmodulePath("fuse-jna"));
         try {
-            helper.getSubmoduleAt("notexisting");
+            helper.getSubmodulePath("notexisting");
             fail("Should catch exception here");
         } catch (NoSuchElementException e) {
             // expected here
         }
     }
+
+    @Test
+    public void testGetSubmoduleHead() throws IOException {
+        assertNotNull(helper.getSubmoduleHead("fuse-jna"));
+        try {
+            helper.getSubmoduleHead("notexisting");
+            fail("Should catch exception here");
+        } catch (NoSuchElementException e) {
+            // expected here
+        }
+    }
+
+    @Test
+    public void testConstructForSubmodule() throws Exception {
+        try (JGitHelper subHelper = new JGitHelper(helper, "fuse-jna")) {
+            final StatWrapper wrapper = getStatsWrapper();
     
+            subHelper.readType(SUBMODULE_COMMIT, "build.gradle", wrapper);
+            assertEquals(NodeType.FILE, wrapper.type());
+            
+            subHelper.readType(SUBMODULE_COMMIT, "src", wrapper);
+            assertEquals(NodeType.DIRECTORY, wrapper.type());
+        }
+    }
+    
+    @Test
+    public void testConstructForInvalidSubmodule() throws Exception {
+        try {
+            JGitHelper subHelper = new JGitHelper(helper, "notexisting");
+            subHelper.close();
+            fail("Should catch exception");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("notexisting"));
+        }
+    }
+
+    @Ignore("Just used for testing")
     @Test
     public void testGitLinkRepository() throws Exception {
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
-        Repository repository = builder.setGitDir(new File("fuse-jna/.git"))
+
+        Repository repository = builder.setGitDir(new File("./.git"))
           .readEnvironment() // scan environment GIT_* variables
           .findGitDir() // scan up the file system tree
           .build();
+//        Repository repository = helper.getRepository();
 
-//        SubmoduleWalk walk = SubmoduleWalk.forIndex( repository );
-//        while( walk.next() ) {
-//          Repository submoduleRepository = walk.getRepository();
-//          //Git.wrap( submoduleRepository ).checkout().call();
-//          listSubs(submoduleRepository);
-//          submoduleRepository.close();
+//        assertFalse("Repo should not be bare", repository.isBare());
+
+        System.out.println("Found submodules" + helper.allSubmodules());
+        
+        Repository subRepo = SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna");
+        
+//        Repository subRepo = builder.setGitDir(new File("/opt/git-fs/JGitFS/fuse-jna/.git"))
+//                .readEnvironment() // scan environment GIT_* variables
+//                .findGitDir() // scan up the file system tree
+//                .build();
+        
+        
+        assertFalse(subRepo.isBare());
+        Map<String, Ref> allRefs = subRepo.getAllRefs();
+        assertFalse("We should find some refs via submodule-repository", allRefs.isEmpty());
+        
+//        {
+//            SubmoduleWalk walk = SubmoduleWalk.forIndex( repository );
+//            boolean found = false;
+//            while( walk.next() ) {
+//              Repository submoduleRepository = walk.getRepository();
+//              //Git.wrap( submoduleRepository ).checkout().call();
+//              //listSubs(submoduleRepository);
+//              
+//              Map<String, Ref> allRefs = submoduleRepository.getAllRefs();
+//              assertFalse("We should find some refs via submodule-repository", allRefs.isEmpty());
+//              for(String ref : allRefs.keySet()) {
+//                  System.out.println(ref);
+//              }
+//    
+//              submoduleRepository.close();
+//            }
+//            assertTrue("Should find some submodules", found);
+//            walk.release();
 //        }
-//        walk.release();
         
         //listSubs(SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna"));
-        listSubs(repository);
+        {
+            for(String ref : allRefs.keySet()) {
+                System.out.println(ref);
+            }
+        }        
+
+        // find the commit
+        ObjectId lastCommitId = subRepo.resolve(SUBMODULE_COMMIT);
+
+        // .add(lastCommitId)
+//        Iterable<RevCommit> commits = new Git(subRepo).log().call();
+//        for(RevCommit commit : commits) {
+//            System.out.println("Commit: " + commit.getId());
+//        }
         
-        Iterable<RevCommit> commits = new Git(repository).log().call();
-        for(RevCommit commit : commits) {
-            System.out.println("Commit: " + commit.getId());
-        }
-        
-        // find the HEAD
-        ObjectId lastCommitId = repository.resolve("0fa3ca5246abc9553f97212232b07ea76bf74596");
+
         // a RevWalk allows to walk over commits based on some filtering that is defined
-        RevWalk revWalk = new RevWalk(repository);
+        RevWalk revWalk = new RevWalk(subRepo);
         RevCommit commit = revWalk.parseCommit(lastCommitId);
         // and using commit's tree find the path
         RevTree tree = commit.getTree();
         System.out.println("Having tree: " + tree);
         // now try to find a specific file
-        TreeWalk treeWalk = new TreeWalk(repository);
+        TreeWalk treeWalk = new TreeWalk(subRepo);
         treeWalk.addTree(tree);
         treeWalk.setRecursive(true);
         treeWalk.setFilter(PathFilter.create("build.gradle"));
@@ -640,7 +714,7 @@ public class JGitHelperTest {
             throw new IllegalStateException("Did not find expected file 'build.gradle'");
         }
         ObjectId objectId = treeWalk.getObjectId(0);
-        ObjectLoader loader = repository.open(objectId);
+        ObjectLoader loader = subRepo.open(objectId);
         // and then one can the loader to read the file
         loader.copyTo(System.out);
         revWalk.dispose();
@@ -652,20 +726,4 @@ public class JGitHelperTest {
 //            assertFalse(allCommitSubs.isEmpty());
 //        }
     }
-
-    private void listSubs(Repository repository) {
-        // we currently use all refs for finding commits quickly
-        RevWalk walk = new RevWalk(repository);
-        try {
-            // optimization: we only need the commit-ids here, so we can discard the contents right away
-            walk.setRetainBody(false);
-    
-            Map<String, Ref> allRefs = repository.getAllRefs();
-            for(String ref : allRefs.keySet()) {
-                System.out.println(ref);
-            }
-        } finally {
-            walk.dispose();
-        }
-    }    
 }

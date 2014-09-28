@@ -46,7 +46,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 	private long lastLinkCacheCleanup = System.currentTimeMillis();
 
 	private final JGitHelper jgitHelper;
-	private Map<String, JGitFilesystem> jgitSubmodules = new HashMap<>();
+	private final Map<String, JGitFilesystem> jgitSubmodules = new HashMap<>();
 
 	/**
 	 * static set of directories to handle them quickly in getattr().
@@ -80,7 +80,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 	 * @throws IOException If opening the Git repository fails.
 	 */
 	@SuppressWarnings("resource")
-    public JGitFilesystem(String gitDir, boolean enableLogging) throws IOException {
+	public JGitFilesystem(String gitDir, boolean enableLogging) throws IOException {
 		super();
 
 		// disable verbose logging
@@ -90,10 +90,27 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		
 		// open a separate JGitFilesystem for any submodule found in the Git repository
 		for(String subName : jgitHelper.allSubmodules()) {
-		    String subPath = jgitHelper.getSubmodulePath(subName);
-		    System.out.println("Preparing submodule " + subName + " at " + subPath);
-            jgitSubmodules.put(subName, new JGitFilesystem(subPath, enableLogging));
+			String subPath = jgitHelper.getSubmodulePath(subName);
+			System.out.println("Preparing submodule " + subName + " at " + subPath);
+			jgitSubmodules.put(subName, new JGitFilesystem(this, subPath, enableLogging));
 		}
+	}
+	
+	/**
+	 * Creates a JGitFilesystem for a Git submodule.
+	 *
+	 * @param parent The JGitFilesystem for the parent Git repository.
+	 * @param submodulePath The path in the parent Git repository where the submodule is mounted.
+	 * @param enableLogging If fuse-jna should log details about file/directory accesses
+	 * @throws IOException If opening the Git repository fails.
+	 */
+	public JGitFilesystem(JGitFilesystem parent, String submodulePath, boolean enableLogging) throws IOException {
+		super();
+
+		// disable verbose logging
+		log(enableLogging);
+
+		jgitHelper = new JGitHelper(parent.jgitHelper, submodulePath);
 	}
 
 	@Override
@@ -120,11 +137,11 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 			// entries under /branch and /tag are always symbolic links
 			stat.setMode(NodeType.SYMBOLIC_LINK, true, true, true, true, true, true, true, true, true);
 			return 0;
-        } else if (GitUtils.isSubmodulePath(path)) {
-            // delegate submodule-requests to the separate filesystem 
-            Pair<String,String> sub = GitUtils.splitSubmodule(path);
-            
-            return jgitSubmodules.get(sub.getLeft()).getattr(sub.getRight(), stat);
+		} else if (GitUtils.isSubmodulePath(path)) {
+			// delegate submodule-requests to the separate filesystem 
+			Pair<String,String> sub = GitUtils.splitSubmodule(path);
+			
+			return jgitSubmodules.get(sub.getLeft()).getattr(sub.getRight(), stat);
 		}
 
 		// all others are reported as "not found"
@@ -144,14 +161,14 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 
 	@Override
 	public int read(final String path, final ByteBuffer buffer, final long size, final long offset, final FileInfoWrapper info) {
-        // delegate submodule-requests to the separate filesystem 
-	    if (GitUtils.isSubmodulePath(path)) {
-            Pair<String,String> sub = GitUtils.splitSubmodule(path);
-            
-            return jgitSubmodules.get(sub.getLeft()).read(sub.getRight(), buffer, size, offset, info);
-        }
-	    
-	    String commit = jgitHelper.readCommit(path);
+		// delegate submodule-requests to the separate filesystem 
+		if (GitUtils.isSubmodulePath(path)) {
+			Pair<String,String> sub = GitUtils.splitSubmodule(path);
+			
+			return jgitSubmodules.get(sub.getLeft()).read(sub.getRight(), buffer, size, offset, info);
+		}
+		
+		String commit = jgitHelper.readCommit(path);
 		String file = jgitHelper.readPath(path);
 
 		try {
@@ -199,7 +216,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 //			filler.add("/perfile/commit"); - history per file
 //			filler.add("/perfile/remote"); - history per file
 //			filler.add("/perfile/tag"); - history per file
-//          filler.add("/date"); - commits sorted by date, i.e. 2013/03/04/34:23/...
+//		  filler.add("/date"); - commits sorted by date, i.e. 2013/03/04/34:23/...
 
 			return 0;
 		} else if (path.equals("/commit")) {
@@ -276,23 +293,23 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 			}
 
 			return 0;
-        } else if (path.equals("/submodule")) {
-            // list names of all submodules
-            try {
-                Collection<String> items = jgitHelper.allSubmodules();
-                for(String item : items) {
-                    filler.add(item);
-                }
-            } catch (Exception e) {
-                throw new IllegalStateException("Error reading elements of path " + path, e);
-            }
+		} else if (path.equals("/submodule")) {
+			// list names of all submodules
+			try {
+				Collection<String> items = jgitHelper.allSubmodules();
+				for(String item : items) {
+					filler.add(item);
+				}
+			} catch (Exception e) {
+				throw new IllegalStateException("Error reading elements of path " + path, e);
+			}
 
-            return 0;
-        } else if (GitUtils.isSubmodulePath(path)) {
-            // delegate submodule-requests to the separate filesystem
-            Pair<String, String> sub = GitUtils.splitSubmodule(path);
+			return 0;
+		} else if (GitUtils.isSubmodulePath(path)) {
+			// delegate submodule-requests to the separate filesystem
+			Pair<String, String> sub = GitUtils.splitSubmodule(path);
 
-            return jgitSubmodules.get(sub.getLeft()).readdir(sub.getRight(), filler);
+			return jgitSubmodules.get(sub.getLeft()).readdir(sub.getRight(), filler);
 		}
 
 		throw new IllegalStateException("Error reading directories in path " + path);
@@ -313,7 +330,6 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		           new CacheLoader<String, byte[]>() {
 		             @Override
 					public byte[] load(String path) {
-		         		StringBuilder target = new StringBuilder(".." + GitUtils.COMMIT_SLASH);
 		        		try {
 		        			final String commit;
 		        			if(GitUtils.isBranchDir(path)) {
@@ -326,8 +342,14 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		        				String lcommit = jgitHelper.readCommit(path);
 		        				String dir = jgitHelper.readPath(path);
 
+		        				// for symlinks that are actually git-links for a submodule, we need to redirect back to the 
+		        				// separate submodule-folder with the correct submodule name filled in
 		        				if(jgitHelper.isGitLink(lcommit, dir)) {
-	                                return (".." + GitUtils.SUBMODULE_SLASH + jgitHelper.getSubmoduleAt(dir)).getBytes();
+		        				    // TODO: does this still work with submodules in directories further down? 
+	                                String subName = jgitHelper.getSubmoduleAt(dir);
+                                    String subHead = jgitHelper.getSubmoduleHead(subName);
+                                    return ("../../.." + GitUtils.SUBMODULE_SLASH + subName + GitUtils.COMMIT_SLASH + 
+	                                        subHead.substring(0,2) + "/" + subHead.substring(2)).getBytes();
 		        				}
 
 		        				return jgitHelper.readSymlink(lcommit, dir).getBytes();
@@ -336,7 +358,9 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		        			if(commit == null) {
 		        				throw new FileNotFoundException("Had unknown tag/branch/remote " + path + " in readlink()");
 		        			}
-		        			target.append(commit.substring(0, 2)).append("/").append(commit.substring(2));
+
+		        			StringBuilder target = new StringBuilder("..");
+		        			target.append(GitUtils.COMMIT_SLASH).append(commit.substring(0, 2)).append("/").append(commit.substring(2));
 
 		        			return target.toString().getBytes();
 		        		} catch (Exception e) {

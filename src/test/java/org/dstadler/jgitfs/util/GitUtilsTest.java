@@ -162,6 +162,8 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "asdfasd/sjwekw"));
 		assertFalse(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "asdfasd_aldsjfasd asdlkjasdj.,.;_:;:öÖLP\"=)==\"§\"§%/\"!§)$§\""));
 		assertFalse(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "ae/.hidden"));
+        assertFalse(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "asdfasd/.hidden"));
+        assertFalse(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + ".hidden"));
 		
 		assertTrue(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "asdfasd"));
 		assertTrue(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "fg"));
@@ -185,7 +187,9 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isTagDir(GitUtils.TAG_SLASH + "00/"));
 		assertFalse(GitUtils.isTagDir(GitUtils.TAG_SLASH + "asdfasd/sjwekw"));
 		assertFalse(GitUtils.isTagDir(GitUtils.TAG_SLASH + "asdfasd_aldsjfasd asdlkjasdj.,.;_:;:öÖLP\"=)==\"§\"§%/\"!§)$§\""));
-		assertFalse(GitUtils.isTagDir(GitUtils.BRANCH_SLASH + "ae/.hidden"));
+		assertFalse(GitUtils.isTagDir(GitUtils.TAG_SLASH + "ae/.hidden"));
+		assertFalse(GitUtils.isTagDir(GitUtils.TAG_SLASH + "asdfasd/.hidden"));
+		assertFalse(GitUtils.isTagDir(GitUtils.TAG_SLASH + ".hidden"));
 
 		assertTrue(GitUtils.isTagDir(GitUtils.TAG_SLASH + "asdfasd"));
 		assertTrue(GitUtils.isTagDir(GitUtils.TAG_SLASH + "fg"));
@@ -210,6 +214,8 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isRemoteDir(GitUtils.REMOTE_SLASH + "asdfasd/sjwekw"));
 		assertFalse(GitUtils.isRemoteDir(GitUtils.REMOTE_SLASH + "asdfasd_aldsjfasd asdlkjasdj.,.;_:;:öÖLP\"=)==\"§\"§%/\"!§)$§\""));
 		assertFalse(GitUtils.isRemoteDir(GitUtils.BRANCH_SLASH + "ae/.hidden"));
+        assertFalse(GitUtils.isRemoteDir(GitUtils.REMOTE_SLASH + "asdfasd/.hidden"));
+        assertFalse(GitUtils.isRemoteDir(GitUtils.REMOTE_SLASH + ".hidden"));
 
 		assertTrue(GitUtils.isRemoteDir(GitUtils.REMOTE_SLASH + "asdfasd"));
 		assertTrue(GitUtils.isRemoteDir(GitUtils.REMOTE_SLASH + "fg"));

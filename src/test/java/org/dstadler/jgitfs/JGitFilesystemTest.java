@@ -29,6 +29,8 @@ public class JGitFilesystemTest {
 	private static final String DEFAULT_COMMIT_SUB = JGitHelperTest.DEFAULT_COMMIT.substring(0,2);
 	private static final String DEFAULT_COMMIT_PREFIX = JGitHelperTest.DEFAULT_COMMIT.substring(2);
 	private static final String DEFAULT_COMMIT_PATH = "/commit/" + DEFAULT_COMMIT_SUB + "/" + DEFAULT_COMMIT_PREFIX;
+	
+	private static final String SUBMODULE_COMMIT_PATH = "/submodule/fuse-jna/commit/0f/a3ca5246abc9553f97212232b07ea76bf74596";
 
 	private JGitFilesystem fs;
 
@@ -535,16 +537,37 @@ public class JGitFilesystemTest {
         // check that we can read the gitlink
         buffer = ByteBuffer.allocate(1000);
         assertEquals(0, fs.readlink(commit + "/fuse-jna", buffer, 1000));
-        assertEquals("Incorrect number of bytes written to the buffer", 979, buffer.remaining());
-        assertEquals("../submodule/fuse-jna", new String(buffer.array(), 0, buffer.position()));
+        assertEquals("Incorrect number of bytes written to the buffer", 924, buffer.remaining());
+        assertEquals("../../../submodule/fuse-jna/commit/39/c1c4b78ff751b0b9e28f4fb35148a1acd6646f", new String(buffer.array(), 0, buffer.position()));
 
         StatWrapper stat = getStatsWrapper();
         assertEquals(0, fs.getattr("/submodule/fuse-jna", stat));
         assertEquals(NodeType.DIRECTORY, stat.type());
 
-        assertEquals(0, fs.getattr("/submodule/fuse-jna/commit/0f/a3ca5246abc9553f97212232b07ea76bf74596/build.gradle", stat));
+        assertEquals(0, fs.getattr(SUBMODULE_COMMIT_PATH + "/build.gradle", stat));
         assertEquals(NodeType.FILE, stat.type());
-	}
+        
+        assertEquals(100, fs.read(SUBMODULE_COMMIT_PATH + "/LICENSE", ByteBuffer.allocate(100), 100, 0, null));
+        
+        final List<String> filledFiles = new ArrayList<String>();
+        DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
+        
+        fs.readdir("/submodule/fuse-jna/", filler);
+        assertEquals("[/branch, /commit, /remote, /tag, /submodule]", filledFiles.toString());
+        
+        filledFiles.clear();
+        fs.readdir("/submodule/fuse-jna", filler);
+        assertEquals("[/branch, /commit, /remote, /tag, /submodule]", filledFiles.toString());
+        
+        filledFiles.clear();
+        fs.readdir(SUBMODULE_COMMIT_PATH, filler);
+        assertEquals("[.classpath, .gitignore, .project, .settings, .travis.yml, LICENSE, README.md, build.gradle, examples, lib, res, src]", 
+                filledFiles.toString());
+
+//        assertEquals(0, fs.getattr("/commit/10/180121602b3aa3b7c6b4bdf15878b0e34bc378/fuse-jna/build.gradle", stat));
+//        assertEquals(NodeType.FILE, stat.type());
+        
+    }
 
 	@Test
 	public void testWithTestDataRemote() {
