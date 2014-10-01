@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.junit.Test;
 
 
@@ -27,7 +28,9 @@ public class FuseUtilsTest {
 
         try {
             FuseUtils.prepareMountpoint(new File("/proc/123234"));
-            fail("Should not be able to create the invalid mountpoint");
+            if(!SystemUtils.IS_OS_WINDOWS) {
+            	fail("Should not be able to create the invalid mountpoint");
+            }
         } catch (IOException e) {
             // expected
         }

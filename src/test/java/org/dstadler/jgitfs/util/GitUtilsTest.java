@@ -67,7 +67,7 @@ public class GitUtilsTest {
         assertTrue(GitUtils.isSubmodulePath("/submodule/name"));
         ret = GitUtils.splitSubmodule("/submodule/name");
         assertEquals("name", ret.getLeft());
-        assertEquals("", ret.getRight());
+        assertEquals("/", ret.getRight());
 
         assertFalse(GitUtils.isSubmodulePath("/submodule/"));
         try {

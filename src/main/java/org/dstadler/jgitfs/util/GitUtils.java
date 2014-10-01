@@ -102,12 +102,12 @@ public class GitUtils {
 		    InputStream inputStream = child.getInputStream();
 		    try  {
 		    	String string = IOUtils.toString(inputStream).trim();
-		    	System.out.println("Found user/group id: " + string);
+		    	System.out.println("Found user/group id: " + string + " for user: " + userName);
 		    	return Long.parseLong(string);
 		    } finally {
 		    	inputStream.close();
 		    }
-		} catch (IOException e) {
+		} catch (IOException | NumberFormatException e) {
 			System.out.println("Could not read user/group information for user " + userName);
 			e.printStackTrace();
 			return 0;
