@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -453,6 +454,11 @@ public class JGitHelper implements Closeable {
      * @throws IOException If accessing the Git repository fails
 	 */
 	public Collection<String> allSubmodules() throws IOException {
+	    if(repository.isBare()) {
+	        System.out.println("Cannot list submodules for bare repository at " + repository.getDirectory());
+	        return Collections.emptyList();
+	    }
+
         try {
             return git.submoduleStatus().call().keySet();
         } catch (GitAPIException e) {

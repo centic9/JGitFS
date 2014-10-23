@@ -16,6 +16,7 @@ import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode;
 import net.fusejna.types.TypeMode.NodeType;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
@@ -597,6 +598,40 @@ public class JGitHelperTest {
             fail("Should catch exception here");
         } catch (NoSuchElementException e) {
             // expected here
+        }
+    }
+    
+    @Test
+    public void testGetSubmodulesBareRepository() throws Exception {
+        File localPath = File.createTempFile("JGitHelperTest", ".test");
+        assertTrue(localPath.delete());
+        
+        try {
+            System.out.println("Cloning to " + localPath);
+            Git.cloneRepository()
+            .setURI(new File(".").toURI().toURL().toString())
+            .setBare(true)
+            .setDirectory(new File(localPath, ".git"))
+            .call();
+
+            System.out.println("Cloned to " + localPath + ", now opening repository");
+            
+            Repository repository = new FileRepositoryBuilder()
+                    .setGitDir(localPath)
+                    .readEnvironment() // scan environment GIT_* variables
+                    .findGitDir() // scan up the file system tree
+                    .build();
+            try {
+                assertTrue(repository.isBare());
+        
+                try (JGitHelper jGitHelper = new JGitHelper(localPath.getAbsolutePath())) {
+                    assertTrue(jGitHelper.allSubmodules().isEmpty());
+                }
+            } finally {
+                repository.close();
+            }
+        } finally {
+            FileUtils.deleteDirectory(localPath);
         }
     }
 
