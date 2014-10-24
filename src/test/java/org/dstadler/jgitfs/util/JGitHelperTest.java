@@ -600,38 +600,54 @@ public class JGitHelperTest {
             // expected here
         }
     }
-    
+
     @Test
     public void testGetSubmodulesBareRepository() throws Exception {
         File localPath = File.createTempFile("JGitHelperTest", ".test");
         assertTrue(localPath.delete());
-        
+
         try {
             System.out.println("Cloning to " + localPath);
-            Git.cloneRepository()
+
+            Git result = Git.cloneRepository()
             .setURI(new File(".").toURI().toURL().toString())
             .setBare(true)
             .setDirectory(new File(localPath, ".git"))
             .call();
 
-            System.out.println("Cloned to " + localPath + ", now opening repository");
-            
-            Repository repository = new FileRepositoryBuilder()
-                    .setGitDir(localPath)
-                    .readEnvironment() // scan environment GIT_* variables
-                    .findGitDir() // scan up the file system tree
-                    .build();
             try {
-                assertTrue(repository.isBare());
-        
+	            System.out.println("Cloned to " + localPath + ", result: " + result.getRepository().getDirectory());
+
+                assertTrue(result.getRepository().isBare());
+
                 try (JGitHelper jGitHelper = new JGitHelper(localPath.getAbsolutePath())) {
                     assertTrue(jGitHelper.allSubmodules().isEmpty());
                 }
             } finally {
-                repository.close();
+            	result.close();
             }
         } finally {
-            FileUtils.deleteDirectory(localPath);
+    		FileUtils.deleteDirectory(localPath);
+        }
+    }
+
+    @Test
+    public void testJGitCloneCloseResources() throws Exception {
+        File localPath = File.createTempFile("JGitHelperTest", ".test");
+        assertTrue(localPath.delete());
+
+        try {
+            System.out.println("Cloning to " + localPath);
+            Git result = Git.cloneRepository()
+            .setURI("https://github.com/centic9/jgit-cookbook.git")
+            .setDirectory(new File(localPath, ".git"))
+            .call();
+
+            result.close();
+
+            System.out.println("Cloned to " + localPath + ", now opening repository");
+        } finally {
+    		FileUtils.deleteDirectory(localPath);
         }
     }
 
