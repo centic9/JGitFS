@@ -17,6 +17,7 @@ import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode.NodeType;
 
 import org.dstadler.jgitfs.util.FuseUtils;
+import org.dstadler.jgitfs.util.JGitHelper;
 import org.dstadler.jgitfs.util.JGitHelperTest;
 import org.junit.After;
 import org.junit.Assume;
@@ -216,7 +217,14 @@ public class JGitFilesystemTest {
 	}
 
 	@Test
-	public void testReadDirBranch() {
+	public void testReadDirBranch() throws IOException {
+		// the check further down failed in CI, verify that JGitHelper reports the correct ones
+		try (JGitHelper helper = new JGitHelper(".")) {
+			List<String> branches = helper.getBranches();
+			assertTrue("Had: " + branches.toString(), branches.contains("master"));
+			assertTrue("Had: " + branches.toString(), branches.contains("refs_heads_master"));
+		}
+
 		final List<String> filledFiles = new ArrayList<String>();
 		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
