@@ -90,7 +90,7 @@ public class JGitHelper implements Closeable {
         System.out.println("Using submodule at " + submodulePath + " via git repository at " + parent.repository.getDirectory());
         repository = SubmoduleWalk.getSubmoduleRepository(parent.repository, submodulePath);
         if(repository == null) {
-            throw new IllegalArgumentException("Could not open submodule at path " + submodulePath);
+            throw new IllegalArgumentException("Could not open submodule at path " + submodulePath + " in repository " + parent.repository.getDirectory());
         }
         git = new Git(repository);
 	}

@@ -79,7 +79,6 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 	 * @param enableLogging If fuse-jna should log details about file/directory accesses
 	 * @throws IOException If opening the Git repository fails.
 	 */
-	@SuppressWarnings("resource")
 	public JGitFilesystem(String gitDir, boolean enableLogging) throws IOException {
 		super();
 
@@ -92,7 +91,11 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		for(String subName : jgitHelper.allSubmodules()) {
 			String subPath = jgitHelper.getSubmodulePath(subName);
 			System.out.println("Preparing submodule " + subName + " at " + subPath);
-			jgitSubmodules.put(subName, new JGitFilesystem(this, subPath, enableLogging));
+			try {
+			    jgitSubmodules.put(subName, new JGitFilesystem(this, subPath, enableLogging));
+			} catch (IllegalArgumentException e) {
+			    System.out.println("Error adding submodule: " + subName + ": " + e);
+			}
 		}
 	}
 
