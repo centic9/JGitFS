@@ -2,8 +2,10 @@ package org.dstadler.jgitfs;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.IOException;
 
+import org.junit.Assume;
 import org.junit.Test;
 
 
@@ -52,6 +54,28 @@ public class JGitFSTest {
             // happens when run in CloudBees, but could not find out details...
         } catch (IllegalStateException e) {
             assertTrue("Had: " + e.getMessage(), e.getMessage().contains("invalidrepo"));
+        }
+    }
+
+
+    @Test
+    public void testMount() throws Exception {
+        try {
+            assertFalse(JGitFS.unmount("notexisting"));
+
+            // if we have one that works and the last one an invalid one we get an exception, but did the mounting
+            // for the first one
+            File mountPoint = new File(System.getProperty("java.io.tmpdir") + "/testrepo");
+            JGitFS.mount(".", mountPoint);
+            JGitFS.list();
+            assertTrue(JGitFS.unmount("."));
+            
+            JGitFS.mount(".", mountPoint);
+            JGitFS.list();
+            assertTrue(JGitFS.unmount(mountPoint.getPath()));
+        } catch (IOException e) {
+            // happens when run in CloudBees, but could not find out details...
+            Assume.assumeNoException("In some CI environments this will fail", e);
         }
     }
 }

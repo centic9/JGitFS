@@ -17,10 +17,11 @@ dependencies {
 	compile 'org.eclipse.jgit:org.eclipse.jgit:3.5.0.201409260305-r'
 	compile 'com.google.guava:guava:16.0.1'
 	compile project(':fuse-jna')
+	compile 'jline:jline:2.12'
 
 	testCompile 'junit:junit:4.11'
 }
 
 task wrapper(type: Wrapper) {
-	gradleVersion = '2.1'
+	gradleVersion = '2.2.1'
 }

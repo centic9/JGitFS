@@ -2,11 +2,15 @@ package org.dstadler.jgitfs;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import net.fusejna.FuseException;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.dstadler.jgitfs.console.Console;
 import org.dstadler.jgitfs.util.FuseUtils;
 
 /**
@@ -17,8 +21,9 @@ import org.dstadler.jgitfs.util.FuseUtils;
  *
  * @author dominik.stadler
  */
-public class JGitFS
-{
+public class JGitFS {
+    private static final ConcurrentMap<String,Pair<File, JGitFilesystem>> mounts = new ConcurrentHashMap<>();
+    
 	/**
 	 * Main method for JGitFS.
 	 *
@@ -28,35 +33,61 @@ public class JGitFS
 	 */
 	public static void main(final String... args) throws FuseException, IOException
 	{
-		if (args.length % 2 != 0 || args.length == 0) {
+		if (args.length % 2 != 0) {
 			System.err.println("Usage: GitFS <git-repo> <mountpoint> ...");
 			System.exit(1);
 		}
-
-		List<JGitFilesystem> gitFSList = new ArrayList<JGitFilesystem>(args.length / 2);
+		
 		try {
 			for (int i = 0; i < args.length; i += 2) {
-				String gitDir = args[i];
-				File mountPoint = new File(args[i + 1]);
-
-				System.out.println("Mounting git repository at " + gitDir + " at mountpoint " + mountPoint);
-
-				// now create the Git filesystem
-				@SuppressWarnings("resource")
-				JGitFilesystem gitFS = new JGitFilesystem(gitDir, false);
-				gitFSList.add(gitFS);
-
-				// ensure that we do not have a previous mount lingering on the mountpoint
-				FuseUtils.prepareMountpoint(mountPoint);
-
-				// mount the filesystem. If this is the last mount-point that was specified, block until the filesystem is unmounted
-				gitFS.mount(mountPoint, i == (args.length - 2));
+				mount(args[i], new File(args[i + 1]));
 			}
+
+		    new Console().run();
 		} finally {
 			// ensure that we try to close all filesystems that we created
-			for (JGitFilesystem gitFS : gitFSList) {
-				gitFS.close();
+			for (Pair<File, JGitFilesystem> gitFS : mounts.values()) {
+				gitFS.getRight().close();
 			}
 		}
 	}
+
+	public static boolean unmount(String dirOrMountPoint) throws IOException {
+	    for(Map.Entry<String,Pair<File, JGitFilesystem>> entry : mounts.entrySet()) {
+	        String gitDir = entry.getKey();
+            if(gitDir.equals(dirOrMountPoint) || 
+	                entry.getValue().getLeft().getPath().equals(dirOrMountPoint)) {
+                System.out.println("Unmounting git repository at " + gitDir + " at mountpoint " + entry.getValue().getLeft());
+                entry.getValue().getRight().close();
+	            mounts.remove(gitDir);
+	            return true;
+	        }
+	    }
+	    
+	    System.out.println("Could not find " + dirOrMountPoint);
+	    return false;
+	}
+
+    public static void mount(String gitDir, File mountPoint) throws IOException, UnsatisfiedLinkError, FuseException {
+        System.out.println("Mounting git repository at " + gitDir + " at mountpoint " + mountPoint);
+
+        // now create the Git filesystem
+        @SuppressWarnings("resource")
+        JGitFilesystem gitFS = new JGitFilesystem(gitDir, false);
+
+        // ensure that we do not have a previous mount lingering on the mountpoint
+        FuseUtils.prepareMountpoint(mountPoint);
+
+        // mount the filesystem. If this is the last mount-point that was specified and no console is used 
+        // then block until the filesystem is unmounted
+        gitFS.mount(mountPoint, false);
+        
+        mounts.put(gitDir, ImmutablePair.of(mountPoint, gitFS));
+    }
+
+    public static void list() {
+        for(Map.Entry<String,Pair<File, JGitFilesystem>> entry : mounts.entrySet()) {
+            System.out.println(entry.getKey() + " mounted at " + entry.getValue().getLeft());
+        }
+    }
 }
