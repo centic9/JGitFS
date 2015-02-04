@@ -19,7 +19,7 @@ dependencies {
 	compile project(':fuse-jna')
 	compile 'jline:jline:2.12'
 
-	testCompile 'junit:junit:4.11'
+	testCompile 'junit:junit:4.+'
 }
 
 task wrapper(type: Wrapper) {
