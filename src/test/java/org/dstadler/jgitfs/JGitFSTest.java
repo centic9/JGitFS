@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.Assume;
 import org.junit.Test;
@@ -50,7 +51,13 @@ public class JGitFSTest {
         try {
             // if we have one that works and the last one an invalid one we get an exception, but did the mounting
             // for the first one
-            JGitFS.main(new String[] {".", System.getProperty("java.io.tmpdir") + "/testrepo", "invalidrepo", "somemountpoint"});
+            File mountPoint = File.createTempFile("JGitFSTest", ".dir2");
+            assertTrue(mountPoint.delete());
+            try {
+            	JGitFS.main(new String[] {".", mountPoint.getPath(), "invalidrepo", "somemountpoint"});
+            } finally {
+            	FileUtils.deleteDirectory(mountPoint);
+            }
             fail("Should throw exception with invalid git repository");
         } catch (IOException e) {
             // happens when run in CloudBees, but could not find out details...
@@ -67,14 +74,19 @@ public class JGitFSTest {
 
             // if we have one that works and the last one an invalid one we get an exception, but did the mounting
             // for the first one
-            File mountPoint = new File(System.getProperty("java.io.tmpdir") + "/testrepo");
-            JGitFS.mount(".", mountPoint);
-            JGitFS.list();
-            assertTrue(JGitFS.unmount("."));
+            File mountPoint = File.createTempFile("JGitFSTest", ".dir");
+            assertTrue(mountPoint.delete());
+            try {
+	            JGitFS.mount(".", mountPoint);
+	            JGitFS.list();
+	            assertTrue(JGitFS.unmount("."));
 
-            JGitFS.mount(".", mountPoint);
-            JGitFS.list();
-            assertTrue(JGitFS.unmount(mountPoint.getPath()));
+	            JGitFS.mount(".", mountPoint);
+	            JGitFS.list();
+	            assertTrue(JGitFS.unmount(mountPoint.getPath()));
+            } finally {
+            	FileUtils.deleteDirectory(mountPoint);
+            }
         } catch (IOException e) {
             // happens when run in CloudBees, but could not find out details...
             Assume.assumeNoException("In some CI environments this will fail", e);
