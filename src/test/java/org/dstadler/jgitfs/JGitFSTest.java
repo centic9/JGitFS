@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.junit.Assume;
 import org.junit.Test;
 
@@ -45,6 +46,7 @@ public class JGitFSTest {
 
     @Test
     public void testMainMultiple() throws Exception {
+    	Assume.assumeFalse("Not executed on Windows for now because of https://github.com/EtiennePerot/fuse-jna/issues/44", SystemUtils.IS_OS_WINDOWS);
         try {
             // if we have one that works and the last one an invalid one we get an exception, but did the mounting
             // for the first one
@@ -69,13 +71,15 @@ public class JGitFSTest {
             JGitFS.mount(".", mountPoint);
             JGitFS.list();
             assertTrue(JGitFS.unmount("."));
-            
+
             JGitFS.mount(".", mountPoint);
             JGitFS.list();
             assertTrue(JGitFS.unmount(mountPoint.getPath()));
         } catch (IOException e) {
             // happens when run in CloudBees, but could not find out details...
             Assume.assumeNoException("In some CI environments this will fail", e);
+        } catch (UnsatisfiedLinkError e) {
+			Assume.assumeNoException("Will fail on Windows", e);
         }
     }
 }
