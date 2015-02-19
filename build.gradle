@@ -14,8 +14,8 @@ dependencies {
 	compile 'commons-io:commons-io:2.4'
 	compile 'org.apache.commons:commons-lang3:3.3.2'
 	compile 'net.java.dev.jna:jna:3.5.2'
-	compile 'org.eclipse.jgit:org.eclipse.jgit:3.5.0.201409260305-r'
-	compile 'com.google.guava:guava:16.0.1'
+	compile 'org.eclipse.jgit:org.eclipse.jgit:3.6.2.201501210735-r'
+	compile 'com.google.guava:guava:18.0'
 	compile project(':fuse-jna')
 	compile 'jline:jline:2.12'
 
