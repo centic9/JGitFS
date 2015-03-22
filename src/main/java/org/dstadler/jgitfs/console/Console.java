@@ -48,7 +48,11 @@ public class Console {
                 } else {
                     //out.println("Mounting " + cmd[1] + " at " + cmd[2]);
                     try {
-                        JGitFS.mount(cmd[1], new File(cmd[2]));
+                        try {
+                            JGitFS.mount(cmd[1], new File(cmd[2]));
+                        } catch (IllegalArgumentException e) {
+                            e.printStackTrace();
+                        }
                     } catch (IOException | FuseException e) {
                         e.printStackTrace(out);
                     }

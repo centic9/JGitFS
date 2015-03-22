@@ -94,4 +94,68 @@ public class JGitFSTest {
 			Assume.assumeNoException("Will fail on Windows", e);
         }
     }
+
+    @Test
+    public void testMountGitDirTwice() throws Exception {
+        try {
+            // if we have one that works and the last one an invalid one we get an exception, but did the mounting
+            // for the first one
+            File mountPoint = File.createTempFile("JGitFSTest", ".dir");
+            assertTrue(mountPoint.delete());
+            try {
+                JGitFS.mount(".", mountPoint);
+                try {
+                    JGitFS.list();
+
+                    try {
+                        JGitFS.mount(".", mountPoint);
+                        fail("Should fail due to double mount here");
+                    } catch (IllegalArgumentException e) {
+                        assertTrue(e.getMessage().contains("already mounted"));
+                    }
+                } finally {
+                    assertTrue(JGitFS.unmount(mountPoint.getPath()));
+                }
+            } finally {
+                FileUtils.deleteDirectory(mountPoint);
+            }
+        } catch (IOException e) {
+            // happens when run in CloudBees, but could not find out details...
+            Assume.assumeNoException("In some CI environments this will fail", e);
+        } catch (UnsatisfiedLinkError e) {
+            Assume.assumeNoException("Will fail on Windows", e);
+        }
+    }
+
+    @Test
+    public void testMountPointTwice() throws Exception {
+        try {
+            // if we have one that works and the last one an invalid one we get an exception, but did the mounting
+            // for the first one
+            File mountPoint = File.createTempFile("JGitFSTest", ".dir");
+            assertTrue(mountPoint.delete());
+            try {
+                JGitFS.mount(".", mountPoint);
+                try {
+                    JGitFS.list();
+
+                    try {
+                        JGitFS.mount("someother", mountPoint);
+                        fail("Should fail due to double mount here");
+                    } catch (IllegalArgumentException e) {
+                        assertTrue(e.getMessage().contains("already used for a mount"));
+                    }
+                } finally {
+                    assertTrue(JGitFS.unmount(mountPoint.getPath()));
+                }
+            } finally {
+                FileUtils.deleteDirectory(mountPoint);
+            }
+        } catch (IOException e) {
+            // happens when run in CloudBees, but could not find out details...
+            Assume.assumeNoException("In some CI environments this will fail", e);
+        } catch (UnsatisfiedLinkError e) {
+            Assume.assumeNoException("Will fail on Windows", e);
+        }
+    }
 }

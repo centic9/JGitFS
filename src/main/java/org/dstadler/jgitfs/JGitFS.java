@@ -13,6 +13,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.dstadler.jgitfs.console.Console;
 import org.dstadler.jgitfs.util.FuseUtils;
 
+import com.google.common.base.Preconditions;
+
 /**
  * Main class which handles commandline parsing and starts up the {@link JGitFilesystem}.
  *
@@ -52,6 +54,14 @@ public class JGitFS {
 		}
 	}
 
+	/**
+	 * Unmount the given mounting and free related system resources.
+	 *
+	 * @param dirOrMountPoint Either the location of the git repository or the mount point.
+	 * @return true if the directory was unmounted successfully, false if it was not found and an 
+	 *     exception is thrown if an error occurs during unmounting. 
+	 * @throws IOException
+	 */
 	public static boolean unmount(String dirOrMountPoint) throws IOException {
 	    for(Map.Entry<String,Pair<File, JGitFilesystem>> entry : mounts.entrySet()) {
 	        String gitDir = entry.getKey();
@@ -68,8 +78,32 @@ public class JGitFS {
 	    return false;
 	}
 
-    public static void mount(String gitDir, File mountPoint) throws IOException, UnsatisfiedLinkError, FuseException {
+	/**
+	 * Create a mount of the given git repository at the given mount point. Will throw an exception
+	 * if any of the mount operations fail or either the git repository is already mounted or the
+	 * mount point is already used for another mount. 
+	 *
+	 * @param gitDir The git-repository to mount
+	 * @param mountPoint The point in the filesystem where the Git Repository should appear.
+	 * @throws IOException If a file operation fails during creating the mount.
+	 * @throws UnsatisfiedLinkError If an internal error occurs while setting up the mount.
+	 * @throws FuseException If an internal error occurs while setting up the mount.
+	 * @throws IllegalArgumentException If the git repository is already mounted somewhere or the 
+	 *     mount point is already used for another mount operation. 
+	 */
+    public static void mount(String gitDir, File mountPoint) 
+            throws IOException, UnsatisfiedLinkError, FuseException, IllegalArgumentException {
         System.out.println("Mounting git repository at " + gitDir + " at mountpoint " + mountPoint);
+
+        // don't allow double-mounting of the git-directory although it should theoretically work on different mountpoints
+        Preconditions.checkArgument(!mounts.containsKey(gitDir), 
+                "Cannot mount git directory '" + gitDir + "' which is already mounted somewhere.");
+
+        // don't allow double-mounting on the same mount-point, this will fail anyway
+        for(Pair<File, JGitFilesystem> mountPoints : mounts.values()) {
+            Preconditions.checkArgument(!mountPoints.getKey().equals(mountPoint), 
+                "Cannot mount to mount point '" + mountPoint + "' which is already used for a mount.");
+        }
 
         // now create the Git filesystem
         @SuppressWarnings("resource")
@@ -85,6 +119,9 @@ public class JGitFS {
         mounts.put(gitDir, ImmutablePair.of(mountPoint, gitFS));
     }
 
+    /**
+     * Prints out a list of currently mounted git repositories. 
+     */
     public static void list() {
         for(Map.Entry<String,Pair<File, JGitFilesystem>> entry : mounts.entrySet()) {
             System.out.println(entry.getKey() + " mounted at " + entry.getValue().getLeft());
