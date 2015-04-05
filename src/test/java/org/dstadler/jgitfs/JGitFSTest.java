@@ -81,6 +81,14 @@ public class JGitFSTest {
 	            JGitFS.list();
 	            assertTrue(JGitFS.unmount("."));
 
+                JGitFS.mount("./.git", mountPoint);
+                JGitFS.list();
+                assertTrue(JGitFS.unmount("./.git"));
+	            
+                JGitFS.mount("./.git/", mountPoint);
+                JGitFS.list();
+                assertTrue(JGitFS.unmount("./.git/"));
+                
 	            JGitFS.mount(".", mountPoint);
 	            JGitFS.list();
 	            assertTrue(JGitFS.unmount(mountPoint.getPath()));

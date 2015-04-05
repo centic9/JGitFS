@@ -60,7 +60,7 @@ public class JGitHelper implements Closeable {
 	 */
 	public JGitHelper(String pGitDir) throws IOException {
 		String gitDir = pGitDir;
-		if(!gitDir.endsWith(".git")) {
+		if(!gitDir.endsWith(".git") && !gitDir.endsWith(".git/")) {
 			gitDir = gitDir + "/.git";
 		}
 		if(!new File(gitDir).exists()) {
