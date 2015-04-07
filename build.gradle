@@ -12,7 +12,7 @@ repositories {
 
 dependencies {
 	compile 'commons-io:commons-io:2.4'
-	compile 'org.apache.commons:commons-lang3:3.3.2'
+	compile 'org.apache.commons:commons-lang3:3.4'
 	compile 'net.java.dev.jna:jna:3.5.2'
 	compile 'org.eclipse.jgit:org.eclipse.jgit:3.7.0.201502260915-r'
 	compile 'com.google.guava:guava:18.0'
