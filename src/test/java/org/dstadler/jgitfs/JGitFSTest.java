@@ -1,6 +1,9 @@
 package org.dstadler.jgitfs;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -84,11 +87,11 @@ public class JGitFSTest {
                 JGitFS.mount("./.git", mountPoint);
                 JGitFS.list();
                 assertTrue(JGitFS.unmount("./.git"));
-	            
+
                 JGitFS.mount("./.git/", mountPoint);
                 JGitFS.list();
                 assertTrue(JGitFS.unmount("./.git/"));
-                
+
 	            JGitFS.mount(".", mountPoint);
 	            JGitFS.list();
 	            assertTrue(JGitFS.unmount(mountPoint.getPath()));

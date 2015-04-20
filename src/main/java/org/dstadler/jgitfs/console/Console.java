@@ -35,7 +35,7 @@ public class Console {
         })));
 
         // TODO: the completers do not seem to work, is there more to do to make them work?
-        
+
         String line;
         PrintWriter out = new PrintWriter(reader.getOutput());
 
