@@ -29,6 +29,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isCommitSub("/commit"));
         assertFalse(GitUtils.isCommitSub("/submodule"));
         assertFalse(GitUtils.isCommitSub("/stash"));
+        assertFalse(GitUtils.isCommitSub("/stashorig"));
 		assertFalse(GitUtils.isCommitSub(GitUtils.COMMIT_SLASH + "00/"));
 		assertFalse(GitUtils.isCommitSub(GitUtils.COMMIT_SLASH + "0g"));
 		assertFalse(GitUtils.isCommitSub(GitUtils.COMMIT_SLASH + "fg"));
@@ -49,6 +50,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isCommitDir("/commit"));
 		assertFalse(GitUtils.isCommitDir("/submodule"));
 		assertFalse(GitUtils.isCommitDir("/stash"));
+		assertFalse(GitUtils.isCommitDir("/stashorig"));
 		assertFalse(GitUtils.isCommitDir(GitUtils.COMMIT_SLASH + "00/"));
 		assertFalse(GitUtils.isCommitDir(GitUtils.COMMIT_SLASH + "0g"));
 		assertFalse(GitUtils.isCommitDir(GitUtils.COMMIT_SLASH + "fg"));
@@ -101,6 +103,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isCommitSubDir("/commit"));
 		assertFalse(GitUtils.isCommitSubDir("/submodule"));
 		assertFalse(GitUtils.isCommitSubDir("/stash"));
+		assertFalse(GitUtils.isCommitSubDir("/stashorig"));
 		assertFalse(GitUtils.isCommitSubDir(GitUtils.COMMIT_SLASH + "00/"));
 		assertFalse(GitUtils.isCommitSubDir(GitUtils.COMMIT_SLASH + "0g"));
 		assertFalse(GitUtils.isCommitSubDir(GitUtils.COMMIT_SLASH + "fg"));
@@ -125,6 +128,7 @@ public class GitUtilsTest {
         assertFalse(GitUtils.isSubmoduleName("/commit"));
         assertFalse(GitUtils.isSubmoduleName("/submodule"));
         assertFalse(GitUtils.isSubmoduleName("/stash"));
+        assertFalse(GitUtils.isSubmoduleName("/stashorig"));
         assertFalse(GitUtils.isSubmoduleName(GitUtils.SUBMODULE_SLASH + "00/"));
         assertFalse(GitUtils.isSubmoduleName(GitUtils.SUBMODULE_SLASH + "zz/123"));
 
@@ -143,6 +147,7 @@ public class GitUtilsTest {
         assertFalse(GitUtils.isSubmodulePath("/commit"));
         assertFalse(GitUtils.isSubmodulePath("/submodule"));
         assertFalse(GitUtils.isSubmodulePath("/stash"));
+        assertFalse(GitUtils.isSubmodulePath("/stashorig"));
 
         assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "00/"));
         assertTrue(GitUtils.isSubmodulePath(GitUtils.SUBMODULE_SLASH + "12/34567890123456789012345678901234567890/file123"));
@@ -171,6 +176,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isBranchDir("/submodule"));
 		assertFalse(GitUtils.isBranchDir("/branch"));
 		assertFalse(GitUtils.isBranchDir("/stash"));
+		assertFalse(GitUtils.isBranchDir("/stashorig"));
         assertFalse(GitUtils.isBranchDir("ae/.hidden"));
 		assertFalse(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "00/"));
 		assertFalse(GitUtils.isBranchDir(GitUtils.BRANCH_SLASH + "asdfasd/sjwekw"));
@@ -198,6 +204,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isTagDir("/tag"));
 		assertFalse(GitUtils.isTagDir("/submodule"));
 		assertFalse(GitUtils.isTagDir("/stash"));
+		assertFalse(GitUtils.isTagDir("/stashorig"));
         assertFalse(GitUtils.isTagDir("ae/.hidden"));
 		assertFalse(GitUtils.isTagDir(GitUtils.TAG_SLASH + "00/"));
 		assertFalse(GitUtils.isTagDir(GitUtils.TAG_SLASH + "asdfasd/sjwekw"));
@@ -225,6 +232,7 @@ public class GitUtilsTest {
 		assertFalse(GitUtils.isRemoteDir("/tag"));
 		assertFalse(GitUtils.isRemoteDir("/submodule"));
 		assertFalse(GitUtils.isRemoteDir("/stash"));
+		assertFalse(GitUtils.isRemoteDir("/stashorig"));
         assertFalse(GitUtils.isRemoteDir("ae/.hidden"));
 		assertFalse(GitUtils.isRemoteDir(GitUtils.REMOTE_SLASH + "00/"));
 		assertFalse(GitUtils.isRemoteDir(GitUtils.REMOTE_SLASH + "asdfasd/sjwekw"));
@@ -253,6 +261,7 @@ public class GitUtilsTest {
         assertFalse(GitUtils.isStashDir("/submodule"));
         assertFalse(GitUtils.isStashDir("/branch"));
         assertFalse(GitUtils.isStashDir("/stash"));
+        assertFalse(GitUtils.isStashDir("/stashorig"));
         assertFalse(GitUtils.isStashDir("ae/.hidden"));
         assertFalse(GitUtils.isStashDir(GitUtils.STASH_SLASH + "00/"));
         assertFalse(GitUtils.isStashDir(GitUtils.STASH_SLASH + "asdfasd/sjwekw"));
@@ -270,7 +279,35 @@ public class GitUtilsTest {
         assertTrue(GitUtils.isStashDir(GitUtils.STASH_SLASH + "asdfasd_aldsjfasd asdlkjasdj.,.;_:;:öÖLP\"=)==\"§\"§%\"!§)$§\""));
     }
 
-	@Test
+    @Test
+    public void testIsStashOrigDir() {
+        assertFalse(GitUtils.isStashOrigDir(""));
+        assertFalse(GitUtils.isStashOrigDir("/"));
+        assertFalse(GitUtils.isStashOrigDir("/something"));
+        assertFalse(GitUtils.isStashOrigDir("/tag"));
+        assertFalse(GitUtils.isStashOrigDir("/commit"));
+        assertFalse(GitUtils.isStashOrigDir("/submodule"));
+        assertFalse(GitUtils.isStashOrigDir("/branch"));
+        assertFalse(GitUtils.isStashOrigDir("/stash"));
+        assertFalse(GitUtils.isStashOrigDir("/stashorig"));
+        assertFalse(GitUtils.isStashOrigDir("ae/.hidden"));
+        assertFalse(GitUtils.isStashOrigDir(GitUtils.STASHORIG_SLASH + "00/"));
+        assertFalse(GitUtils.isStashOrigDir(GitUtils.STASHORIG_SLASH + "asdfasd/sjwekw"));
+        assertFalse(GitUtils.isStashOrigDir(GitUtils.STASHORIG_SLASH + "asdfasd_aldsjfasd asdlkjasdj.,.;_:;:öÖLP\"=)==\"§\"§%/\"!§)$§\""));
+        assertFalse(GitUtils.isStashOrigDir(GitUtils.STASHORIG_SLASH + "ae/.hidden"));
+        assertFalse(GitUtils.isStashOrigDir(GitUtils.STASHORIG_SLASH + "asdfasd/.hidden"));
+        assertFalse(GitUtils.isStashOrigDir(GitUtils.STASHORIG_SLASH + ".hidden"));
+
+        assertTrue(GitUtils.isStashOrigDir(GitUtils.STASHORIG_SLASH + "asdfasd"));
+        assertTrue(GitUtils.isStashOrigDir(GitUtils.STASHORIG_SLASH + "fg"));
+        assertTrue(GitUtils.isStashOrigDir(GitUtils.STASHORIG_SLASH + "zz"));
+        assertTrue(GitUtils.isStashOrigDir(GitUtils.STASHORIG_SLASH + "00"));
+        assertTrue(GitUtils.isStashOrigDir(GitUtils.STASHORIG_SLASH + "ff"));
+        assertTrue(GitUtils.isStashOrigDir(GitUtils.STASHORIG_SLASH + "ae"));
+        assertTrue(GitUtils.isStashOrigDir(GitUtils.STASHORIG_SLASH + "asdfasd_aldsjfasd asdlkjasdj.,.;_:;:öÖLP\"=)==\"§\"§%\"!§)$§\""));
+    }
+
+    @Test
 	public void testGetUID() throws IOException {
 		assertTrue(GitUtils.getUID() >= 0);
 	}

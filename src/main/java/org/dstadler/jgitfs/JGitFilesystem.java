@@ -60,6 +60,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		DIRS.add("/tag");
 		DIRS.add("/submodule");
 		DIRS.add("/stash");
+		DIRS.add("/stashorig");
 	}
 
 	/**
@@ -137,7 +138,8 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 				throw new IllegalStateException("Error reading type of path " + path + ", commit " + commit + " and file " + file, e);
 			}
 			return 0;
-		} else if (GitUtils.isBranchDir(path) || GitUtils.isTagDir(path) || GitUtils.isRemoteDir(path) || GitUtils.isStashDir(path)) {
+		} else if (GitUtils.isBranchDir(path) || GitUtils.isTagDir(path) || GitUtils.isRemoteDir(path) ||
+		        GitUtils.isStashDir(path) || GitUtils.isStashOrigDir(path)) {
 			// entries under /branch and /tag are always symbolic links
 			stat.setMode(NodeType.SYMBOLIC_LINK, true, true, true, true, true, true, true, true, true);
 			return 0;
@@ -210,6 +212,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 			filler.add("/tag");
 			filler.add("/submodule");
 			filler.add("/stash");
+			filler.add("/stashorig");
 
 			// TODO: implement later
 //			filler.add("/index");	- use DirCache?
@@ -314,7 +317,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 			Pair<String, String> sub = GitUtils.splitSubmodule(path);
 
 			return jgitSubmodules.get(sub.getLeft()).readdir(sub.getRight(), filler);
-        } else if (path.equals("/stash")) {
+        } else if (path.equals("/stash") || path.equals("/stashorig")) {
             try {
                 List<String> items = jgitHelper.getStashes();
                 for (String item : items) {
@@ -355,6 +358,8 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		        				commit = jgitHelper.getRemoteHeadCommit(StringUtils.removeStart(path, GitUtils.REMOTE_SLASH));
 		        			} else if(GitUtils.isStashDir(path)) {
 	                            commit = jgitHelper.getStashHeadCommit(StringUtils.removeStart(path, GitUtils.STASH_SLASH));
+                            } else if(GitUtils.isStashOrigDir(path)) {
+                                commit = jgitHelper.getStashOrigCommit(StringUtils.removeStart(path, GitUtils.STASHORIG_SLASH));
 		        			} else {
 		        				String lcommit = jgitHelper.readCommit(path);
 		        				String dir = jgitHelper.readPath(path);

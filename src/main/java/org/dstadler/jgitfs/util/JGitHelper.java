@@ -542,6 +542,7 @@ public class JGitHelper implements Closeable {
     public List<String> getStashes() throws IOException {
         List<String> stashNames = new ArrayList<String>();
 
+        // first a list of all stashes
         for(int i = 0;i < readStashes().size();i++) {
             // for now just use the simple numbering as done in git stash list without the commit message
             stashNames.add(getStashName(i));
@@ -567,6 +568,26 @@ public class JGitHelper implements Closeable {
         for(RevCommit rev : stashes) {
             if(getStashName(i).equals(stash)) {
                 return rev.getName();
+            }
+            i++;
+        }
+
+        return null;
+    }
+
+    /**
+     * Return the commit-id for the parent commit of the given stash.
+     *
+     * @param branch The stash to read data for, usually just a "stash@{<nr>}".
+     * @return A commit-id if found or null if not found.
+     * @throws IOException If accessing the Git repository fails
+     */
+    public String getStashOrigCommit(String stash) throws IOException {
+        final Collection<RevCommit> stashes = readStashes();
+        int i = 0;
+        for(RevCommit rev : stashes) {
+            if(getStashName(i).equals(stash)) {
+                return rev.getParent(0).getName();
             }
             i++;
         }
