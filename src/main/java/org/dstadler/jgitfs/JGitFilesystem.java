@@ -35,7 +35,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 
 /**
  * Implementation of the {@link FuseFilesystem} interfaces to
- * provide a view of branches/tags/commits of the given
+ * provide a view of branches/tags/stashes/commits of the given
  * Git repository.
  *
  * @author dominik.stadler
@@ -59,6 +59,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		DIRS.add("/remote");
 		DIRS.add("/tag");
 		DIRS.add("/submodule");
+		DIRS.add("/stash");
 	}
 
 	/**
@@ -136,7 +137,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 				throw new IllegalStateException("Error reading type of path " + path + ", commit " + commit + " and file " + file, e);
 			}
 			return 0;
-		} else if (GitUtils.isBranchDir(path) || GitUtils.isTagDir(path) || GitUtils.isRemoteDir(path)) {
+		} else if (GitUtils.isBranchDir(path) || GitUtils.isTagDir(path) || GitUtils.isRemoteDir(path) || GitUtils.isStashDir(path)) {
 			// entries under /branch and /tag are always symbolic links
 			stat.setMode(NodeType.SYMBOLIC_LINK, true, true, true, true, true, true, true, true, true);
 			return 0;
@@ -208,9 +209,9 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 			filler.add("/remote");
 			filler.add("/tag");
 			filler.add("/submodule");
+			filler.add("/stash");
 
 			// TODO: implement later
-//			filler.add("/stash");
 //			filler.add("/index");	- use DirCache?
 //			filler.add("/workspace"); - use WorkingTreeIterator?
 //			filler.add("/git") => symbolic link to the source dir
@@ -313,7 +314,18 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 			Pair<String, String> sub = GitUtils.splitSubmodule(path);
 
 			return jgitSubmodules.get(sub.getLeft()).readdir(sub.getRight(), filler);
-		}
+        } else if (path.equals("/stash")) {
+            try {
+                List<String> items = jgitHelper.getStashes();
+                for (String item : items) {
+                    filler.add(item);
+                }
+            } catch (Exception e) {
+                throw new IllegalStateException("Error reading stashes", e);
+            }
+
+            return 0;
+        }
 
 		throw new IllegalStateException("Error reading directories in path " + path);
 	}
@@ -341,6 +353,8 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		        				commit = jgitHelper.getTagHeadCommit(StringUtils.removeStart(path, GitUtils.TAG_SLASH));
 		        			} else if(GitUtils.isRemoteDir(path)) {
 		        				commit = jgitHelper.getRemoteHeadCommit(StringUtils.removeStart(path, GitUtils.REMOTE_SLASH));
+		        			} else if(GitUtils.isStashDir(path)) {
+	                            commit = jgitHelper.getStashHeadCommit(StringUtils.removeStart(path, GitUtils.STASH_SLASH));
 		        			} else {
 		        				String lcommit = jgitHelper.readCommit(path);
 		        				String dir = jgitHelper.readPath(path);

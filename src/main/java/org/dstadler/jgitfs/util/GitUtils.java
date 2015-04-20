@@ -26,6 +26,7 @@ public class GitUtils {
 	public final static String TAG_SLASH = "/tag/";
     public final static String SUBMODULE_SLASH = "/submodule/";
     public final static int SUBMODULE_SLASH_LENGTH = SUBMODULE_SLASH.length();
+    public final static String STASH_SLASH = "/stash/";
 
 	private final static int SHA1_LENGTH = 40;
 
@@ -38,6 +39,7 @@ public class GitUtils {
 	private final static Pattern COMMIT_SUB_PATTERN = Pattern.compile("/commit/[a-f0-9]{2}");
 	private final static Pattern SUBMODULE_PATTERN = Pattern.compile("/submodule/([^/]+)(.*)");
     private final static Pattern SUBMODULE_NAME_PATTERN = Pattern.compile("/submodule/[^/]+");
+    private final static Pattern STASH_PATTERN = Pattern.compile("/stash/[^/]+");
 
 	public static boolean isTagDir(final String path) {
 		return TAG_PATTERN.matcher(path).matches() && !path.endsWith(".hidden");
@@ -82,6 +84,10 @@ public class GitUtils {
         String name = matcher.group(1);
         String dir = matcher.group(2);
         return ImmutablePair.of(name, dir.isEmpty() ? "/" : dir);
+    }
+
+    public static boolean isStashDir(final String path) {
+        return STASH_PATTERN.matcher(path).matches() && !path.endsWith(".hidden");
     }
 
     public static long getUID() {

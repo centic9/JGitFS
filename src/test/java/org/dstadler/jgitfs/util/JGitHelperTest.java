@@ -306,6 +306,19 @@ public class JGitHelperTest {
 	}
 
 	@Test
+    public void testGetStashHeadCommit() throws IOException {
+        assertNull(helper.getStashHeadCommit("somestash"));
+        assertNotNull(helper.getStashHeadCommit("stash@{0}"));
+    }
+
+    @Test
+    public void testGetStashes() throws IOException {
+        List<String> stashes = helper.getStashes();
+        assertTrue(stashes.size() > 0);
+        assertTrue("Had: " + stashes.toString(), stashes.contains("stash@{0}"));
+    }
+
+	@Test
 	public void testallCommitsNull() throws NoHeadException, GitAPIException, IOException {
 		Collection<String> allCommits = helper.allCommits(null);
 		int size = allCommits.size();
@@ -454,6 +467,7 @@ public class JGitHelperTest {
 	@Test
 	public void testWithTestdata() throws IOException {
 		String commit = helper.getBranchHeadCommit("master");
+        assertNotNull(commit);
 
 		// check that the test-data is there
 		List<String> elements = helper.readElementsAt(commit, "src/test/data");
@@ -523,8 +537,83 @@ public class JGitHelperTest {
 		} catch (IllegalArgumentException e) {
 			assertTrue(e.getMessage().contains("src/test/data"));
 		}
-
 	}
+
+
+    @Test
+    public void testStashWithTestData() throws IOException {
+        String commit = helper.getStashHeadCommit("stash@{0}");
+        assertNotNull(commit);
+
+        // check that the test-data is there
+        List<String> elements = helper.readElementsAt(commit, "src/test/data");
+        assertEquals("Had: " + elements, 4, elements.size());
+        assertTrue(elements.contains("emptytestfile"));
+        assertTrue(elements.contains("one"));
+        assertTrue(elements.contains("symlink"));
+        assertTrue(elements.contains("rellink"));
+
+        // check type of files
+        final StatWrapper wrapper = getStatsWrapper();
+        helper.readType(commit, "src/test/data", wrapper);
+        assertEquals(NodeType.DIRECTORY, wrapper.type());
+        helper.readType(commit, "src/test/data/emptytestfile", wrapper);
+        assertEquals(NodeType.FILE, wrapper.type());
+        helper.readType(commit, "src/test/data/one", wrapper);
+        assertEquals(NodeType.FILE, wrapper.type());
+        helper.readType(commit, "src/test/data/symlink", wrapper);
+        assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
+        helper.readType(commit, "src/test/data/rellink", wrapper);
+        assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
+
+        // check that the empty file is actually empty
+        InputStream stream = helper.openFile(commit, "src/test/data/emptytestfile");
+        try {
+            assertEquals("", IOUtils.toString(stream));
+        } finally {
+            stream.close();
+        }
+
+        // check that the file has the correct content
+        stream = helper.openFile(commit, "src/test/data/one");
+        try {
+            assertEquals("1", IOUtils.toString(stream).trim());
+        } finally {
+            stream.close();
+        }
+
+        // check that we can read the symlink
+        stream = helper.openFile(commit, "src/test/data/symlink");
+        try {
+            assertEquals("Should be 'one' as it contains the filename of the file pointed to!",
+                    "one", IOUtils.toString(stream).trim());
+        } finally {
+            stream.close();
+        }
+        stream = helper.openFile(commit, "src/test/data/rellink");
+        try {
+            assertEquals("Should be '../../../build.gradle' as it contains the filename of the file pointed to!",
+                    "../../../build.gradle", IOUtils.toString(stream).trim());
+        } finally {
+            stream.close();
+        }
+
+        // read the symlinks
+        assertEquals("one", helper.readSymlink(commit, "src/test/data/symlink"));
+        assertEquals("../../../build.gradle", helper.readSymlink(commit, "src/test/data/rellink"));
+        try {
+            helper.readSymlink(commit, "src/test/data/one");
+            fail("Should not be able to read symlink for normal file");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("src/test/data/one"));
+        }
+        try {
+            helper.readSymlink(commit, "src/test/data");
+            fail("Should not be able to read symlink for directory");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("src/test/data"));
+        }
+    }
 
 	@Test
     public void testToString() throws Exception {

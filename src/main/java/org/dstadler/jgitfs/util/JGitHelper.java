@@ -531,6 +531,60 @@ public class JGitHelper implements Closeable {
     }
 
     /**
+     * Return all stashes
+     *
+     * To ease implementation, slashes in stash-names are replaced by underscore. Also
+     * entries starting with refs/heads/ are listed with their short name as well
+     *
+     * @return A list of branch-names
+     * @throws IOException If accessing the Git repository fails
+     */
+    public List<String> getStashes() throws IOException {
+        List<String> stashNames = new ArrayList<String>();
+
+        for(int i = 0;i < readStashes().size();i++) {
+            // for now just use the simple numbering as done in git stash list without the commit message
+            stashNames.add(getStashName(i));
+        }
+
+        return stashNames;
+    }
+
+    private String getStashName(int i) {
+        return "stash@{" + i + "}";
+    }
+
+    /**
+     * Return the commit-id for the given stash.
+     *
+     * @param branch The stash to read data for, usually just a "stash@{<nr>}".
+     * @return A commit-id if found or null if not found.
+     * @throws IOException If accessing the Git repository fails
+     */
+    public String getStashHeadCommit(String stash) throws IOException {
+        final Collection<RevCommit> stashes = readStashes();
+        int i = 0;
+        for(RevCommit rev : stashes) {
+            if(getStashName(i).equals(stash)) {
+                return rev.getName();
+            }
+            i++;
+        }
+
+        return null;
+    }
+
+    private Collection<RevCommit> readStashes() throws IOException {
+        final Collection<RevCommit> stashes;
+        try {
+            stashes = git.stashList().call();
+        } catch (GitAPIException e) {
+            throw new IOException(e);
+        }
+        return stashes;
+    }
+
+    /**
 	 * Retrieve a list of all two-digit commit-subs which allow to build the first directory level
 	 * of a commit-file-structure.
 	 *
