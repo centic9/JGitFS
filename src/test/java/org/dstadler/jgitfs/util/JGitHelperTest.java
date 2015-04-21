@@ -48,6 +48,8 @@ public class JGitHelperTest {
     private static final String GITLINK_COMMIT = "ca1767dc76fe104d0b94fb2a5c962c82121be3da";
     private static final String SUBMODULE_COMMIT = "39c1c4b78ff751b0b9e28f4fb35148a1acd6646f";
 
+    private static boolean hasStashes = false;
+
 	private JGitHelper helper;
 
 	@BeforeClass
@@ -70,6 +72,8 @@ public class JGitHelperTest {
 		if(!found) {
 			git.tag().setName("testtag").call();
 		}
+
+		hasStashes = !git.stashList().call().isEmpty();
 	}
 
 	@Before
@@ -307,18 +311,24 @@ public class JGitHelperTest {
 
 	@Test
     public void testGetStashHeadCommit() throws IOException {
+    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+
         assertNull(helper.getStashHeadCommit("somestash"));
         assertNotNull(helper.getStashHeadCommit("stash@{0}"));
     }
 
     @Test
     public void testGetStashOrigCommit() throws IOException {
+    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+
         assertNull(helper.getStashOrigCommit("somestash"));
         assertNotNull(helper.getStashOrigCommit("stash@{0}"));
     }
 
     @Test
     public void testGetStashes() throws IOException {
+    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+
         List<String> stashes = helper.getStashes();
         assertTrue(stashes.size() > 0);
         assertTrue("Had: " + stashes.toString(), stashes.contains("stash@{0}"));
@@ -479,12 +489,16 @@ public class JGitHelperTest {
 
     @Test
     public void testStashWithTestData() throws IOException {
+    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+
         String commit = helper.getStashHeadCommit("stash@{0}");
         checkCommitContents(commit);
     }
 
     @Test
     public void testStashOrigWithTestData() throws IOException {
+    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+
         String commit = helper.getStashOrigCommit("stash@{0}");
         checkCommitContents(commit);
     }

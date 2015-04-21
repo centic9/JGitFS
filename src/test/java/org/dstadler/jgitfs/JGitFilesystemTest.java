@@ -1,9 +1,6 @@
 package org.dstadler.jgitfs;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,9 +19,14 @@ import net.fusejna.types.TypeMode.NodeType;
 import org.dstadler.jgitfs.util.FuseUtils;
 import org.dstadler.jgitfs.util.JGitHelper;
 import org.dstadler.jgitfs.util.JGitHelperTest;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -37,6 +39,20 @@ public class JGitFilesystemTest {
 	private static final String SUBMODULE_COMMIT_PATH = "/submodule/fuse-jna/commit/0f/a3ca5246abc9553f97212232b07ea76bf74596";
 
 	private JGitFilesystem fs;
+
+    private static boolean hasStashes = false;
+
+	@BeforeClass
+	public static void setUpClass() throws GitAPIException, IOException {
+		FileRepositoryBuilder builder = new FileRepositoryBuilder();
+		Repository repository = builder.setGitDir(new File(".git"))
+		  .readEnvironment() // scan environment GIT_* variables
+		  .findGitDir() // scan up the file system tree
+		  .build();
+		Git git = new Git(repository);
+
+		hasStashes = !git.stashList().call().isEmpty();
+	}
 
 	@Before
 	public void setUp() throws IOException {
@@ -170,13 +186,15 @@ public class JGitFilesystemTest {
 		assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("origin_master"));
 		assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("refs_remotes_origin_master"));
 
-        filledFiles.clear();
-        fs.readdir("/stash", filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("stash@{0}"));
+		if(hasStashes) {
+	        filledFiles.clear();
+	        fs.readdir("/stash", filler);
+	        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("stash@{0}"));
 
-        filledFiles.clear();
-        fs.readdir("/stashorig", filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("stash@{0}"));
+	        filledFiles.clear();
+	        fs.readdir("/stashorig", filler);
+	        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("stash@{0}"));
+		}
 
         filledFiles.clear();
 		fs.readdir("/commit", filler);
@@ -266,6 +284,8 @@ public class JGitFilesystemTest {
 
     @Test
     public void testReadDirStash() throws IOException {
+    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+
         // the check further down failed in CI, verify that JGitHelper reports the correct ones
         try (JGitHelper helper = new JGitHelper(".")) {
             List<String> stashes = helper.getStashes();
@@ -281,6 +301,8 @@ public class JGitFilesystemTest {
 
     @Test
     public void testReadDirStashOrig() throws IOException {
+    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+
         // the check further down failed in CI, verify that JGitHelper reports the correct ones
         try (JGitHelper helper = new JGitHelper(".")) {
             List<String> stashes = helper.getStashes();
@@ -337,6 +359,8 @@ public class JGitFilesystemTest {
 
     @Test
     public void testReadLinkStash() {
+    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+
         ByteBuffer buffer = ByteBuffer.allocate(100);
         int readlink = fs.readlink("/stash/stash@{0}", buffer, 100);
         assertEquals("Had: " + readlink + ": " + new String(buffer.array()), 0, readlink);
@@ -347,6 +371,8 @@ public class JGitFilesystemTest {
 
     @Test
     public void testReadLinkStashOrig() {
+    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+
         ByteBuffer buffer = ByteBuffer.allocate(100);
         int readlink = fs.readlink("/stashorig/stash@{0}", buffer, 100);
         assertEquals("Had: " + readlink + ": " + new String(buffer.array()), 0, readlink);
@@ -617,6 +643,8 @@ public class JGitFilesystemTest {
 
     @Test
     public void testStashWithTestData() {
+    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+
         ByteBuffer buffer = ByteBuffer.allocate(1000);
         assertEquals(0, fs.readlink("/stash/stash@{0}", buffer, 1000));
         verifyData(buffer);
@@ -624,6 +652,8 @@ public class JGitFilesystemTest {
 
     @Test
     public void testStashOrigWithTestData() {
+    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+
         ByteBuffer buffer = ByteBuffer.allocate(1000);
         assertEquals(0, fs.readlink("/stashorig/stash@{0}", buffer, 1000));
         verifyData(buffer);
