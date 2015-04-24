@@ -2,6 +2,8 @@ package org.dstadler.jgitfs.console;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Arrays;
 
@@ -19,8 +21,8 @@ import org.dstadler.jgitfs.JGitFS;
  */
 public class Console {
 
-    public void run() throws IOException {
-        ConsoleReader reader = new ConsoleReader();
+    public void run(final InputStream inStream, final OutputStream outStream) throws IOException {
+        ConsoleReader reader = new ConsoleReader("JGitFS", inStream, outStream, null);
 
         reader.setPrompt("jgitfs> ");
 

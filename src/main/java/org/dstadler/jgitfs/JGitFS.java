@@ -1,6 +1,8 @@
 package org.dstadler.jgitfs;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,7 +47,7 @@ public class JGitFS {
 				mount(args[i], new File(args[i + 1]));
 			}
 
-		    new Console().run();
+		    new Console().run(new FileInputStream(FileDescriptor.in), System.out);
 		} finally {
 			// ensure that we try to close all filesystems that we created
 			for (Pair<File, JGitFilesystem> gitFS : mounts.values()) {
