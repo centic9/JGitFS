@@ -827,4 +827,28 @@ public class JGitHelperTest {
 //            assertFalse(allCommitSubs.isEmpty());
 //        }
     }
+
+    @Ignore("Used for local testing")
+    @Test
+    public void testPOIInvalidSubmodule() throws IOException, GitAPIException {
+        try (JGitHelper jgit = new JGitHelper("/opt/poi")) {
+
+            String path = "/commit/09/2cdc23b0db770dc5dc7836e2d8cbeadfd1dd29/src/documentation";
+
+            String lcommit = jgit.readCommit(path);
+            String dir = jgit.readPath(path);
+
+            // for symlinks that are actually git-links for a submodule, we need to redirect back to the
+            // separate submodule-folder with the correct submodule name filled in
+            assertTrue(jgit.isGitLink(lcommit, dir));
+
+            System.out.println("Submodules: " + jgit.allSubmodules());
+
+            String subName = jgit.getSubmoduleAt(dir);
+            String subHead = jgit.getSubmoduleHead(subName);
+            assertNotNull(subHead);
+
+            jgit.readSymlink(lcommit, dir).getBytes();
+        }
+    }
 }

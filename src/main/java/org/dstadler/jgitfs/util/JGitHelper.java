@@ -37,6 +37,7 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
+import org.eclipse.jgit.submodule.SubmoduleStatusType;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
@@ -187,6 +188,8 @@ public class JGitHelper implements Closeable {
         TreeWalk treeWalk = buildTreeWalk(tree, path);
         FileMode fileMode = treeWalk.getFileMode(0);
 
+        // TODO: this also returns true for a normal symbolic link,
+        // how can we determine the difference?
         return fileMode.equals(FileMode.GITLINK);
     }
 
@@ -521,7 +524,13 @@ public class JGitHelper implements Closeable {
             Map<String, SubmoduleStatus> set = git.submoduleStatus().call();
             for(Map.Entry<String, SubmoduleStatus> entry : set.entrySet()) {
                 if(entry.getKey().equals(name)) {
-                    return entry.getValue().getHeadId().getName();
+                    SubmoduleStatus value = entry.getValue();
+                    SubmoduleStatusType type = value.getType();
+                    if(type == SubmoduleStatusType.MISSING ||
+                        type == SubmoduleStatusType.UNINITIALIZED) {
+                        throw new NoSuchElementException("Could not read submodule " + name + " because it is in state " + type);
+                    }
+                    return value.getHeadId().getName();
                 }
             }
             throw new NoSuchElementException("Could not read submodule " + name);
