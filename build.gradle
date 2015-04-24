@@ -24,6 +24,14 @@ dependencies {
 	testCompile 'junit:junit:4.+'
 }
 
+// work around unnecessary timestamp in generated file which always causes dirty files in version control
+// https://issues.gradle.org/browse/GRADLE-2293
+task adjustEclipseSettingsFile(type: Exec) {
+	executable 'sed'
+	args '-i','-e','s/^#.*//g','.settings/org.eclipse.jdt.core.prefs'
+}
+eclipseJdt.finalizedBy adjustEclipseSettingsFile
+
 task wrapper(type: Wrapper) {
 	gradleVersion = '2.3'
 }
