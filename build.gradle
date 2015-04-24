@@ -4,6 +4,8 @@ apply plugin: 'eclipse'
 apply plugin:'application'
 apply plugin:'jacoco'
 
+sourceCompatibility = 1.7
+
 mainClassName = "org.dstadler.jgitfs.JGitFS"
 
 repositories {
