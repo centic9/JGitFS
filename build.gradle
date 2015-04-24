@@ -30,7 +30,7 @@ dependencies {
 // https://issues.gradle.org/browse/GRADLE-2293
 task adjustEclipseSettingsFile << {
    ant.replaceregexp(match:'^#.*', replace:'', flags:'g', byline:true) {
-      fileset(dir: project.rootDir, includes: '.settings/org.eclipse.jdt.core.prefs')
+      fileset(dir: project.projectDir, includes: '.settings/org.eclipse.jdt.core.prefs')
    }
 }
 eclipseJdt.finalizedBy adjustEclipseSettingsFile
