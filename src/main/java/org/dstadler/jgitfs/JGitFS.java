@@ -99,12 +99,12 @@ public class JGitFS {
 
         // don't allow double-mounting of the git-directory although it should theoretically work on different mountpoints
         Preconditions.checkArgument(!mounts.containsKey(gitDir),
-                "Cannot mount git directory '" + gitDir + "' which is already mounted somewhere.");
+                "Cannot mount git directory '%s' which is already mounted to %s.", gitDir, mounts.get(gitDir) == null ? null : mounts.get(gitDir).getLeft());
 
         // don't allow double-mounting on the same mount-point, this will fail anyway
-        for(Pair<File, JGitFilesystem> mountPoints : mounts.values()) {
-            Preconditions.checkArgument(!mountPoints.getKey().equals(mountPoint),
-                "Cannot mount to mount point '" + mountPoint + "' which is already used for a mount.");
+        for(Map.Entry<String, Pair<File, JGitFilesystem>> entry : mounts.entrySet()) {
+            Preconditions.checkArgument(!entry.getValue().getKey().equals(mountPoint),
+                "Cannot mount to mount point '%s' which is already used for mount at %s.", mountPoint, entry.getKey());
         }
 
         // now create the Git filesystem
