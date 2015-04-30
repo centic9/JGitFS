@@ -1,15 +1,13 @@
 package org.dstadler.jgitfs;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.dstadler.commons.testing.TestHelpers;
 import org.junit.Assume;
 import org.junit.Test;
 
@@ -154,7 +152,7 @@ public class JGitFSTest {
                         JGitFS.mount("someother", mountPoint);
                         fail("Should fail due to double mount here");
                     } catch (IllegalArgumentException e) {
-                        assertTrue(e.getMessage().contains("already used for a mount"));
+                    	TestHelpers.assertContains(e, "already used for mount at");
                     }
                 } finally {
                     assertTrue(JGitFS.unmount(mountPoint.getPath()));

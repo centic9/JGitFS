@@ -13,6 +13,7 @@ repositories {
 }
 
 dependencies {
+	compile 'org.dstadler:commons-dost:1.0.0.+'
 	compile 'commons-io:commons-io:2.4'
 	compile 'org.apache.commons:commons-lang3:3.4'
 	compile 'net.java.dev.jna:jna:3.5.2'
@@ -38,6 +39,13 @@ task sortEclipseSettingsFile << {
 }
 eclipseJdt.finalizedBy adjustEclipseSettingsFile
 eclipseJdt.finalizedBy sortEclipseSettingsFile
+
+tasks.withType(JavaCompile){
+	// avoid: :compileJavawarning: [options] bootstrap class path not set in conjunction with -source 1.7
+	options.warnings = false
+	options.compilerArgs = [ '-Xlint:deprecation' ]
+    options.encoding = 'UTF-8'
+}
 
 task wrapper(type: Wrapper) {
 	gradleVersion = '2.3'
