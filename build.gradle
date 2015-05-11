@@ -25,6 +25,7 @@ dependencies {
 	runtime 'org.slf4j:slf4j-simple:1.7.12'
 
 	testCompile 'junit:junit:4.+'
+	testCompile 'org.dstadler:commons-test:1.0.0.+'
 }
 
 // work around unnecessary timestamp in generated file which always causes dirty files in version control
