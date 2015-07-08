@@ -144,30 +144,31 @@ public class JGitHelper implements Closeable {
         RevTree tree = revCommit.getTree();
 
 		// now read the file/directory attributes
-		TreeWalk treeWalk = buildTreeWalk(tree, path);
-		FileMode fileMode = treeWalk.getFileMode(0);
-		if(fileMode.equals(FileMode.EXECUTABLE_FILE) ||
-				fileMode.equals(FileMode.REGULAR_FILE)) {
-			ObjectLoader loader = repository.open(treeWalk.getObjectId(0));
-			stat.size(loader.getSize());
-			stat.setMode(NodeType.FILE,
-					true, false, fileMode.equals(FileMode.EXECUTABLE_FILE),
-					true, false, fileMode.equals(FileMode.EXECUTABLE_FILE),
-					false, false, false);
-			return;
-		} else if(fileMode.equals(FileMode.TREE)) {
-			stat.setMode(NodeType.DIRECTORY, true, false, true, true, false, true, false, false, false);
-			return;
-		} else if(fileMode.equals(FileMode.SYMLINK)) {
-			stat.setMode(NodeType.SYMBOLIC_LINK, true, false, true, true, false, true, false, false, false);
-			return;
-		} else if(fileMode.equals(FileMode.GITLINK)) {
-			stat.setMode(NodeType.SYMBOLIC_LINK, true, false, true, true, false, true, false, false, false);
-			return;
-		}
+		try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
+			FileMode fileMode = treeWalk.getFileMode(0);
+			if(fileMode.equals(FileMode.EXECUTABLE_FILE) ||
+					fileMode.equals(FileMode.REGULAR_FILE)) {
+				ObjectLoader loader = repository.open(treeWalk.getObjectId(0));
+				stat.size(loader.getSize());
+				stat.setMode(NodeType.FILE,
+						true, false, fileMode.equals(FileMode.EXECUTABLE_FILE),
+						true, false, fileMode.equals(FileMode.EXECUTABLE_FILE),
+						false, false, false);
+				return;
+			} else if(fileMode.equals(FileMode.TREE)) {
+				stat.setMode(NodeType.DIRECTORY, true, false, true, true, false, true, false, false, false);
+				return;
+			} else if(fileMode.equals(FileMode.SYMLINK)) {
+				stat.setMode(NodeType.SYMBOLIC_LINK, true, false, true, true, false, true, false, false, false);
+				return;
+			} else if(fileMode.equals(FileMode.GITLINK)) {
+				stat.setMode(NodeType.SYMBOLIC_LINK, true, false, true, true, false, true, false, false, false);
+				return;
+			}
 
-		throw new IllegalStateException("Found unknown FileMode 0o" + Integer.toOctalString(fileMode.getBits()) + "/" + fileMode.getClass() +
-		        " in Git for commit '" + commit + "' and path '" + path + "'");
+			throw new IllegalStateException("Found unknown FileMode 0o" + Integer.toOctalString(fileMode.getBits()) + "/" + fileMode.getClass() +
+			        " in Git for commit '" + commit + "' and path '" + path + "'");
+		}
 	}
 
 	/**
@@ -185,12 +186,13 @@ public class JGitHelper implements Closeable {
         RevTree tree = revCommit.getTree();
 
         // now read the file/directory attributes
-        TreeWalk treeWalk = buildTreeWalk(tree, path);
-        FileMode fileMode = treeWalk.getFileMode(0);
-
-        // TODO: this also returns true for a normal symbolic link,
-        // how can we determine the difference?
-        return fileMode.equals(FileMode.GITLINK);
+        try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
+	        FileMode fileMode = treeWalk.getFileMode(0);
+	
+	        // TODO: this also returns true for a normal symbolic link,
+	        // how can we determine the difference?
+	        return fileMode.equals(FileMode.GITLINK);
+        }
     }
 
 	/**
@@ -210,8 +212,11 @@ public class JGitHelper implements Closeable {
 		RevTree tree = revCommit.getTree();
 
 		// now read the file/directory attributes
-		TreeWalk treeWalk = buildTreeWalk(tree, path);
-		FileMode fileMode = treeWalk.getFileMode(0);
+		final FileMode fileMode;
+		try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
+			fileMode = treeWalk.getFileMode(0);
+		}
+
 		if(!fileMode.equals(FileMode.SYMLINK) && !fileMode.equals(FileMode.GITLINK)) {
 			throw new IllegalArgumentException("Had request for symlink-target which is not a symlink, commit '" + commit + "' and path '" + path + "': " + fileMode.getBits());
 		}
@@ -250,17 +255,18 @@ public class JGitHelper implements Closeable {
 		//System.out.println("Having tree: " + tree + " for commit " + commit);
 
 		// now try to find a specific file
-		TreeWalk treeWalk = buildTreeWalk(tree, path);
-		if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_FILE) == 0) {
-			throw new IllegalStateException("Tried to read the contents of a non-file for commit '" + commit + "' and path '" + path + "', had filemode " + treeWalk.getFileMode(0).getBits());
+		try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
+			if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_FILE) == 0) {
+				throw new IllegalStateException("Tried to read the contents of a non-file for commit '" + commit + "' and path '" + path + "', had filemode " + treeWalk.getFileMode(0).getBits());
+			}
+	
+			// then open the file for reading.
+			ObjectId objectId = treeWalk.getObjectId(0);
+			ObjectLoader loader = repository.open(objectId);
+	
+			// finally open an InputStream for the file contents
+			return loader.openStream();
 		}
-
-		// then open the file for reading.
-		ObjectId objectId = treeWalk.getObjectId(0);
-		ObjectLoader loader = repository.open(objectId);
-
-		// finally open an InputStream for the file contents
-		return loader.openStream();
 	}
 
 	private TreeWalk buildTreeWalk(RevTree tree, final String path) throws IOException {
@@ -275,8 +281,9 @@ public class JGitHelper implements Closeable {
 
 	private RevCommit buildRevCommit(String commit) throws MissingObjectException, IncorrectObjectTypeException, IOException {
 		// a RevWalk allows to walk over commits based on some filtering that is defined
-		RevWalk revWalk = new RevWalk(repository);
-		return revWalk.parseCommit(ObjectId.fromString(commit));
+		try (RevWalk revWalk = new RevWalk(repository)) {
+			return revWalk.parseCommit(ObjectId.fromString(commit));
+		}
 	}
 
 	/**
@@ -625,8 +632,7 @@ public class JGitHelper implements Closeable {
 		Set<String> commitSubs = new HashSet<String>();
 
 		// we currently use all refs for finding commits quickly
-		RevWalk walk = new RevWalk(repository);
-		try {
+		try (RevWalk walk = new RevWalk(repository)) {
 			// optimization: we only need the commit-ids here, so we can discard the contents right away
 			walk.setRetainBody(false);
 
@@ -635,9 +641,9 @@ public class JGitHelper implements Closeable {
 				addCommitSubs(commitSubs, walk, ref);
 			}
 
-			return commitSubs;
-		} finally {
 			walk.dispose();
+
+			return commitSubs;
 		}
 	}
 
@@ -683,45 +689,45 @@ public class JGitHelper implements Closeable {
 		// as a workaround we currently use all branches (includes master) and all tags for finding commits quickly
 		Map<String, Ref> allRefs = repository.getAllRefs();
 
-		RevWalk walk = new RevWalk(repository);
-
-		// optimization: we only need the commit-ids here, so we can discard the contents right away
-		walk.setRetainBody(false);
-
-		try {
-			// Store commits directly, not the SHA1 as getName() is a somewhat costly operation on RevCommit via formatHexChar()
-			Set<RevCommit> seenHeadCommits = new HashSet<RevCommit>(allRefs.size());
-			for(String ref : allRefs.keySet()) {
-				Ref head = repository.getRef(ref);
-				final RevCommit commit;
-				try {
-					commit = walk.parseCommit(head.getObjectId());
-				} catch (IncorrectObjectTypeException e) {
-					System.out.println("Invalid head-commit for ref " + ref + " and id: " + head.getObjectId().getName() + ": " + e);
-					continue;
+		try (RevWalk walk = new RevWalk(repository)) {
+			// optimization: we only need the commit-ids here, so we can discard the contents right away
+			walk.setRetainBody(false);
+	
+			try {
+				// Store commits directly, not the SHA1 as getName() is a somewhat costly operation on RevCommit via formatHexChar()
+				Set<RevCommit> seenHeadCommits = new HashSet<RevCommit>(allRefs.size());
+				for(String ref : allRefs.keySet()) {
+					Ref head = repository.getRef(ref);
+					final RevCommit commit;
+					try {
+						commit = walk.parseCommit(head.getObjectId());
+					} catch (IncorrectObjectTypeException e) {
+						System.out.println("Invalid head-commit for ref " + ref + " and id: " + head.getObjectId().getName() + ": " + e);
+						continue;
+					}
+	
+					// only read commits of this ref if we did not add parents of this commit already
+					if(seenHeadCommits.add(commit)) {
+						addCommits(map, walk, commit, sub);
+					}
 				}
-
-				// only read commits of this ref if we did not add parents of this commit already
-				if(seenHeadCommits.add(commit)) {
-					addCommits(map, walk, commit, sub);
-				}
+				//System.out.println("Had " + seen + " dupplicate commits");
+			} finally {
+				walk.dispose();
 			}
-			//System.out.println("Had " + seen + " dupplicate commits");
-		} finally {
-			walk.dispose();
+	
+			// use the ObjectIdSubclassMap for quick map-insertion and only afterwards convert the resulting commits
+			// to Strings. ObjectIds can be compared much quicker as Strings as they only are 4 ints, not 40 character strings
+			List<String> commits = new ArrayList<String>(map.size());
+	
+			Iterator<RevCommit> iterator = map.iterator();
+			while(iterator.hasNext()) {
+				RevObject commit = iterator.next();
+				commits.add(commit.getName());
+			}
+	
+			return commits;
 		}
-
-		// use the ObjectIdSubclassMap for quick map-insertion and only afterwards convert the resulting commits
-		// to Strings. ObjectIds can be compared much quicker as Strings as they only are 4 ints, not 40 character strings
-		List<String> commits = new ArrayList<String>(map.size());
-
-		Iterator<RevCommit> iterator = map.iterator();
-		while(iterator.hasNext()) {
-			RevObject commit = iterator.next();
-			commits.add(commit.getName());
-		}
-
-		return commits;
 	}
 
 	private void addCommits(ObjectIdSubclassMap<RevCommit> map, RevWalk walk, RevCommit commit, String sub) throws IOException, MissingObjectException,
@@ -772,31 +778,32 @@ public class JGitHelper implements Closeable {
 
 		// shortcut for root-path
 		if(path.isEmpty()) {
-			TreeWalk treeWalk = new TreeWalk(repository);
-			treeWalk.addTree(tree);
-			treeWalk.setRecursive(false);
-			treeWalk.setPostOrderTraversal(false);
-
-			while(treeWalk.next()) {
-				items.add(treeWalk.getPathString());
+			try (TreeWalk treeWalk = new TreeWalk(repository)) {
+				treeWalk.addTree(tree);
+				treeWalk.setRecursive(false);
+				treeWalk.setPostOrderTraversal(false);
+	
+				while(treeWalk.next()) {
+					items.add(treeWalk.getPathString());
+				}
 			}
-
-			return items;
+		} else {
+			// now try to find a specific file
+			try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
+				if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_TREE) == 0) {
+					throw new IllegalStateException("Tried to read the elements of a non-tree for commit '" + commit + "' and path '" + path + "', had filemode " + treeWalk.getFileMode(0).getBits());
+				}
+		
+				try (TreeWalk dirWalk = new TreeWalk(repository)) {
+					dirWalk.addTree(treeWalk.getObjectId(0));
+					dirWalk.setRecursive(false);
+					while(dirWalk.next()) {
+						items.add(dirWalk.getPathString());
+					}
+				}
+			}
 		}
-
-		// now try to find a specific file
-		TreeWalk treeWalk = buildTreeWalk(tree, path);
-		if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_TREE) == 0) {
-			throw new IllegalStateException("Tried to read the elements of a non-tree for commit '" + commit + "' and path '" + path + "', had filemode " + treeWalk.getFileMode(0).getBits());
-		}
-
-		TreeWalk dirWalk = new TreeWalk(repository);
-		dirWalk.addTree(treeWalk.getObjectId(0));
-		dirWalk.setRecursive(false);
-		while(dirWalk.next()) {
-			items.add(dirWalk.getPathString());
-		}
-
+		
 		return items;
 	}
 

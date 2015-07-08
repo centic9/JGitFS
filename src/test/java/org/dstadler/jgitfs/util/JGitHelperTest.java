@@ -55,25 +55,26 @@ public class JGitHelperTest {
 	@BeforeClass
 	public static void setUpClass() throws GitAPIException, IOException {
 		FileRepositoryBuilder builder = new FileRepositoryBuilder();
-		Repository repository = builder.setGitDir(new File(".git"))
+		try (Repository repository = builder.setGitDir(new File(".git"))
 		  .readEnvironment() // scan environment GIT_* variables
 		  .findGitDir() // scan up the file system tree
-		  .build();
-		Git git = new Git(repository);
-
-		List<Ref> tags = git.tagList().call();
-		boolean found = false;
-		for(Ref ref : tags) {
-			if(ref.getName().equals("refs/tags/testtag")) {
-				found = true;
-				break;
+		  .build()) {
+			try (Git git = new Git(repository)) {
+				List<Ref> tags = git.tagList().call();
+				boolean found = false;
+				for(Ref ref : tags) {
+					if(ref.getName().equals("refs/tags/testtag")) {
+						found = true;
+						break;
+					}
+				}
+				if(!found) {
+					git.tag().setName("testtag").call();
+				}
+		
+				hasStashes = !git.stashList().call().isEmpty();
 			}
 		}
-		if(!found) {
-			git.tag().setName("testtag").call();
-		}
-
-		hasStashes = !git.stashList().call().isEmpty();
 	}
 
 	@Before
@@ -741,28 +742,27 @@ public class JGitHelperTest {
     public void testGitLinkRepository() throws Exception {
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
 
-        Repository repository = builder.setGitDir(new File("./.git"))
+        try (Repository repository = builder.setGitDir(new File("./.git"))
           .readEnvironment() // scan environment GIT_* variables
           .findGitDir() // scan up the file system tree
-          .build();
+          .build()) {
 //        Repository repository = helper.getRepository();
 
 //        assertFalse("Repo should not be bare", repository.isBare());
-
-        System.out.println("Found submodules" + helper.allSubmodules());
-
-        Repository subRepo = SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna");
-
+	
+	        System.out.println("Found submodules" + helper.allSubmodules());
+	
+	        try (Repository subRepo = SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna")) {
+		
 //        Repository subRepo = builder.setGitDir(new File("/opt/git-fs/JGitFS/fuse-jna/.git"))
 //                .readEnvironment() // scan environment GIT_* variables
 //                .findGitDir() // scan up the file system tree
 //                .build();
-
-
-        assertFalse(subRepo.isBare());
-        Map<String, Ref> allRefs = subRepo.getAllRefs();
-        assertFalse("We should find some refs via submodule-repository", allRefs.isEmpty());
-
+		
+		        assertFalse(subRepo.isBare());
+		        Map<String, Ref> allRefs = subRepo.getAllRefs();
+		        assertFalse("We should find some refs via submodule-repository", allRefs.isEmpty());
+	
 //        {
 //            SubmoduleWalk walk = SubmoduleWalk.forIndex( repository );
 //            boolean found = false;
@@ -782,45 +782,46 @@ public class JGitHelperTest {
 //            assertTrue("Should find some submodules", found);
 //            walk.release();
 //        }
-
-        //listSubs(SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna"));
-        {
-            for(String ref : allRefs.keySet()) {
-                System.out.println(ref);
-            }
-        }
-
-        // find the commit
-        ObjectId lastCommitId = subRepo.resolve(SUBMODULE_COMMIT);
-
-        // .add(lastCommitId)
+	
+		        //listSubs(SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna"));
+		        {
+		            for(String ref : allRefs.keySet()) {
+		                System.out.println(ref);
+		            }
+		        }
+		
+		        // find the commit
+		        ObjectId lastCommitId = subRepo.resolve(SUBMODULE_COMMIT);
+		
+		        // .add(lastCommitId)
 //        Iterable<RevCommit> commits = new Git(subRepo).log().call();
 //        for(RevCommit commit : commits) {
 //            System.out.println("Commit: " + commit.getId());
 //        }
-
-
-        // a RevWalk allows to walk over commits based on some filtering that is defined
-        RevWalk revWalk = new RevWalk(subRepo);
-        RevCommit commit = revWalk.parseCommit(lastCommitId);
-        // and using commit's tree find the path
-        RevTree tree = commit.getTree();
-        System.out.println("Having tree: " + tree);
-        // now try to find a specific file
-        TreeWalk treeWalk = new TreeWalk(subRepo);
-        treeWalk.addTree(tree);
-        treeWalk.setRecursive(true);
-        treeWalk.setFilter(PathFilter.create("build.gradle"));
-        if (!treeWalk.next()) {
-            throw new IllegalStateException("Did not find expected file 'build.gradle'");
+		
+		        // a RevWalk allows to walk over commits based on some filtering that is defined
+		        try (RevWalk revWalk = new RevWalk(subRepo)) {
+			        RevCommit commit = revWalk.parseCommit(lastCommitId);
+			        // and using commit's tree find the path
+			        RevTree tree = commit.getTree();
+			        System.out.println("Having tree: " + tree);
+			        // now try to find a specific file
+			        try (TreeWalk treeWalk = new TreeWalk(subRepo)) {
+				        treeWalk.addTree(tree);
+				        treeWalk.setRecursive(true);
+				        treeWalk.setFilter(PathFilter.create("build.gradle"));
+				        if (!treeWalk.next()) {
+				            throw new IllegalStateException("Did not find expected file 'build.gradle'");
+				        }
+				        ObjectId objectId = treeWalk.getObjectId(0);
+				        ObjectLoader loader = subRepo.open(objectId);
+				        // and then one can the loader to read the file
+				        loader.copyTo(System.out);
+			        }
+			        revWalk.dispose();
+		        }
+	        }
         }
-        ObjectId objectId = treeWalk.getObjectId(0);
-        ObjectLoader loader = subRepo.open(objectId);
-        // and then one can the loader to read the file
-        loader.copyTo(System.out);
-        revWalk.dispose();
-
-
 //        try (JGitHelper linkHelper = new JGitHelper("fuse-jna")) {
 //            Set<String> allCommitSubs = linkHelper.allCommitSubs();
 //            assertNotNull(allCommitSubs);

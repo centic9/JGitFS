@@ -49,13 +49,14 @@ public class JGitFilesystemTest {
 	@BeforeClass
 	public static void setUpClass() throws GitAPIException, IOException {
 		FileRepositoryBuilder builder = new FileRepositoryBuilder();
-		Repository repository = builder.setGitDir(new File(".git"))
+		try (Repository repository = builder.setGitDir(new File(".git"))
 		  .readEnvironment() // scan environment GIT_* variables
 		  .findGitDir() // scan up the file system tree
-		  .build();
-		Git git = new Git(repository);
-
-		hasStashes = !git.stashList().call().isEmpty();
+		  .build()) {
+			try (Git git = new Git(repository)) {
+				hasStashes = !git.stashList().call().isEmpty();
+			}
+		}
 	}
 
 	@Before
