@@ -1,6 +1,9 @@
 package org.dstadler.jgitfs;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,13 +12,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.fusejna.DirectoryFiller;
-import net.fusejna.ErrorCodes;
-import net.fusejna.FuseException;
-import net.fusejna.StatWrapperFactory;
-import net.fusejna.StructStat.StatWrapper;
-import net.fusejna.types.TypeMode.NodeType;
-
+import org.dstadler.commons.testing.ThreadTestHelper;
 import org.dstadler.jgitfs.util.FuseUtils;
 import org.dstadler.jgitfs.util.JGitHelper;
 import org.dstadler.jgitfs.util.JGitHelperTest;
@@ -29,6 +26,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import net.fusejna.DirectoryFiller;
+import net.fusejna.ErrorCodes;
+import net.fusejna.FuseException;
+import net.fusejna.StatWrapperFactory;
+import net.fusejna.StructStat.StatWrapper;
+import net.fusejna.types.TypeMode.NodeType;
 
 
 public class JGitFilesystemTest {

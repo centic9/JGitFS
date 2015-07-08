@@ -94,7 +94,9 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 			String subPath = jgitHelper.getSubmodulePath(subName);
 			System.out.println("Preparing submodule " + subName + " at " + subPath);
 			try {
-			    jgitSubmodules.put(subName, new JGitFilesystem(this, subPath, enableLogging));
+			    @SuppressWarnings("resource")
+				JGitFilesystem jgitFS = new JGitFilesystem(this, subPath, enableLogging);
+				jgitSubmodules.put(subName, jgitFS);
 			} catch (IllegalArgumentException e) {
 			    System.out.println("Error adding submodule: " + subName + ": " + e);
 			}

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -47,7 +48,9 @@ public class JGitFS {
 				mount(args[i], new File(args[i + 1]));
 			}
 
-		    new Console().run(new FileInputStream(FileDescriptor.in), System.out);
+		    @SuppressWarnings("resource")
+			InputStream inStream = new FileInputStream(FileDescriptor.in);
+			new Console().run(inStream, System.out);
 		} finally {
 			// ensure that we try to close all filesystems that we created
 			for (Pair<File, JGitFilesystem> gitFS : mounts.values()) {
