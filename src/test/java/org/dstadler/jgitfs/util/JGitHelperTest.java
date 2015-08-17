@@ -11,11 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import net.fusejna.StatWrapperFactory;
-import net.fusejna.StructStat.StatWrapper;
-import net.fusejna.types.TypeMode;
-import net.fusejna.types.TypeMode.NodeType;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +34,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import net.fusejna.StatWrapperFactory;
+import net.fusejna.StructStat.StatWrapper;
+import net.fusejna.types.TypeMode;
+import net.fusejna.types.TypeMode.NodeType;
 
 
 
@@ -71,7 +71,7 @@ public class JGitHelperTest {
 				if(!found) {
 					git.tag().setName("testtag").call();
 				}
-		
+
 				hasStashes = !git.stashList().call().isEmpty();
 			}
 		}
@@ -675,6 +675,9 @@ public class JGitHelperTest {
                     assertTrue(jGitHelper.allSubmodules().isEmpty());
                 }
             } finally {
+                // workaround for https://bugs.eclipse.org/bugs/show_bug.cgi?id=474093
+                result.getRepository().close();
+
             	result.close();
             }
         } finally {
@@ -694,11 +697,14 @@ public class JGitHelperTest {
             .setDirectory(new File(localPath, ".git"))
             .call();
 
+            // workaround for https://bugs.eclipse.org/bugs/show_bug.cgi?id=474093
+            result.getRepository().close();
+
             result.close();
 
             System.out.println("Cloned to " + localPath + ", now opening repository");
         } finally {
-    		FileUtils.deleteDirectory(localPath);
+			FileUtils.deleteDirectory(localPath);
         }
     }
 
@@ -749,20 +755,20 @@ public class JGitHelperTest {
 //        Repository repository = helper.getRepository();
 
 //        assertFalse("Repo should not be bare", repository.isBare());
-	
+
 	        System.out.println("Found submodules" + helper.allSubmodules());
-	
+
 	        try (Repository subRepo = SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna")) {
-		
+
 //        Repository subRepo = builder.setGitDir(new File("/opt/git-fs/JGitFS/fuse-jna/.git"))
 //                .readEnvironment() // scan environment GIT_* variables
 //                .findGitDir() // scan up the file system tree
 //                .build();
-		
+
 		        assertFalse(subRepo.isBare());
 		        Map<String, Ref> allRefs = subRepo.getAllRefs();
 		        assertFalse("We should find some refs via submodule-repository", allRefs.isEmpty());
-	
+
 //        {
 //            SubmoduleWalk walk = SubmoduleWalk.forIndex( repository );
 //            boolean found = false;
@@ -782,23 +788,23 @@ public class JGitHelperTest {
 //            assertTrue("Should find some submodules", found);
 //            walk.release();
 //        }
-	
+
 		        //listSubs(SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna"));
 		        {
 		            for(String ref : allRefs.keySet()) {
 		                System.out.println(ref);
 		            }
 		        }
-		
+
 		        // find the commit
 		        ObjectId lastCommitId = subRepo.resolve(SUBMODULE_COMMIT);
-		
+
 		        // .add(lastCommitId)
 //        Iterable<RevCommit> commits = new Git(subRepo).log().call();
 //        for(RevCommit commit : commits) {
 //            System.out.println("Commit: " + commit.getId());
 //        }
-		
+
 		        // a RevWalk allows to walk over commits based on some filtering that is defined
 		        try (RevWalk revWalk = new RevWalk(subRepo)) {
 			        RevCommit commit = revWalk.parseCommit(lastCommitId);
