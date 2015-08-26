@@ -7,7 +7,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -85,7 +84,7 @@ public class GitUtils {
 
         String name = matcher.group(1);
         String dir = matcher.group(2);
-        return ImmutablePair.of(name, dir.isEmpty() ? "/" : dir);
+        return Pair.of(name, dir.isEmpty() ? "/" : dir);
     }
 
     public static boolean isStashDir(final String path) {

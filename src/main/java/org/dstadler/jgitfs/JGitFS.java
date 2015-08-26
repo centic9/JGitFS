@@ -9,14 +9,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import net.fusejna.FuseException;
-
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dstadler.jgitfs.console.Console;
 import org.dstadler.jgitfs.util.FuseUtils;
 
 import com.google.common.base.Preconditions;
+
+import net.fusejna.FuseException;
 
 /**
  * Main class which handles commandline parsing and starts up the {@link JGitFilesystem}.
@@ -121,7 +120,7 @@ public class JGitFS {
         // then block until the filesystem is unmounted
         gitFS.mount(mountPoint, false);
 
-        mounts.put(gitDir, ImmutablePair.of(mountPoint, gitFS));
+        mounts.put(gitDir, Pair.of(mountPoint, gitFS));
     }
 
     /**
