@@ -10,6 +10,7 @@ userland filesystem.
     git clone --recursive git://github.com/centic9/JGitFS
 
 Note: The "--recursive" is necessary to clone necessary submodules as well!
+If you did a normal clone, you can do ``git submodule update --init --recursive`` to fetch the submodule.
 
 #### Build it and create the distribution files
 
