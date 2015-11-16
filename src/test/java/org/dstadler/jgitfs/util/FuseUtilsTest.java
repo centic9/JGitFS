@@ -31,7 +31,7 @@ public class FuseUtilsTest {
             if(!SystemUtils.IS_OS_WINDOWS) {
             	fail("Should not be able to create the invalid mountpoint");
             }
-        } catch (IOException e) {
+        } catch (@SuppressWarnings("unused") IOException e) {
             // expected
         }
     }

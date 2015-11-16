@@ -401,7 +401,7 @@ public class JGitFilesystemTest {
 		try {
 			fs.readlink("/tag/testtag", buffer, 21);
 			fail("Should catch exception here");
-		} catch (BufferOverflowException e) {
+		} catch (@SuppressWarnings("unused") BufferOverflowException e) {
 			// expected...
 		}
 	}
@@ -412,7 +412,7 @@ public class JGitFilesystemTest {
 		try {
 			fs.readlink("/tag/testtag", buffer, 30);
 			fail("Should catch exception here");
-		} catch (BufferOverflowException e) {
+		} catch (@SuppressWarnings("unused") BufferOverflowException e) {
 			// expected...
 		}
 	}

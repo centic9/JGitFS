@@ -134,7 +134,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 
 			try {
 				jgitHelper.readType(commit, file, stat);
-			} catch (FileNotFoundException e) {
+			} catch (@SuppressWarnings("unused") FileNotFoundException e) {
 				return -ErrorCodes.ENOENT();
 			} catch (Exception e) {
 				throw new IllegalStateException("Error reading type of path " + path + ", commit " + commit + " and file " + file, e);

@@ -606,7 +606,7 @@ public class JGitHelperTest {
         try {
             link = helper.readSymlink(GITLINK_COMMIT, "fuse-jna");
             //assertEquals("one", link);
-        } catch (UnsupportedOperationException e) {
+        } catch (@SuppressWarnings("unused") UnsupportedOperationException e) {
             // expected for now...
         }
 
@@ -636,7 +636,7 @@ public class JGitHelperTest {
         try {
             helper.getSubmoduleAt("notexisting");
             fail("Should catch exception here");
-        } catch (NoSuchElementException e) {
+        } catch (@SuppressWarnings("unused") NoSuchElementException e) {
             // expected here
         }
     }
@@ -647,7 +647,7 @@ public class JGitHelperTest {
         try {
             helper.getSubmodulePath("notexisting");
             fail("Should catch exception here");
-        } catch (NoSuchElementException e) {
+        } catch (@SuppressWarnings("unused") NoSuchElementException e) {
             // expected here
         }
     }
@@ -714,7 +714,7 @@ public class JGitHelperTest {
         try {
             helper.getSubmoduleHead("notexisting");
             fail("Should catch exception here");
-        } catch (NoSuchElementException e) {
+        } catch (@SuppressWarnings("unused") NoSuchElementException e) {
             // expected here
         }
     }

@@ -34,7 +34,7 @@ public class JGitFSTest {
         try {
             JGitFS.main(new String[] {"invalidrepo", "somemountpoint"});
             fail("Should throw exception with invalid git repository");
-        } catch (IllegalStateException e) {
+        } catch (@SuppressWarnings("unused") IllegalStateException e) {
             // expected
         }
     }
@@ -60,7 +60,7 @@ public class JGitFSTest {
             	FileUtils.deleteDirectory(mountPoint);
             }
             fail("Should throw exception with invalid git repository");
-        } catch (IOException e) {
+        } catch (@SuppressWarnings("unused") IOException e) {
             // happens when run in CloudBees, but could not find out details...
         } catch (IllegalStateException e) {
             assertTrue("Had: " + e.getMessage(), e.getMessage().contains("invalidrepo"));
