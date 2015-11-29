@@ -297,7 +297,7 @@ public class JGitHelper implements Closeable {
 	 */
 	public List<String> getBranches() throws IOException {
 		final List<Ref> brancheRefs = readBranches();
-		List<String> branches = new ArrayList<String>();
+		List<String> branches = new ArrayList<>();
 		for(Ref ref : brancheRefs) {
 			String name = adjustName(ref.getName());
 			branches.add(name);
@@ -353,7 +353,7 @@ public class JGitHelper implements Closeable {
 	 */
 	public List<String> getRemotes() throws IOException {
 		final List<Ref> remoteRefs = readRemotes();
-		List<String> remotes = new ArrayList<String>();
+		List<String> remotes = new ArrayList<>();
 		for(Ref ref : remoteRefs) {
 			String name = adjustName(ref.getName());
 			remotes.add(name);
@@ -408,7 +408,7 @@ public class JGitHelper implements Closeable {
 	 */
 	public List<String> getTags() throws IOException {
 		List<Ref> tagRefs = readTags();
-		List<String> tags = new ArrayList<String>();
+		List<String> tags = new ArrayList<>();
 		for(Ref ref : tagRefs) {
 			String name = adjustName(ref.getName());
 			tags.add(name);
@@ -556,7 +556,7 @@ public class JGitHelper implements Closeable {
      * @throws IOException If accessing the Git repository fails
      */
     public List<String> getStashes() throws IOException {
-        List<String> stashNames = new ArrayList<String>();
+        List<String> stashNames = new ArrayList<>();
 
         // first a list of all stashes
         for(int i = 0;i < readStashes().size();i++) {
@@ -629,7 +629,7 @@ public class JGitHelper implements Closeable {
 	 * @throws IOException If access to the Git repository fails.
 	 */
 	public Set<String> allCommitSubs() throws IOException {
-		Set<String> commitSubs = new HashSet<String>();
+		Set<String> commitSubs = new HashSet<>();
 
 		// we currently use all refs for finding commits quickly
 		try (RevWalk walk = new RevWalk(repository)) {
@@ -682,7 +682,7 @@ public class JGitHelper implements Closeable {
 	 * @throws IOException If access to the Git repository fails.
 	 */
 	public Collection<String> allCommits(String sub) throws IOException {
-		ObjectIdSubclassMap<RevCommit> map = new ObjectIdSubclassMap<RevCommit>();
+		ObjectIdSubclassMap<RevCommit> map = new ObjectIdSubclassMap<>();
 
 		// TODO: we do not read unreferenced commits here, it would be nice to be able to access these as well here
 		// see http://stackoverflow.com/questions/17178432/how-to-find-all-commits-using-jgit-not-just-referenceable-ones
@@ -695,7 +695,7 @@ public class JGitHelper implements Closeable {
 	
 			try {
 				// Store commits directly, not the SHA1 as getName() is a somewhat costly operation on RevCommit via formatHexChar()
-				Set<RevCommit> seenHeadCommits = new HashSet<RevCommit>(allRefs.size());
+				Set<RevCommit> seenHeadCommits = new HashSet<>(allRefs.size());
 				for(String ref : allRefs.keySet()) {
 					Ref head = repository.getRef(ref);
 					final RevCommit commit;
@@ -718,7 +718,7 @@ public class JGitHelper implements Closeable {
 	
 			// use the ObjectIdSubclassMap for quick map-insertion and only afterwards convert the resulting commits
 			// to Strings. ObjectIds can be compared much quicker as Strings as they only are 4 ints, not 40 character strings
-			List<String> commits = new ArrayList<String>(map.size());
+			List<String> commits = new ArrayList<>(map.size());
 	
 			Iterator<RevCommit> iterator = map.iterator();
 			while(iterator.hasNext()) {
@@ -774,7 +774,7 @@ public class JGitHelper implements Closeable {
 		RevTree tree = revCommit.getTree();
 		//System.out.println("Having tree: " + tree + " for commit " + commit);
 
-		List<String> items = new ArrayList<String>();
+		List<String> items = new ArrayList<>();
 
 		// shortcut for root-path
 		if(path.isEmpty()) {

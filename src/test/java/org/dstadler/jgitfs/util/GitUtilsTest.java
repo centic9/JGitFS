@@ -5,7 +5,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -308,12 +307,12 @@ public class GitUtilsTest {
     }
 
     @Test
-	public void testGetUID() throws IOException {
+	public void testGetUID() {
 		assertTrue(GitUtils.getUID() >= 0);
 	}
 
 	@Test
-	public void testGetGID() throws IOException {
+	public void testGetGID() {
 		assertTrue(GitUtils.getGID() >= 0);
 	}
 }

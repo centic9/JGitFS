@@ -51,7 +51,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 	/**
 	 * static set of directories to handle them quickly in getattr().
 	 */
-	private static Set<String> DIRS = new HashSet<String>();
+	private static Set<String> DIRS = new HashSet<>();
 	static {
 		DIRS.add("/");
 		DIRS.add("/branch");
@@ -67,7 +67,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 	 * Don't print out a warning for some directories which are queried by
 	 * some apps, e.g. Nautilus on Gnome
 	 */
-	private static Set<String> IGNORED_DIRS = new HashSet<String>();
+	private static Set<String> IGNORED_DIRS = new HashSet<>();
 	static {
 		IGNORED_DIRS.add("/.hidden");
 		IGNORED_DIRS.add("/.Trash");

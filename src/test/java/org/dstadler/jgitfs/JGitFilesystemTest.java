@@ -70,12 +70,12 @@ public class JGitFilesystemTest {
 	}
 
 	@Test
-	public void testConstructClose() throws IOException {
+	public void testConstructClose() {
 		// do nothing here, just construct and close the fs in before/after...
 	}
 
 	@Test
-	public void testConstructMountClose() throws IOException, FuseException {
+	public void testConstructMountClose() throws UnsatisfiedLinkError, IOException, FuseException {
 		// ensure that we can actually load FUSE-binaries before we try to mount/unmount
 		// an assumption will fail if the binaries are missing
 		assertNotNull(getStatsWrapper());
@@ -86,7 +86,7 @@ public class JGitFilesystemTest {
 	}
 
 	@Test
-	public void testGetAttr() throws IOException, FuseException {
+	public void testGetAttr() {
 		StatWrapper stat = getStatsWrapper();
 		assertEquals(0, fs.getattr("/", stat));
 		assertEquals(NodeType.DIRECTORY, stat.type());
@@ -171,7 +171,7 @@ public class JGitFilesystemTest {
 
 	@Test
 	public void testReadDir() {
-		final List<String> filledFiles = new ArrayList<String>();
+		final List<String> filledFiles = new ArrayList<>();
 		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
 		fs.readdir("/", filler);
@@ -224,7 +224,7 @@ public class JGitFilesystemTest {
 
 	@Test
 	public void testReadDirPathFails() {
-		final List<String> filledFiles = new ArrayList<String>();
+		final List<String> filledFiles = new ArrayList<>();
 		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
 		String path = DEFAULT_COMMIT_PATH + "/notexisting";
@@ -240,7 +240,7 @@ public class JGitFilesystemTest {
 
 	@Test
 	public void testReadDirTag() {
-		final List<String> filledFiles = new ArrayList<String>();
+		final List<String> filledFiles = new ArrayList<>();
 		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
 		fs.readdir("/tag", filler);
@@ -249,7 +249,7 @@ public class JGitFilesystemTest {
 
 	@Test
 	public void testReadDirTagFails() throws IOException {
-		final List<String> filledFiles = new ArrayList<String>();
+		final List<String> filledFiles = new ArrayList<>();
 		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
 		fs.close();
@@ -269,7 +269,7 @@ public class JGitFilesystemTest {
 			assertTrue("Had: " + branches.toString(), branches.contains("refs_heads_master"));
 		}
 
-		final List<String> filledFiles = new ArrayList<String>();
+		final List<String> filledFiles = new ArrayList<>();
 		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
 		fs.readdir("/branch", filler);
@@ -279,7 +279,7 @@ public class JGitFilesystemTest {
 
 	@Test
 	public void testReadDirRemote() {
-		final List<String> filledFiles = new ArrayList<String>();
+		final List<String> filledFiles = new ArrayList<>();
 		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
 		fs.readdir("/remote", filler);
@@ -297,7 +297,7 @@ public class JGitFilesystemTest {
             assertTrue("Had: " + stashes.toString(), stashes.contains("stash@{0}"));
         }
 
-        final List<String> filledFiles = new ArrayList<String>();
+        final List<String> filledFiles = new ArrayList<>();
         DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
         fs.readdir("/stash", filler);
@@ -314,7 +314,7 @@ public class JGitFilesystemTest {
             assertTrue("Had: " + stashes.toString(), stashes.contains("stash@{0}"));
         }
 
-        final List<String> filledFiles = new ArrayList<String>();
+        final List<String> filledFiles = new ArrayList<>();
         DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
         fs.readdir("/stashorig", filler);
@@ -530,24 +530,24 @@ public class JGitFilesystemTest {
 		StatWrapper stat = getStatsWrapper();
 		assertEquals(0, fs.getattr("/", stat));
 
-		final List<String> filledFiles = new ArrayList<String>();
+		final List<String> filledFiles = new ArrayList<>();
 		DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
 		assertEquals(0, fs.readdir("/", filler));
 		assertEquals("[/branch, /commit, /remote, /tag, /submodule, /stash, /stashorig]", filledFiles.toString());
 
-		for(String file : new ArrayList<String>(filledFiles)) {
+		for(String file : new ArrayList<>(filledFiles)) {
 			assertEquals(0, fs.getattr(file, stat));
 			assertEquals(0, fs.readdir(file, filler));
 		}
 
 		filledFiles.clear();
 		assertEquals(0, fs.readdir("/commit", filler));
-		for(String file : new ArrayList<String>(filledFiles)) {
+		for(String file : new ArrayList<>(filledFiles)) {
 			assertEquals(0, fs.getattr("/commit/" + file, stat));
 			filledFiles.clear();
 			assertEquals(0, fs.readdir("/commit/" + file, filler));
-			for(String subfile : new ArrayList<String>(filledFiles)) {
+			for(String subfile : new ArrayList<>(filledFiles)) {
 				assertEquals(0, fs.getattr("/commit/" + file + "/" + subfile, stat));
 				filledFiles.clear();
 				assertEquals(0, fs.readdir("/commit/" + file + "/" + subfile, filler));
@@ -556,7 +556,7 @@ public class JGitFilesystemTest {
 
 		filledFiles.clear();
 		assertEquals(0, fs.readdir("/branch", filler));
-		for(String file : new ArrayList<String>(filledFiles)) {
+		for(String file : new ArrayList<>(filledFiles)) {
 			assertEquals(0, fs.getattr("/branch/" + file, stat));
 			assertEquals(NodeType.SYMBOLIC_LINK, stat.type());
 			//fs.readlink("/branch/" + file, ByteBuffer.allocate(capacity), size)
@@ -564,7 +564,7 @@ public class JGitFilesystemTest {
 
 		filledFiles.clear();
 		assertEquals(0, fs.readdir("/remote", filler));
-		for(String file : new ArrayList<String>(filledFiles)) {
+		for(String file : new ArrayList<>(filledFiles)) {
 			assertEquals(0, fs.getattr("/remote/" + file, stat));
 			assertEquals(NodeType.SYMBOLIC_LINK, stat.type());
 			//fs.readlink("/branch/" + file, ByteBuffer.allocate(capacity), size)
@@ -572,7 +572,7 @@ public class JGitFilesystemTest {
 
 		filledFiles.clear();
         assertEquals(0, fs.readdir("/stash", filler));
-        for(String file : new ArrayList<String>(filledFiles)) {
+        for(String file : new ArrayList<>(filledFiles)) {
             assertEquals(0, fs.getattr("/stash/" + file, stat));
             assertEquals(NodeType.SYMBOLIC_LINK, stat.type());
             //fs.readlink("/branch/" + file, ByteBuffer.allocate(capacity), size)
@@ -580,7 +580,7 @@ public class JGitFilesystemTest {
 
         filledFiles.clear();
         assertEquals(0, fs.readdir("/stashorig", filler));
-        for(String file : new ArrayList<String>(filledFiles)) {
+        for(String file : new ArrayList<>(filledFiles)) {
             assertEquals(0, fs.getattr("/stashorig/" + file, stat));
             assertEquals(NodeType.SYMBOLIC_LINK, stat.type());
             //fs.readlink("/branch/" + file, ByteBuffer.allocate(capacity), size)
@@ -619,7 +619,7 @@ public class JGitFilesystemTest {
 
         assertEquals(100, fs.read(SUBMODULE_COMMIT_PATH + "/LICENSE", ByteBuffer.allocate(100), 100, 0, null));
 
-        final List<String> filledFiles = new ArrayList<String>();
+        final List<String> filledFiles = new ArrayList<>();
         DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
         fs.readdir("/submodule/fuse-jna/", filler);
@@ -672,7 +672,7 @@ public class JGitFilesystemTest {
         String commit = new String(buffer.array(), 0, buffer.position()).substring(2);
 
         // check that the test-data is there
-        final List<String> filledFiles = new ArrayList<String>();
+        final List<String> filledFiles = new ArrayList<>();
         DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
         assertEquals(0, fs.readdir(commit + "/src/test/data", filler));
         assertEquals("Had: " + filledFiles, 4, filledFiles.size());

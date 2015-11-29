@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import net.fusejna.FuseException;
-
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
@@ -15,7 +13,7 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 
 public class ListObjects {
-	public static void main(final String... args) throws FuseException, IOException, GitAPIException
+	public static void main(final String... args) throws IOException, GitAPIException
 	{
 		FileRepositoryBuilder builder = new FileRepositoryBuilder();
 		try (Repository repository = builder.setGitDir(new File("/opt/poi/.git"))

@@ -1,6 +1,11 @@
 package org.dstadler.jgitfs.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,7 +21,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Ref;
@@ -336,7 +340,7 @@ public class JGitHelperTest {
     }
 
 	@Test
-	public void testallCommitsNull() throws NoHeadException, GitAPIException, IOException {
+	public void testallCommitsNull() throws IOException {
 		Collection<String> allCommits = helper.allCommits(null);
 		int size = allCommits.size();
 		assertTrue("Had size: " + size, size > 3);
@@ -344,7 +348,7 @@ public class JGitHelperTest {
 	}
 
 	@Test
-	public void testallCommits() throws NoHeadException, GitAPIException, IOException {
+	public void testallCommits() throws IOException {
 		int size = helper.allCommits("zz").size();
 		assertEquals("Had size: " + size, 0, size);
 
@@ -363,7 +367,7 @@ public class JGitHelperTest {
 	}
 
 	@Test
-	public void testAllCommitSubs() throws NoHeadException, GitAPIException, IOException {
+	public void testAllCommitSubs() throws IOException {
 		Collection<String> subs = helper.allCommitSubs();
 		int subSize = subs.size();
 		assertTrue("Had: " + subs, subSize > 3);
@@ -378,7 +382,7 @@ public class JGitHelperTest {
 
 	@Ignore("local test")
 	@Test
-	public void testAllCommitSubsJenkins() throws NoHeadException, GitAPIException, IOException {
+	public void testAllCommitSubsJenkins() throws IOException {
 		helper.close();
 		helper = new JGitHelper("/opt/jenkins/jenkins.git/.git");
 		//helper = new JGitHelper("G:\\workspaces\\linux\\.git");
@@ -403,7 +407,7 @@ public class JGitHelperTest {
 
 	@Ignore("local test")
 	@Test
-	public void testAllCommitsJenkins() throws NoHeadException, GitAPIException, IOException {
+	public void testAllCommitsJenkins() throws IOException {
 		helper.close();
 		helper = new JGitHelper("/opt/jenkins/jenkins.git/.git");
 		//helper = new JGitHelper("G:\\workspaces\\linux\\.git");
@@ -837,7 +841,7 @@ public class JGitHelperTest {
 
     @Ignore("Used for local testing")
     @Test
-    public void testPOIInvalidSubmodule() throws IOException, GitAPIException {
+    public void testPOIInvalidSubmodule() throws IOException {
         try (JGitHelper jgit = new JGitHelper("/opt/poi")) {
 
             String path = "/commit/09/2cdc23b0db770dc5dc7836e2d8cbeadfd1dd29/src/documentation";
