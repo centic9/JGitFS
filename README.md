@@ -1,4 +1,4 @@
-[![Build Status](https://buildhive.cloudbees.com/job/centic9/job/JGitFS/badge/icon)](https://buildhive.cloudbees.com/job/centic9/job/JGitFS/)
+[![Build Status](https://travis-ci.org/centic9/JGitFS.svg)](https://travis-ci.org/centic9/JGitFS)
 
 JGitFS provides access to Git branches/tags/commits like if they would be separate directories via a [FUSE][Linux-Fuse] 
 userland filesystem. 
