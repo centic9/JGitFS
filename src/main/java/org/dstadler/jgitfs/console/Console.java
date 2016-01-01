@@ -81,6 +81,9 @@ public class Console {
                 reader.clearScreen();
             }
         }
+
+        // ensure that all content is written to the screen at the end to make unit tests stable
+        reader.flush();
     }
 
     private void help(PrintWriter out) {
