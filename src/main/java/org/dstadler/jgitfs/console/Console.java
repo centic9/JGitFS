@@ -70,15 +70,12 @@ public class Console {
                 }
             } else if (line.startsWith("list")) {
                 JGitFS.list();
+            } else if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit")) {
+                break;
+            } else if (line.equalsIgnoreCase("cls")) {
+                reader.clearScreen();
             } else {
                 help(out);
-            }
-
-            if (line.equalsIgnoreCase("quit") || line.equalsIgnoreCase("exit")) {
-                break;
-            }
-            if (line.equalsIgnoreCase("cls")) {
-                reader.clearScreen();
             }
         }
 
