@@ -188,7 +188,7 @@ public class JGitHelper implements Closeable {
         // now read the file/directory attributes
         try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
 	        FileMode fileMode = treeWalk.getFileMode(0);
-	
+
 	        // TODO: this also returns true for a normal symbolic link,
 	        // how can we determine the difference?
 	        return fileMode.equals(FileMode.GITLINK);
@@ -259,11 +259,11 @@ public class JGitHelper implements Closeable {
 			if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_FILE) == 0) {
 				throw new IllegalStateException("Tried to read the contents of a non-file for commit '" + commit + "' and path '" + path + "', had filemode " + treeWalk.getFileMode(0).getBits());
 			}
-	
+
 			// then open the file for reading.
 			ObjectId objectId = treeWalk.getObjectId(0);
 			ObjectLoader loader = repository.open(objectId);
-	
+
 			// finally open an InputStream for the file contents
 			return loader.openStream();
 		}
@@ -692,7 +692,7 @@ public class JGitHelper implements Closeable {
 		try (RevWalk walk = new RevWalk(repository)) {
 			// optimization: we only need the commit-ids here, so we can discard the contents right away
 			walk.setRetainBody(false);
-	
+
 			try {
 				// Store commits directly, not the SHA1 as getName() is a somewhat costly operation on RevCommit via formatHexChar()
 				Set<RevCommit> seenHeadCommits = new HashSet<>(allRefs.size());
@@ -705,7 +705,7 @@ public class JGitHelper implements Closeable {
 						System.out.println("Invalid head-commit for ref " + ref + " and id: " + head.getObjectId().getName() + ": " + e);
 						continue;
 					}
-	
+
 					// only read commits of this ref if we did not add parents of this commit already
 					if(seenHeadCommits.add(commit)) {
 						addCommits(map, walk, commit, sub);
@@ -715,17 +715,17 @@ public class JGitHelper implements Closeable {
 			} finally {
 				walk.dispose();
 			}
-	
+
 			// use the ObjectIdSubclassMap for quick map-insertion and only afterwards convert the resulting commits
 			// to Strings. ObjectIds can be compared much quicker as Strings as they only are 4 ints, not 40 character strings
 			List<String> commits = new ArrayList<>(map.size());
-	
+
 			Iterator<RevCommit> iterator = map.iterator();
 			while(iterator.hasNext()) {
 				RevObject commit = iterator.next();
 				commits.add(commit.getName());
 			}
-	
+
 			return commits;
 		}
 	}
@@ -782,7 +782,7 @@ public class JGitHelper implements Closeable {
 				treeWalk.addTree(tree);
 				treeWalk.setRecursive(false);
 				treeWalk.setPostOrderTraversal(false);
-	
+
 				while(treeWalk.next()) {
 					items.add(treeWalk.getPathString());
 				}
@@ -793,7 +793,7 @@ public class JGitHelper implements Closeable {
 				if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_TREE) == 0) {
 					throw new IllegalStateException("Tried to read the elements of a non-tree for commit '" + commit + "' and path '" + path + "', had filemode " + treeWalk.getFileMode(0).getBits());
 				}
-		
+
 				try (TreeWalk dirWalk = new TreeWalk(repository)) {
 					dirWalk.addTree(treeWalk.getObjectId(0));
 					dirWalk.setRecursive(false);
@@ -803,7 +803,7 @@ public class JGitHelper implements Closeable {
 				}
 			}
 		}
-		
+
 		return items;
 	}
 

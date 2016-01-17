@@ -31,13 +31,13 @@ public class ListObjects {
 			for(Ref ref : branches) {
 				System.out.println("Branch: " + ref.getName() + ", " + ref.toString() + ", " + ref.getLeaf().getName() + ", " + ref.getObjectId() + ", " + ref.getTarget().getName());
 			}
-	
+
 			List<Ref> tags = git.tagList().call();
 			System.out.println("Listing " + tags.size() + " tags");
 			for(Ref ref : tags) {
 				System.out.println("Tag: " + ref.getName());
 			}
-	
+
 			String head = repository.getFullBranch();
 			if(head == null) {
 				System.out.println("Null head!");
@@ -47,11 +47,11 @@ public class ListObjects {
 				        System.out.println("Current branch is " + repository.getBranch());
 				}
 			}
-	
+
 			// The following could also have been done using repo.resolve("HEAD")
 	//        ObjectId id = repository.resolve(repository.getFullBranch());
 	//        System.out.println("Branch " + repository.getBranch() + " points to " + id.name());
-	
+
 			// The following could also have been done using repo.resolve("HEAD")
 	        ObjectId id = repository.resolve("HEAD");
 			if(id == null) {
