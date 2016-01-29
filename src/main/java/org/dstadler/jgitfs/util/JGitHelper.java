@@ -648,7 +648,7 @@ public class JGitHelper implements Closeable {
 	}
 
 	private void addCommitSubs(Collection<String> commits, RevWalk walk, String ref) throws IOException {
-		Ref head = repository.getRef(ref);
+		Ref head = repository.exactRef(ref);
 		final RevCommit commit;
 		try {
 			commit = walk.parseCommit(head.getObjectId());
@@ -697,7 +697,7 @@ public class JGitHelper implements Closeable {
 				// Store commits directly, not the SHA1 as getName() is a somewhat costly operation on RevCommit via formatHexChar()
 				Set<RevCommit> seenHeadCommits = new HashSet<>(allRefs.size());
 				for(String ref : allRefs.keySet()) {
-					Ref head = repository.getRef(ref);
+					Ref head = repository.exactRef(ref);
 					final RevCommit commit;
 					try {
 						commit = walk.parseCommit(head.getObjectId());
