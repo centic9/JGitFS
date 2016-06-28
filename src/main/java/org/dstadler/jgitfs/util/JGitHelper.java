@@ -5,11 +5,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -24,7 +24,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
-import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectIdSubclassMap;
@@ -32,7 +31,6 @@ import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevObject;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
@@ -227,11 +225,8 @@ public class JGitHelper implements Closeable {
 		}
 
 		// try to read the file-data as it contains the symlink target
-		InputStream openFile = openFile(commit, path);
-		try {
-			return IOUtils.toString(openFile);
-		} finally {
-			openFile.close();
+		try (InputStream openFile = openFile(commit, path)) {
+			return IOUtils.toString(openFile, Charset.forName("UTF-8"));
 		}
 	}
 
@@ -245,7 +240,7 @@ public class JGitHelper implements Closeable {
 	 *
 	 * @throws IllegalStateException If the path or the commit cannot be found or does not denote a file
 	 * @throws IOException If access to the Git repository fails
-	 * @throws FileNotFoundException If the given path cannotbe found in the given commit-id
+	 * @throws FileNotFoundException If the given path cannot be found in the given commit-id
 	 */
 	public InputStream openFile(String commit, String path) throws IOException {
 		RevCommit revCommit = buildRevCommit(commit);
@@ -279,7 +274,7 @@ public class JGitHelper implements Closeable {
 		return treeWalk;
 	}
 
-	private RevCommit buildRevCommit(String commit) throws MissingObjectException, IncorrectObjectTypeException, IOException {
+	private RevCommit buildRevCommit(String commit) throws IOException {
 		// a RevWalk allows to walk over commits based on some filtering that is defined
 		try (RevWalk revWalk = new RevWalk(repository)) {
 			return revWalk.parseCommit(ObjectId.fromString(commit));
@@ -296,9 +291,9 @@ public class JGitHelper implements Closeable {
 	 * @throws IOException If accessing the Git repository fails
 	 */
 	public List<String> getBranches() throws IOException {
-		final List<Ref> brancheRefs = readBranches();
+		final List<Ref> branchRefs = readBranches();
 		List<String> branches = new ArrayList<>();
-		for(Ref ref : brancheRefs) {
+		for(Ref ref : branchRefs) {
 			String name = adjustName(ref.getName());
 			branches.add(name);
 			if(name.startsWith("refs_heads_")) {
@@ -453,7 +448,7 @@ public class JGitHelper implements Closeable {
 	}
 
 	private String adjustName(String name) {
-		// TODO: handle tags with slash as subdirs instead of replacing with underscore
+		// TODO: handle tags with slash as sub-dirs instead of replacing with underscore
 		return name.replace("/", "_");
 	}
 
@@ -574,7 +569,7 @@ public class JGitHelper implements Closeable {
     /**
      * Return the commit-id for the given stash.
      *
-     * @param branch The stash to read data for, usually just a "stash@{<nr>}".
+     * @param stash The stash to read data for, usually just a "stash@{<nr>}".
      * @return A commit-id if found or null if not found.
      * @throws IOException If accessing the Git repository fails
      */
@@ -594,7 +589,7 @@ public class JGitHelper implements Closeable {
     /**
      * Return the commit-id for the parent commit of the given stash.
      *
-     * @param branch The stash to read data for, usually just a "stash@{<nr>}".
+     * @param stash The stash to read data for, usually just a "stash@{<nr>}".
      * @return A commit-id if found or null if not found.
      * @throws IOException If accessing the Git repository fails
      */
@@ -711,7 +706,7 @@ public class JGitHelper implements Closeable {
 						addCommits(map, walk, commit, sub);
 					}
 				}
-				//System.out.println("Had " + seen + " dupplicate commits");
+				//System.out.println("Had " + seen + " duplicate commits");
 			} finally {
 				walk.dispose();
 			}
@@ -720,9 +715,7 @@ public class JGitHelper implements Closeable {
 			// to Strings. ObjectIds can be compared much quicker as Strings as they only are 4 ints, not 40 character strings
 			List<String> commits = new ArrayList<>(map.size());
 
-			Iterator<RevCommit> iterator = map.iterator();
-			while(iterator.hasNext()) {
-				RevObject commit = iterator.next();
+			for (RevCommit commit : map) {
 				commits.add(commit.getName());
 			}
 
@@ -730,8 +723,7 @@ public class JGitHelper implements Closeable {
 		}
 	}
 
-	private void addCommits(ObjectIdSubclassMap<RevCommit> map, RevWalk walk, RevCommit commit, String sub) throws IOException, MissingObjectException,
-			IncorrectObjectTypeException {
+	private void addCommits(ObjectIdSubclassMap<RevCommit> map, RevWalk walk, RevCommit commit, String sub) throws IOException {
 		walk.markStart(commit);
 		try {
 			for(RevCommit rev : walk) {
@@ -746,9 +738,9 @@ public class JGitHelper implements Closeable {
 	}
 
 	/**
-	 * Free resources held in thie instance, i.e. by releasing the Git repository resources held internally.
+	 * Free resources held in the instance, i.e. by releasing the Git repository resources held internally.
 	 *
-	 * The instance is not useable after this call any more.
+	 * The instance is not usable after this call any more.
 	 */
 	@Override
 	public void close() throws IOException {
