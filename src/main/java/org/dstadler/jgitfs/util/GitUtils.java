@@ -2,6 +2,7 @@ package org.dstadler.jgitfs.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -110,13 +111,10 @@ public class GitUtils {
 		    Process child = Runtime.getRuntime().exec(command);
 
 		    // Get the input stream and read from it
-		    InputStream inputStream = child.getInputStream();
-		    try  {
-		    	String string = IOUtils.toString(inputStream).trim();
+		    try (InputStream inputStream = child.getInputStream()) {
+		    	String string = IOUtils.toString(inputStream, Charset.defaultCharset()).trim();
 		    	System.out.println("Found user/group id: " + string + " for user: " + userName);
 		    	return Long.parseLong(string);
-		    } finally {
-		    	inputStream.close();
 		    }
 		} catch (IOException | NumberFormatException e) {
 			System.out.println("Could not read user/group information for user " + userName);

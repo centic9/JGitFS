@@ -32,7 +32,7 @@ public class JGitFSTest {
     @Test
     public void testMainInvalidLocation() throws Exception {
         try {
-            JGitFS.main(new String[] {"invalidrepo", "somemountpoint"});
+            JGitFS.main("invalidrepo", "somemountpoint");
             fail("Should throw exception with invalid git repository");
         } catch (@SuppressWarnings("unused") IllegalStateException e) {
             // expected
@@ -55,9 +55,10 @@ public class JGitFSTest {
             File mountPoint = File.createTempFile("JGitFSTest", ".dir2");
             assertTrue(mountPoint.delete());
             try {
-            	JGitFS.main(new String[] {".", mountPoint.getPath(), "invalidrepo", "somemountpoint"});
+            	JGitFS.main(".", mountPoint.getPath(), "invalidrepo", "somemountpoint");
             } finally {
-            	FileUtils.deleteDirectory(mountPoint);
+                //noinspection ThrowFromFinallyBlock
+                FileUtils.deleteDirectory(mountPoint);
             }
             fail("Should throw exception with invalid git repository");
         } catch (@SuppressWarnings("unused") IOException e) {
@@ -94,7 +95,8 @@ public class JGitFSTest {
 	            JGitFS.list();
 	            assertTrue(JGitFS.unmount(mountPoint.getPath()));
             } finally {
-            	FileUtils.deleteDirectory(mountPoint);
+                //noinspection ThrowFromFinallyBlock
+                FileUtils.deleteDirectory(mountPoint);
             }
         } catch (IOException e) {
             // happens when run in CloudBees, but could not find out details...
@@ -123,9 +125,11 @@ public class JGitFSTest {
                         assertTrue(e.getMessage().contains("already mounted"));
                     }
                 } finally {
+                    //noinspection ThrowFromFinallyBlock
                     assertTrue(JGitFS.unmount(mountPoint.getPath()));
                 }
             } finally {
+                //noinspection ThrowFromFinallyBlock
                 FileUtils.deleteDirectory(mountPoint);
             }
         } catch (IOException e) {
@@ -155,9 +159,11 @@ public class JGitFSTest {
                     	TestHelpers.assertContains(e, "already used for mount at");
                     }
                 } finally {
+                    //noinspection ThrowFromFinallyBlock
                     assertTrue(JGitFS.unmount(mountPoint.getPath()));
                 }
             } finally {
+                //noinspection ThrowFromFinallyBlock
                 FileUtils.deleteDirectory(mountPoint);
             }
         } catch (IOException e) {

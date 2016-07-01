@@ -31,7 +31,7 @@ public class JGitFS {
 	/**
 	 * Main method for JGitFS.
 	 *
-	 * @param args
+	 * @param args The initial filesystems to mount and their mountpoint
 	 * @throws FuseException If mounting fails.
 	 * @throws IOException If the given Git repository cannot be read or some other error happens during file access.
 	 */
@@ -53,6 +53,7 @@ public class JGitFS {
 		} finally {
 			// ensure that we try to close all filesystems that we created
 			for (Pair<File, JGitFilesystem> gitFS : mounts.values()) {
+				//noinspection ThrowFromFinallyBlock
 				gitFS.getRight().close();
 			}
 		}

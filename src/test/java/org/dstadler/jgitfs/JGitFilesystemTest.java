@@ -10,8 +10,10 @@ import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Iterables;
 import org.dstadler.commons.testing.ThreadTestHelper;
 import org.dstadler.jgitfs.util.FuseUtils;
 import org.dstadler.jgitfs.util.JGitHelper;
@@ -88,6 +90,7 @@ public class JGitFilesystemTest {
 	@Test
 	public void testGetAttr() {
 		StatWrapper stat = getStatsWrapper();
+		assertNotNull(stat);
 		assertEquals(0, fs.getattr("/", stat));
 		assertEquals(NodeType.DIRECTORY, stat.type());
 		assertEquals(0, fs.getattr("/commit", stat));
@@ -451,7 +454,7 @@ public class JGitFilesystemTest {
 	private void unmount(File mountPoint) throws IOException, FuseException {
 		fs.unmount();
 
-		mountPoint.delete();
+		assertTrue(mountPoint.delete());
 	}
 
 	private StatWrapper getStatsWrapper() {
@@ -528,6 +531,7 @@ public class JGitFilesystemTest {
 	@Test
 	public void testWalkRecursively() {
 		StatWrapper stat = getStatsWrapper();
+		assertNotNull(stat);
 		assertEquals(0, fs.getattr("/", stat));
 
 		final List<String> filledFiles = new ArrayList<>();
@@ -611,6 +615,7 @@ public class JGitFilesystemTest {
         assertEquals("../../../submodule/fuse-jna/commit/39/c1c4b78ff751b0b9e28f4fb35148a1acd6646f", new String(buffer.array(), 0, buffer.position()));
 
         StatWrapper stat = getStatsWrapper();
+		assertNotNull(stat);
         assertEquals(0, fs.getattr("/submodule/fuse-jna", stat));
         assertEquals(NodeType.DIRECTORY, stat.type());
 
@@ -684,6 +689,7 @@ public class JGitFilesystemTest {
 
         // check type of files
         final StatWrapper wrapper = getStatsWrapper();
+		assertNotNull(wrapper);
         assertEquals(0, fs.getattr(commit + "/src/test/data", wrapper));
         assertEquals(NodeType.DIRECTORY, wrapper.type());
         assertEquals(0, fs.getattr(commit + "/src/test/data/emptytestfile", wrapper));
@@ -740,17 +746,13 @@ public class JGitFilesystemTest {
 
 		@Override
 		public boolean add(String... files) {
-			for(String file : files) {
-				filledFiles.add(file);
-			}
+			Collections.addAll(filledFiles, files);
 			return true;
 		}
 
 		@Override
 		public boolean add(Iterable<String> files) {
-			for(String file : files) {
-				filledFiles.add(file);
-			}
+			Iterables.addAll(filledFiles, files);
 			return true;
 		}
 	}

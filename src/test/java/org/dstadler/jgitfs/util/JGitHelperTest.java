@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -51,8 +52,9 @@ public class JGitHelperTest {
     private static final String SYMLINK_COMMIT = "e81ba32d8d51cdd1463e9a0b704059bd8ccbfd19";
     private static final String GITLINK_COMMIT = "ca1767dc76fe104d0b94fb2a5c962c82121be3da";
     private static final String SUBMODULE_COMMIT = "39c1c4b78ff751b0b9e28f4fb35148a1acd6646f";
+	private static final Charset CHARSET = Charset.forName("UTF-8");
 
-    private static boolean hasStashes = false;
+	private static boolean hasStashes = false;
 
 	private JGitHelper helper;
 
@@ -133,6 +135,7 @@ public class JGitHelperTest {
 	@Test
 	public void testReadType() throws Exception {
 		final StatWrapper wrapper = getStatsWrapper();
+		assertNotNull(wrapper);
 
 		System.out.println("Had commit: " + DEFAULT_COMMIT);
 		helper.readType(DEFAULT_COMMIT, "src", wrapper);
@@ -176,6 +179,8 @@ public class JGitHelperTest {
 	@Test
 	public void testReadTypeExecutable() throws Exception {
 		final StatWrapper wrapper = getStatsWrapper();
+		assertNotNull(wrapper);
+
 		// Look at a specific older commit to have an executable file
 		helper.readType("355ea52f1e38b1c8e6537c093332180918808b68", "run.sh", wrapper);
 		assertEquals(NodeType.FILE, wrapper.type());
@@ -205,28 +210,28 @@ public class JGitHelperTest {
 	@Test
 	public void testOpenFile() throws Exception {
 		System.out.println("Had commit: " + DEFAULT_COMMIT);
-		String runSh = IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "README.md"));
+		String runSh = IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "README.md"), CHARSET);
 		assertTrue("Had: " + runSh, StringUtils.isNotEmpty(runSh));
 	}
 
 	@Test
 	public void testOpenFileFails() throws Exception {
 		try {
-			IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "src"));
+			assertNotNull(IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "src"), CHARSET));
 			fail("Should catch exception here");
 		} catch (IllegalStateException e) {
 			assertTrue(e.getMessage().contains("src"));
 		}
 
 		try {
-			IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "src/org"));
+			assertNotNull(IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "src/org"), CHARSET));
 			fail("Should catch exception here");
 		} catch (FileNotFoundException e) {
 			assertTrue(e.getMessage().contains("src/org"));
 		}
 
 		try {
-			IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "notexisting"));
+			assertNotNull(IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "notexisting"), CHARSET));
 			fail("Should catch exception here");
 		} catch (FileNotFoundException e) {
 			assertTrue(e.getMessage().contains("notexisting"));
@@ -459,28 +464,19 @@ public class JGitHelperTest {
 		assertTrue(items.size() > 0);
 		assertTrue("Had: " + items, items.contains("__init__.py"));
 
-		InputStream openFile = jgitHelper.openFile(commit, "build/generator/__init__.py");
-		try {
-			String string = IOUtils.toString(openFile);
+		try (InputStream openFile = jgitHelper.openFile(commit, "build/generator/__init__.py")) {
+			String string = IOUtils.toString(openFile, CHARSET);
 			System.out.println("Having " + string.length() + " bytes: \n" + string);
-		} finally {
-			openFile.close();
 		}
 
-
-		openFile = jgitHelper.openFile(commit, "build/generator/__init__.py");
-
-		try {
+		try (InputStream openFile = jgitHelper.openFile(commit, "build/generator/__init__.py")) {
 			// skip until we are at the offset
-			openFile.skip(0);
+			assertEquals(0, openFile.skip(0));
 
 			byte[] arr = new byte[4096];
 			int read = openFile.read(arr, 0, 4096);
 			System.out.println("Had: " + read);
-		} finally {
-			openFile.close();
 		}
-
 
 		jgitHelper.close();
 	}
@@ -521,6 +517,8 @@ public class JGitHelperTest {
 
         // check type of files
         final StatWrapper wrapper = getStatsWrapper();
+		assertNotNull(wrapper);
+
         helper.readType(commit, "src/test/data", wrapper);
         assertEquals(NodeType.DIRECTORY, wrapper.type());
         helper.readType(commit, "src/test/data/emptytestfile", wrapper);
@@ -533,35 +531,23 @@ public class JGitHelperTest {
         assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
 
         // check that the empty file is actually empty
-        InputStream stream = helper.openFile(commit, "src/test/data/emptytestfile");
-        try {
-            assertEquals("", IOUtils.toString(stream));
-        } finally {
-            stream.close();
+        try (InputStream stream = helper.openFile(commit, "src/test/data/emptytestfile")) {
+            assertEquals("", IOUtils.toString(stream, CHARSET));
         }
 
         // check that the file has the correct content
-        stream = helper.openFile(commit, "src/test/data/one");
-        try {
-            assertEquals("1", IOUtils.toString(stream).trim());
-        } finally {
-            stream.close();
+		try (InputStream stream = helper.openFile(commit, "src/test/data/one")) {
+            assertEquals("1", IOUtils.toString(stream, CHARSET).trim());
         }
 
         // check that we can read the symlink
-        stream = helper.openFile(commit, "src/test/data/symlink");
-        try {
+		try (InputStream stream = helper.openFile(commit, "src/test/data/symlink")) {
             assertEquals("Should be 'one' as it contains the filename of the file pointed to!",
-                    "one", IOUtils.toString(stream).trim());
-        } finally {
-            stream.close();
+                    "one", IOUtils.toString(stream, CHARSET).trim());
         }
-        stream = helper.openFile(commit, "src/test/data/rellink");
-        try {
+		try (InputStream stream = helper.openFile(commit, "src/test/data/rellink")) {
             assertEquals("Should be '../../../build.gradle' as it contains the filename of the file pointed to!",
-                    "../../../build.gradle", IOUtils.toString(stream).trim());
-        } finally {
-            stream.close();
+                    "../../../build.gradle", IOUtils.toString(stream, CHARSET).trim());
         }
 
         // read the symlinks
@@ -609,10 +595,11 @@ public class JGitHelperTest {
         // TODO: add full support for Submodules
         try {
             link = helper.readSymlink(GITLINK_COMMIT, "fuse-jna");
-            //assertEquals("one", link);
-        } catch (@SuppressWarnings("unused") UnsupportedOperationException e) {
-            // expected for now...
-        }
+            assertNotNull(link);
+            assertEquals("one", link);
+		} catch (@SuppressWarnings("unused") UnsupportedOperationException e) {
+			// expected for now...
+		}
 
         try {
             helper.readSymlink(DEFAULT_COMMIT, "build.gradle");
@@ -685,7 +672,8 @@ public class JGitHelperTest {
             	result.close();
             }
         } finally {
-    		FileUtils.deleteDirectory(localPath);
+			//noinspection ThrowFromFinallyBlock
+			FileUtils.deleteDirectory(localPath);
         }
     }
 
@@ -708,6 +696,7 @@ public class JGitHelperTest {
 
             System.out.println("Cloned to " + localPath + ", now opening repository");
         } finally {
+			//noinspection ThrowFromFinallyBlock
 			FileUtils.deleteDirectory(localPath);
         }
     }
@@ -727,6 +716,7 @@ public class JGitHelperTest {
     public void testConstructForSubmodule() throws Exception {
         try (JGitHelper subHelper = new JGitHelper(helper, "fuse-jna")) {
             final StatWrapper wrapper = getStatsWrapper();
+			assertNotNull(wrapper);
 
             subHelper.readType(SUBMODULE_COMMIT, "build.gradle", wrapper);
             assertEquals(NodeType.FILE, wrapper.type());
@@ -859,7 +849,7 @@ public class JGitHelperTest {
             String subHead = jgit.getSubmoduleHead(subName);
             assertNotNull(subHead);
 
-            jgit.readSymlink(lcommit, dir).getBytes();
+            assertTrue(jgit.readSymlink(lcommit, dir).getBytes().length > 0);
         }
     }
 }

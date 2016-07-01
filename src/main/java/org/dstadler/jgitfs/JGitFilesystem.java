@@ -23,6 +23,7 @@ import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode.NodeType;
 import net.fusejna.util.FuseFilesystemAdapterFull;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dstadler.jgitfs.util.GitUtils;
@@ -180,11 +181,9 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		String file = jgitHelper.readPath(path);
 
 		try {
-			InputStream openFile = jgitHelper.openFile(commit, file);
-
-			try {
+			try (InputStream openFile = jgitHelper.openFile(commit, file)) {
 				// skip until we are at the offset
-				openFile.skip(offset);
+				IOUtils.skip(openFile, offset);
 
 				byte[] arr = new byte[(int)size];
 				int read = openFile.read(arr, 0, (int)size);
@@ -196,8 +195,6 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 				buffer.put(arr, 0, read);
 
 				return read;
-			} finally {
-				openFile.close();
 			}
 		} catch (Exception e) {
 			throw new IllegalStateException("Error reading contents of path " + path + ", commit " + commit + " and file " + file, e);
@@ -383,10 +380,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 		        				throw new FileNotFoundException("Had unknown tag/branch/remote " + path + " in readlink()");
 		        			}
 
-		        			StringBuilder target = new StringBuilder("..");
-		        			target.append(GitUtils.COMMIT_SLASH).append(commit.substring(0, 2)).append("/").append(commit.substring(2));
-
-		        			return target.toString().getBytes();
+							return (".." + GitUtils.COMMIT_SLASH + commit.substring(0, 2) + "/" + commit.substring(2)).getBytes();
 		        		} catch (Exception e) {
 		        			throw new IllegalStateException("Error reading commit of tag/branch-path " + path, e);
 		        		}
@@ -438,7 +432,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 	/**
 	 * Free up resources held for the Git repository and unmount the FUSE-filesystem.
 	 *
-	 * @throws IOException If an error ocurred while closing the Git repository or while unmounting the filesystem.
+	 * @throws IOException If an error occurred while closing the Git repository or while unmounting the filesystem.
 	 */
 	@Override
 	public void close() throws IOException {
