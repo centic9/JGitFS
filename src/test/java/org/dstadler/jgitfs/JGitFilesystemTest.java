@@ -612,7 +612,8 @@ public class JGitFilesystemTest {
         buffer = ByteBuffer.allocate(1000);
         assertEquals(0, fs.readlink(commit + "/fuse-jna", buffer, 1000));
         assertEquals("Incorrect number of bytes written to the buffer", 924, buffer.remaining());
-        assertEquals("../../../submodule/fuse-jna/commit/39/c1c4b78ff751b0b9e28f4fb35148a1acd6646f", new String(buffer.array(), 0, buffer.position()));
+        assertEquals("../../../submodule/fuse-jna/commit/ec/ed84f81ad6d2547d47384809a789cf9f4ed3d7",
+				new String(buffer.array(), 0, buffer.position()));
 
         StatWrapper stat = getStatsWrapper();
 		assertNotNull(stat);
