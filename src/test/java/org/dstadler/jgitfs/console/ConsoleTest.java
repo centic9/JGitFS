@@ -1,14 +1,23 @@
 package org.dstadler.jgitfs.console;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import jline.console.ConsoleReader;
+import org.junit.Assume;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
-import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class ConsoleTest {
+	@BeforeClass
+	public static void setUpClass() {
+		String travis = System.getenv("RUNNING_IN_TRAVIS");
+		Assume.assumeTrue("Disable this test when running on travis",
+				travis == null || !travis.equalsIgnoreCase("true"));
+	}
 
 	@Test
 	public void testRunQuit() throws Exception {
@@ -104,6 +113,35 @@ public class ConsoleTest {
 
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		console.run(new ByteArrayInputStream("cls\nexit\n".getBytes()), out);
+		out.close();
+
+		String outStr = new String(out.toByteArray());
+		assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
+		assertTrue("Had: " + outStr, outStr.contains("cls"));
+		assertTrue("Had: " + outStr, outStr.contains("exit"));
+	}
+
+	// try to narrow down a test-failure in travis
+	@Test
+	public void testClsTravis() throws Exception {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		try (ConsoleReader reader = new ConsoleReader("JGitFS", new ByteArrayInputStream("cls\nexit\n".getBytes()), out, null)) {
+			reader.setPrompt("jgitfs> ");
+
+			String line;
+			//PrintWriter out = new PrintWriter(reader.getOutput());
+
+			while ((line = reader.readLine()) != null) {
+				System.out.println("Had line: " + line);
+				if (line.equalsIgnoreCase("cls")) {
+					reader.clearScreen();
+				}
+			}
+
+			// ensure that all content is written to the screen at the end to make unit tests stable
+			reader.flush();
+		}
+
 		out.close();
 
 		String outStr = new String(out.toByteArray());

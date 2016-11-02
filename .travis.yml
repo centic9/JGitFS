@@ -1,7 +1,11 @@
 language: java
 jdk:
   - oraclejdk8
- 
+
+env:
+  global:
+    - RUNNING_IN_TRAVIS="true"
+
 before_install:
  - chmod +x gradlew
  - git fetch --unshallow
