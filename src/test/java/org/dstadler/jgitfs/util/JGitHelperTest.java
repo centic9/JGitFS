@@ -838,7 +838,7 @@ public class JGitHelperTest {
     public void testPOIInvalidSubmodule() throws IOException {
         try (JGitHelper jgit = new JGitHelper("/opt/poi")) {
 
-            String path = "/commit/09/2cdc23b0db770dc5dc7836e2d8cbeadfd1dd29/src/documentation";
+            String path = "/commit/78/632d39b2e48e650d82e5ad1480d96a3de4063f/src/documentation";
 
             String lcommit = jgit.readCommit(path);
             String dir = jgit.readPath(path);
@@ -846,6 +846,12 @@ public class JGitHelperTest {
             // for symlinks that are actually git-links for a submodule, we need to redirect back to the
             // separate submodule-folder with the correct submodule name filled in
             assertTrue(jgit.isGitLink(lcommit, dir));
+
+			/*assertEquals("", jgit.readSymlink(lcommit, dir));
+
+			try (InputStream openFile = jgit.openFile(lcommit, path)) {
+				assertEquals("", IOUtils.toString(openFile, Charset.forName("UTF-8")));
+			}*/
 
             System.out.println("Submodules: " + jgit.allSubmodules());
 
