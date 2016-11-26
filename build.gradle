@@ -15,10 +15,10 @@ repositories {
 dependencies {
 	compile 'org.dstadler:commons-dost:1.0.0.+'
 	compile 'commons-io:commons-io:2.5'
-	compile 'org.apache.commons:commons-lang3:3.4'
+	compile 'org.apache.commons:commons-lang3:3.5'
 	compile 'net.java.dev.jna:jna:3.5.2'
 	compile 'org.eclipse.jgit:org.eclipse.jgit:4.5.0.201609210915-r'
-	compile 'com.google.guava:guava:19.0'
+	compile 'com.google.guava:guava:20.0'
 	compile project(':fuse-jna')
 	compile 'jline:jline:2.14.2'
 
