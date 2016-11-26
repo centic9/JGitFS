@@ -65,7 +65,7 @@ public class JGitFS {
 	 * @param dirOrMountPoint Either the location of the git repository or the mount point.
 	 * @return true if the directory was unmounted successfully, false if it was not found and an
 	 *     exception is thrown if an error occurs during unmounting.
-	 * @throws IOException
+	 * @throws IOException If an error occurred while closing the Git repository or while unmounting the filesystem.
 	 */
 	public static boolean unmount(String dirOrMountPoint) throws IOException {
 	    for(Map.Entry<String,Pair<File, JGitFilesystem>> entry : mounts.entrySet()) {
@@ -129,7 +129,8 @@ public class JGitFS {
      */
     public static void list() {
         for(Map.Entry<String,Pair<File, JGitFilesystem>> entry : mounts.entrySet()) {
-            System.out.println(entry.getKey() + " mounted at " + entry.getValue().getLeft());
+            System.out.println(entry.getKey() + " mounted at " + entry.getValue().getLeft() +
+					", stats: " + entry.getValue().getRight().getStats());
         }
     }
 }

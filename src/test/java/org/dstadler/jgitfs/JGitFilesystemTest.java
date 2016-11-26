@@ -1,9 +1,22 @@
 package org.dstadler.jgitfs;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import com.google.common.collect.Iterables;
+import net.fusejna.DirectoryFiller;
+import net.fusejna.ErrorCodes;
+import net.fusejna.FuseException;
+import net.fusejna.StatWrapperFactory;
+import net.fusejna.StructStat.StatWrapper;
+import net.fusejna.types.TypeMode.NodeType;
+import org.apache.commons.lang3.RandomUtils;
+import org.dstadler.commons.testing.ThreadTestHelper;
+import org.dstadler.jgitfs.util.FuseUtils;
+import org.dstadler.jgitfs.util.JGitHelper;
+import org.dstadler.jgitfs.util.JGitHelperTest;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.junit.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,28 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.Iterables;
-import org.dstadler.commons.testing.ThreadTestHelper;
-import org.dstadler.jgitfs.util.FuseUtils;
-import org.dstadler.jgitfs.util.JGitHelper;
-import org.dstadler.jgitfs.util.JGitHelperTest;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import net.fusejna.DirectoryFiller;
-import net.fusejna.ErrorCodes;
-import net.fusejna.FuseException;
-import net.fusejna.StatWrapperFactory;
-import net.fusejna.StructStat.StatWrapper;
-import net.fusejna.types.TypeMode.NodeType;
+import static org.junit.Assert.*;
 
 
 public class JGitFilesystemTest {
@@ -88,6 +80,14 @@ public class JGitFilesystemTest {
 	}
 
 	@Test
+    public void testGetStats() {
+        assertTrue("Had: " + fs.getStats(), fs.getStats().contains("getattr: 0"));
+        assertTrue("Had: " + fs.getStats(), fs.getStats().contains("read: 0"));
+        assertTrue("Had: " + fs.getStats(), fs.getStats().contains("readdir: 0"));
+        assertTrue("Had: " + fs.getStats(), fs.getStats().contains("readlink: 0"));
+    }
+
+	@Test
 	public void testGetAttr() {
 		StatWrapper stat = getStatsWrapper();
 		assertNotNull(stat);
@@ -136,11 +136,15 @@ public class JGitFilesystemTest {
         assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/stash/123/.hidden", stat));
         assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/stashorig/123/.hidden", stat));
 		assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/master/some/file/direct/.hidden", stat));
+        
+        assertFalse("Had: " + fs.getStats(), fs.getStats().contains("getattr: 0"));
 	}
 
 	@Test
 	public void testRead() {
 		assertEquals(100, fs.read(DEFAULT_COMMIT_PATH + "/README.md", ByteBuffer.allocate(100), 100, 0, null));
+
+        assertFalse("Had: " + fs.getStats(), fs.getStats().contains("read: 0"));
 	}
 
 	@Test
@@ -223,6 +227,8 @@ public class JGitFilesystemTest {
         filledFiles.clear();
         fs.readdir("/submodule", filler);
         assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("fuse-jna"));
+
+        assertFalse("Had: " + fs.getStats(), fs.getStats().contains("readdir: 0"));
 	}
 
 	@Test
@@ -343,6 +349,8 @@ public class JGitFilesystemTest {
 
 		String target = new String(buffer.array(), 0, buffer.position());
 		assertTrue("Had: " + target, target.startsWith("../commit"));
+
+        assertFalse("Had: " + fs.getStats(), fs.getStats().contains("readlink: 0"));
 	}
 
 	@Test
@@ -492,7 +500,7 @@ public class JGitFilesystemTest {
 
             @Override
             public void run(int threadnum, int iter) throws Exception {
-            	switch (threadnum) {
+            	switch (RandomUtils.nextInt(0,6)) {
 					case 0:
 						testGetAttr();
 						break;
@@ -511,17 +519,17 @@ public class JGitFilesystemTest {
 					case 5:
 						testReadLinkTag();
 						break;
-                    case 6:
-                        testReadLinkStash();
+                    /*case 6:
+                        //testReadLinkStash();
                         break;
                     case 7:
-                        testReadLinkStashOrig();
+                        //testReadLinkStashOrig();
                         break;
 					case 8:
-						testWalkRecursively();
-						break;
+						//testWalkRecursively();
+						break;*/
 					default:
-						throw new IllegalStateException("No work for thread " + threadnum);
+						throw new IllegalStateException("Invalid random number");
 				}
             }
 
@@ -753,7 +761,7 @@ public class JGitFilesystemTest {
 
 		@Override
 		public boolean add(Iterable<String> files) {
-			Iterables.addAll(filledFiles, files);
+			assertTrue(Iterables.addAll(filledFiles, files));
 			return true;
 		}
 	}
