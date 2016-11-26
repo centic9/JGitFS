@@ -47,136 +47,136 @@ import org.eclipse.jgit.treewalk.TreeWalk;
  * @author cwat-dstadler
  */
 public class JGitHelper implements Closeable {
-	private final Repository repository;
-	private final Git git;
+    private final Repository repository;
+    private final Git git;
 
-	/**
-	 * Construct the helper with the given directory as Git repository.
-	 *
-	 * @param pGitDir A Git repository, either the root-dir or the .git directory directly.
-	 * @throws IllegalStateException If the .git directory is not found
-	 * @throws IOException If opening the Git repository fails
-	 */
-	public JGitHelper(String pGitDir) throws IOException {
-		String gitDir = pGitDir;
-		if(!gitDir.endsWith(".git") && !gitDir.endsWith(".git/")) {
-			gitDir = gitDir + "/.git";
-		}
-		if(!new File(gitDir).exists()) {
-			throw new IllegalStateException("Could not find git repository at " + gitDir);
-		}
-
-		System.out.println("Using git repo at " + gitDir);
-		FileRepositoryBuilder builder = new FileRepositoryBuilder();
-		repository = builder.setGitDir(new File(gitDir))
-		  .readEnvironment() // scan environment GIT_* variables
-		  .findGitDir() // scan up the file system tree
-		  .build();
-		git = new Git(repository);
-	}
-
-	/**
-	 * Initialize a JGitHelper for a Git submodule, this requires the
-	 * parent JGitHelper object in order to correct open the repository
-	 * for the submodule.
-	 *
-	 * @param parent The JGitHelper object for the parent Git repository
-	 * @param submodulePath The path where the submodule is linked in
-	 * @throws IllegalArgumentException If no submodule can be opened at the given path
+    /**
+     * Construct the helper with the given directory as Git repository.
+     *
+     * @param pGitDir A Git repository, either the root-dir or the .git directory directly.
+     * @throws IllegalStateException If the .git directory is not found
      * @throws IOException If opening the Git repository fails
-	 */
-	public JGitHelper(JGitHelper parent, String submodulePath) throws IOException {
+     */
+    public JGitHelper(String pGitDir) throws IOException {
+        String gitDir = pGitDir;
+        if(!gitDir.endsWith(".git") && !gitDir.endsWith(".git/")) {
+            gitDir = gitDir + "/.git";
+        }
+        if(!new File(gitDir).exists()) {
+            throw new IllegalStateException("Could not find git repository at " + gitDir);
+        }
+
+        System.out.println("Using git repo at " + gitDir);
+        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+        repository = builder.setGitDir(new File(gitDir))
+          .readEnvironment() // scan environment GIT_* variables
+          .findGitDir() // scan up the file system tree
+          .build();
+        git = new Git(repository);
+    }
+
+    /**
+     * Initialize a JGitHelper for a Git submodule, this requires the
+     * parent JGitHelper object in order to correct open the repository
+     * for the submodule.
+     *
+     * @param parent The JGitHelper object for the parent Git repository
+     * @param submodulePath The path where the submodule is linked in
+     * @throws IllegalArgumentException If no submodule can be opened at the given path
+     * @throws IOException If opening the Git repository fails
+     */
+    public JGitHelper(JGitHelper parent, String submodulePath) throws IOException {
         System.out.println("Using submodule at " + submodulePath + " via git repository at " + parent.repository.getDirectory());
         repository = SubmoduleWalk.getSubmoduleRepository(parent.repository, submodulePath);
         if(repository == null) {
             throw new IllegalArgumentException("Could not open submodule at path " + submodulePath + " in repository " + parent.repository.getDirectory());
         }
         git = new Git(repository);
-	}
+    }
 
     /**
-	 * For a path to a commit, i.e. something like "/commit/00/123456..." return the
-	 * actual commit-id, i.e. 00123456...
-	 *
-	 * @param path The path with the three elements "commit", <two-digit-sub>, <40-digit-rest>
-	 * @return The resulting commit-id
-	 */
-	public String readCommit(String path) {
-		String commit = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH).replace("/", "");
-		return StringUtils.substring(commit, 0, 40);
-	}
+     * For a path to a commit, i.e. something like "/commit/00/123456..." return the
+     * actual commit-id, i.e. 00123456...
+     *
+     * @param path The path with the three elements "commit", <two-digit-sub>, <40-digit-rest>
+     * @return The resulting commit-id
+     */
+    public String readCommit(String path) {
+        String commit = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH).replace("/", "");
+        return StringUtils.substring(commit, 0, 40);
+    }
 
-	/**
-	 * For a path to a file/directory inside a commit like "/commit/00/123456.../somedir/somefile", return
-	 * the actual file-path, i.e. "somedir/somefile"
-	 *
-	 * @param path The full path including the commit-id
-	 * @return The extracted path to the directory/file
-	 */
-	public String readPath(final String path) {
-		String file = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH);
-		return StringUtils.substring(file, 40 + 2);	// cut away commitish and two slashes
-	}
+    /**
+     * For a path to a file/directory inside a commit like "/commit/00/123456.../somedir/somefile", return
+     * the actual file-path, i.e. "somedir/somefile"
+     *
+     * @param path The full path including the commit-id
+     * @return The extracted path to the directory/file
+     */
+    public String readPath(final String path) {
+        String file = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH);
+        return StringUtils.substring(file, 40 + 2);    // cut away commitish and two slashes
+    }
 
-	/**
-	 * Populate the StatWrapper with the necessary values like mode, uid, gid and type of file/directory/symlink.
-	 *
-	 * @param commit The commit-id as-of which we read the data
-	 * @param path The path to the file/directory
-	 * @param stat The StatWrapper instance to populate
-	 *
-	 * @throws IllegalStateException If the path or the commit cannot be found or an unknown type is encountered
-	 * @throws IOException If access to the Git repository fails
-	 * @throws FileNotFoundException If the given path cannot be found as part of the given commit-id
-	 */
-	public void readType(String commit, String path, StatWrapper stat) throws IOException {
-		RevCommit revCommit = buildRevCommit(commit);
+    /**
+     * Populate the StatWrapper with the necessary values like mode, uid, gid and type of file/directory/symlink.
+     *
+     * @param commit The commit-id as-of which we read the data
+     * @param path The path to the file/directory
+     * @param stat The StatWrapper instance to populate
+     *
+     * @throws IllegalStateException If the path or the commit cannot be found or an unknown type is encountered
+     * @throws IOException If access to the Git repository fails
+     * @throws FileNotFoundException If the given path cannot be found as part of the given commit-id
+     */
+    public void readType(String commit, String path, StatWrapper stat) throws IOException {
+        RevCommit revCommit = buildRevCommit(commit);
 
-		// set time and user-id/group-id
-		stat.ctime(revCommit.getCommitTime());
-		stat.mtime(revCommit.getCommitTime());
-		stat.uid(GitUtils.UID);
-		stat.gid(GitUtils.GID);
+        // set time and user-id/group-id
+        stat.ctime(revCommit.getCommitTime());
+        stat.mtime(revCommit.getCommitTime());
+        stat.uid(GitUtils.UID);
+        stat.gid(GitUtils.GID);
 
         // and using commit's tree find the path
         RevTree tree = revCommit.getTree();
 
-		// now read the file/directory attributes
-		try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
-			FileMode fileMode = treeWalk.getFileMode(0);
-			if(fileMode.equals(FileMode.EXECUTABLE_FILE) ||
-					fileMode.equals(FileMode.REGULAR_FILE)) {
-				ObjectLoader loader = repository.open(treeWalk.getObjectId(0));
-				stat.size(loader.getSize());
-				stat.setMode(NodeType.FILE,
-						true, false, fileMode.equals(FileMode.EXECUTABLE_FILE),
-						true, false, fileMode.equals(FileMode.EXECUTABLE_FILE),
-						false, false, false);
-				return;
-			} else if(fileMode.equals(FileMode.TREE)) {
-				stat.setMode(NodeType.DIRECTORY, true, false, true, true, false, true, false, false, false);
-				return;
-			} else if(fileMode.equals(FileMode.SYMLINK)) {
-				stat.setMode(NodeType.SYMBOLIC_LINK, true, false, true, true, false, true, false, false, false);
-				return;
-			} else if(fileMode.equals(FileMode.GITLINK)) {
-				stat.setMode(NodeType.SYMBOLIC_LINK, true, false, true, true, false, true, false, false, false);
-				return;
-			}
+        // now read the file/directory attributes
+        try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
+            FileMode fileMode = treeWalk.getFileMode(0);
+            if(fileMode.equals(FileMode.EXECUTABLE_FILE) ||
+                    fileMode.equals(FileMode.REGULAR_FILE)) {
+                ObjectLoader loader = repository.open(treeWalk.getObjectId(0));
+                stat.size(loader.getSize());
+                stat.setMode(NodeType.FILE,
+                        true, false, fileMode.equals(FileMode.EXECUTABLE_FILE),
+                        true, false, fileMode.equals(FileMode.EXECUTABLE_FILE),
+                        false, false, false);
+                return;
+            } else if(fileMode.equals(FileMode.TREE)) {
+                stat.setMode(NodeType.DIRECTORY, true, false, true, true, false, true, false, false, false);
+                return;
+            } else if(fileMode.equals(FileMode.SYMLINK)) {
+                stat.setMode(NodeType.SYMBOLIC_LINK, true, false, true, true, false, true, false, false, false);
+                return;
+            } else if(fileMode.equals(FileMode.GITLINK)) {
+                stat.setMode(NodeType.SYMBOLIC_LINK, true, false, true, true, false, true, false, false, false);
+                return;
+            }
 
-			throw new IllegalStateException("Found unknown FileMode 0o" + Integer.toOctalString(fileMode.getBits()) + "/" + fileMode.getClass() +
-			        " in Git for commit '" + commit + "' and path '" + path + "'");
-		}
-	}
+            throw new IllegalStateException("Found unknown FileMode 0o" + Integer.toOctalString(fileMode.getBits()) + "/" + fileMode.getClass() +
+                    " in Git for commit '" + commit + "' and path '" + path + "'");
+        }
+    }
 
-	/**
-	 * Check if the given path in the given commit denotes a git link to a submodule.
-	 *
+    /**
+     * Check if the given path in the given commit denotes a git link to a submodule.
+     *
      * @param commit The commit-id as-of which we read the data
      * @param path The path to the file/directory
-	 * @return true if the path in the given commit denotes a git submodule, false otherwise.
+     * @return true if the path in the given commit denotes a git submodule, false otherwise.
      * @throws IOException If access to the Git repository fails
-	 */
+     */
     public boolean isGitLink(String commit, String path) throws IOException {
         RevCommit revCommit = buildRevCommit(commit);
 
@@ -185,301 +185,301 @@ public class JGitHelper implements Closeable {
 
         // now read the file/directory attributes
         try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
-	        FileMode fileMode = treeWalk.getFileMode(0);
+            FileMode fileMode = treeWalk.getFileMode(0);
 
-	        // TODO: this also returns true for a normal symbolic link,
-	        // how can we determine the difference?
-	        return fileMode.equals(FileMode.GITLINK);
+            // TODO: this also returns true for a normal symbolic link,
+            // how can we determine the difference?
+            return fileMode.equals(FileMode.GITLINK);
         }
     }
 
-	/**
-	 * Read the target file for the given symlink as part of the given commit.
-	 *
-	 * @param commit the commit-id as-of which we read the symlink
-	 * @param path the path to the symlink
-	 * @return the target of the symlink, relative to the directory of the symlink itself
-	 * @throws IOException If an error occurs while reading from the Git repository
-	 * @throws FileNotFoundException If the given path cannot be found in the given commit-id
-	 * @throws IllegalArgumentException If the given path does not denote a symlink
-	 */
-	public String readSymlink(String commit, String path) throws IOException {
-		RevCommit revCommit = buildRevCommit(commit);
+    /**
+     * Read the target file for the given symlink as part of the given commit.
+     *
+     * @param commit the commit-id as-of which we read the symlink
+     * @param path the path to the symlink
+     * @return the target of the symlink, relative to the directory of the symlink itself
+     * @throws IOException If an error occurs while reading from the Git repository
+     * @throws FileNotFoundException If the given path cannot be found in the given commit-id
+     * @throws IllegalArgumentException If the given path does not denote a symlink
+     */
+    public String readSymlink(String commit, String path) throws IOException {
+        RevCommit revCommit = buildRevCommit(commit);
 
-		// and using commit's tree find the path
-		RevTree tree = revCommit.getTree();
+        // and using commit's tree find the path
+        RevTree tree = revCommit.getTree();
 
-		// now read the file/directory attributes
-		final FileMode fileMode;
-		try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
-			fileMode = treeWalk.getFileMode(0);
-		}
+        // now read the file/directory attributes
+        final FileMode fileMode;
+        try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
+            fileMode = treeWalk.getFileMode(0);
+        }
 
-		if(!fileMode.equals(FileMode.SYMLINK) && !fileMode.equals(FileMode.GITLINK)) {
-			throw new IllegalArgumentException("Had request for symlink-target which is not a symlink, commit '" + commit + "' and path '" + path + "': " + fileMode.getBits());
-		}
+        if(!fileMode.equals(FileMode.SYMLINK) && !fileMode.equals(FileMode.GITLINK)) {
+            throw new IllegalArgumentException("Had request for symlink-target which is not a symlink, commit '" + commit + "' and path '" + path + "': " + fileMode.getBits());
+        }
 
         // TODO: add full support for Submodules
-		if(fileMode.equals(FileMode.GITLINK)) {
-		    throw new UnsupportedOperationException("Support for git submodules is not yet available, cannot read path " + path + " of commit " + commit);
-		}
+        if(fileMode.equals(FileMode.GITLINK)) {
+            throw new UnsupportedOperationException("Support for git submodules is not yet available, cannot read path " + path + " of commit " + commit);
+        }
 
-		// try to read the file-data as it contains the symlink target
-		try (InputStream openFile = openFile(commit, path)) {
-			return IOUtils.toString(openFile, Charset.forName("UTF-8"));
-		}
-	}
+        // try to read the file-data as it contains the symlink target
+        try (InputStream openFile = openFile(commit, path)) {
+            return IOUtils.toString(openFile, Charset.forName("UTF-8"));
+        }
+    }
 
-	/**
-	 * Retrieve the contents of the given file as-of the given commit.
-	 *
-	 * @param commit The commit-id as-of which we read the data
-	 * @param path The path to the file/directory
-	 *
-	 * @return An InputStream which can be used to read the contents of the file.
-	 *
-	 * @throws IllegalStateException If the path or the commit cannot be found or does not denote a file
-	 * @throws IOException If access to the Git repository fails
-	 * @throws FileNotFoundException If the given path cannot be found in the given commit-id
-	 */
-	public InputStream openFile(String commit, String path) throws IOException {
-		RevCommit revCommit = buildRevCommit(commit);
+    /**
+     * Retrieve the contents of the given file as-of the given commit.
+     *
+     * @param commit The commit-id as-of which we read the data
+     * @param path The path to the file/directory
+     *
+     * @return An InputStream which can be used to read the contents of the file.
+     *
+     * @throws IllegalStateException If the path or the commit cannot be found or does not denote a file
+     * @throws IOException If access to the Git repository fails
+     * @throws FileNotFoundException If the given path cannot be found in the given commit-id
+     */
+    public InputStream openFile(String commit, String path) throws IOException {
+        RevCommit revCommit = buildRevCommit(commit);
 
-		// use the commit's tree find the path
-		RevTree tree = revCommit.getTree();
-		//System.out.println("Having tree: " + tree + " for commit " + commit);
+        // use the commit's tree find the path
+        RevTree tree = revCommit.getTree();
+        //System.out.println("Having tree: " + tree + " for commit " + commit);
 
-		// now try to find a specific file
-		try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
-			if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_FILE) == 0) {
-				throw new IllegalStateException("Tried to read the contents of a non-file for commit '" + commit + "' and path '" + path + "', had filemode " + treeWalk.getFileMode(0).getBits());
-			}
+        // now try to find a specific file
+        try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
+            if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_FILE) == 0) {
+                throw new IllegalStateException("Tried to read the contents of a non-file for commit '" + commit + "' and path '" + path + "', had filemode " + treeWalk.getFileMode(0).getBits());
+            }
 
-			// then open the file for reading.
-			ObjectId objectId = treeWalk.getObjectId(0);
-			ObjectLoader loader = repository.open(objectId);
+            // then open the file for reading.
+            ObjectId objectId = treeWalk.getObjectId(0);
+            ObjectLoader loader = repository.open(objectId);
 
-			// finally open an InputStream for the file contents
-			return loader.openStream();
-		}
-	}
+            // finally open an InputStream for the file contents
+            return loader.openStream();
+        }
+    }
 
-	private TreeWalk buildTreeWalk(RevTree tree, final String path) throws IOException {
-		TreeWalk treeWalk = TreeWalk.forPath(repository, path, tree);
+    private TreeWalk buildTreeWalk(RevTree tree, final String path) throws IOException {
+        TreeWalk treeWalk = TreeWalk.forPath(repository, path, tree);
 
-		if(treeWalk == null) {
-			throw new FileNotFoundException("Did not find expected file '" + path + "' in tree '" + tree.getName() + "'");
-		}
+        if(treeWalk == null) {
+            throw new FileNotFoundException("Did not find expected file '" + path + "' in tree '" + tree.getName() + "'");
+        }
 
-		return treeWalk;
-	}
+        return treeWalk;
+    }
 
-	private RevCommit buildRevCommit(String commit) throws IOException {
-		// a RevWalk allows to walk over commits based on some filtering that is defined
-		try (RevWalk revWalk = new RevWalk(repository)) {
-			return revWalk.parseCommit(ObjectId.fromString(commit));
-		}
-	}
+    private RevCommit buildRevCommit(String commit) throws IOException {
+        // a RevWalk allows to walk over commits based on some filtering that is defined
+        try (RevWalk revWalk = new RevWalk(repository)) {
+            return revWalk.parseCommit(ObjectId.fromString(commit));
+        }
+    }
 
-	/**
-	 * Return all local branches, excluding any remote branches.
-	 *
-	 * To ease implementation, slashes in branch-names are replaced by underscore. Also
-	 * entries starting with refs/heads/ are listed with their short name as well
-	 *
-	 * @return A list of branch-names
-	 * @throws IOException If accessing the Git repository fails
-	 */
-	public List<String> getBranches() throws IOException {
-		final List<Ref> branchRefs = readBranches();
-		List<String> branches = new ArrayList<>();
-		for(Ref ref : branchRefs) {
-			String name = adjustName(ref.getName());
-			branches.add(name);
-			if(name.startsWith("refs_heads_")) {
-				branches.add(StringUtils.removeStart(name, "refs_heads_"));
-			}
-		}
-		return branches;
-	}
-
-	/**
-	 * Return the commit-id for the given branch.
-	 *
-	 * To ease implementation, slashes in branch-names are replaced by underscore. Also
-	 * entries starting with refs/heads/ are listed with their short name as well
-	 *
-	 * @param branch The branch to read data for, both the short-name and the name with refs/heads/... is possible
-	 * @return A commit-id if found or null if not found.
-	 * @throws IOException If accessing the Git repository fails
-	 */
-	public String getBranchHeadCommit(String branch) throws IOException {
-		final List<Ref> branchRefs = readBranches();
-		for(Ref ref : branchRefs) {
-			String name = adjustName(ref.getName());
-			//System.out.println("Had branch: " + name);
-			if(name.equals(branch) || name.equals("refs_heads_" + branch)) {
-				return ref.getObjectId().getName();
-			}
-		}
-
-		return null;
-	}
-
-	private List<Ref> readBranches() throws IOException {
-		final List<Ref> branchRefs;
-		try {
-			branchRefs = git.branchList().setListMode(null).call();
-		} catch (GitAPIException e) {
-			throw new IOException("Had error while reading the list of branches from the Git repository", e);
-		}
-		return branchRefs;
-	}
-
-
-	/**
-	 * Return all remote branches and tags.
-	 *
-	 * To ease implementation, slashes in names are replaced by underscore. Also
-	 * entries starting with refs/remotes/ are listed with their short name as well
-	 *
-	 * @return A list of remote-names
-	 * @throws IOException If accessing the Git repository fails
-	 */
-	public List<String> getRemotes() throws IOException {
-		final List<Ref> remoteRefs = readRemotes();
-		List<String> remotes = new ArrayList<>();
-		for(Ref ref : remoteRefs) {
-			String name = adjustName(ref.getName());
-			remotes.add(name);
-			if(name.startsWith("refs_remotes_")) {
-				remotes.add(StringUtils.removeStart(name, "refs_remotes_"));
-			}
-		}
-		return remotes;
-	}
-
-	/**
-	 * Return the commit-id for the given remote.
-	 *
-	 * To ease implementation, slashes in names are replaced by underscore. Also
-	 * entries starting with refs/remotes/ are listed with their short name as well
-	 *
-	 * @param remote The remote name to read data for, both the short-name and the name with refs/remotes/... is possible
-	 * @return A commit-id if found or null if not found.
-	 * @throws IOException If accessing the Git repository fails
-	 */
-	public String getRemoteHeadCommit(String remote) throws IOException {
-		final List<Ref> remoteRefs = readRemotes();
-		for(Ref ref : remoteRefs) {
-			String name = adjustName(ref.getName());
-			//System.out.println("Had branch: " + name);
-			if(name.equals(remote) || name.equals("refs_remotes_" + remote)) {
-				return ref.getObjectId().getName();
-			}
-		}
-
-		return null;
-	}
-
-	private List<Ref> readRemotes() throws IOException {
-		final List<Ref> remoteRefs;
-		try {
-			remoteRefs = git.branchList().setListMode(ListMode.REMOTE).call();
-		} catch (GitAPIException e) {
-			throw new IOException("Had error while reading the list of remote branches/tags from the Git repository", e);
-		}
-		return remoteRefs;
-	}
-
-	/**
-	 * Return all tags.
-	 *
-	 * To ease implementation, slashes in branch-names are replaced by underscore. Also
-	 * entries starting with refs/tags/ are listed with their short name as well
-	 *
-	 * @return A list of branch-names
-	 * @throws IOException If accessing the Git repository fails
-	 */
-	public List<String> getTags() throws IOException {
-		List<Ref> tagRefs = readTags();
-		List<String> tags = new ArrayList<>();
-		for(Ref ref : tagRefs) {
-			String name = adjustName(ref.getName());
-			tags.add(name);
-			if(name.startsWith("refs_tags_")) {
-				tags.add(StringUtils.removeStart(name, "refs_tags_"));
-			}
-		}
-		return tags;
-	}
-
-	/**
-	 * Return the commit-id for the given tag.
-	 *
-	 * To ease implementation, slashes in tag-names are replaced by underscore. Also
-	 * entries starting with refs/tags/ are listed with their short name as well
-	 *
-	 * @param tag The tag to read data for, both the short-name and the name with refs/tags/... is possible
-	 * @return A commit-id if found or null if not found.
-	 * @throws IOException If accessing the Git repository fails
-	 */
-	public String getTagHeadCommit(String tag) throws IOException {
-		List<Ref> tagRefs = readTags();
-		for(Ref ref : tagRefs) {
-			String name = adjustName(ref.getName());
-			//System.out.println("Had tag: " + name);
-			if(name.equals(tag) || name.equals("refs_tags_" + tag)) {
-				return ref.getObjectId().getName();
-			}
-		}
-
-		return null;
-	}
-
-	private List<Ref> readTags() throws IOException {
-		final List<Ref> tagRefs;
-		try {
-			tagRefs = git.tagList().call();
-		} catch (GitAPIException e) {
-			throw new IOException("Had error while reading the list of tags from the Git repository", e);
-		}
-		return tagRefs;
-	}
-
-	private String adjustName(String name) {
-		// TODO: handle tags with slash as sub-dirs instead of replacing with underscore
-		return name.replace("/", "_");
-	}
-
-	/**
-	 * Returns a collection of all submodules in the current repository.
-	 *
-	 * @return A collection containing the name of all known submodules.
+    /**
+     * Return all local branches, excluding any remote branches.
+     *
+     * To ease implementation, slashes in branch-names are replaced by underscore. Also
+     * entries starting with refs/heads/ are listed with their short name as well
+     *
+     * @return A list of branch-names
      * @throws IOException If accessing the Git repository fails
-	 */
-	public Collection<String> allSubmodules() throws IOException {
-	    if(repository.isBare()) {
-	        System.out.println("Cannot list submodules for bare repository at " + repository.getDirectory());
-	        return Collections.emptyList();
-	    }
+     */
+    public List<String> getBranches() throws IOException {
+        final List<Ref> branchRefs = readBranches();
+        List<String> branches = new ArrayList<>();
+        for(Ref ref : branchRefs) {
+            String name = adjustName(ref.getName());
+            branches.add(name);
+            if(name.startsWith("refs_heads_")) {
+                branches.add(StringUtils.removeStart(name, "refs_heads_"));
+            }
+        }
+        return branches;
+    }
+
+    /**
+     * Return the commit-id for the given branch.
+     *
+     * To ease implementation, slashes in branch-names are replaced by underscore. Also
+     * entries starting with refs/heads/ are listed with their short name as well
+     *
+     * @param branch The branch to read data for, both the short-name and the name with refs/heads/... is possible
+     * @return A commit-id if found or null if not found.
+     * @throws IOException If accessing the Git repository fails
+     */
+    public String getBranchHeadCommit(String branch) throws IOException {
+        final List<Ref> branchRefs = readBranches();
+        for(Ref ref : branchRefs) {
+            String name = adjustName(ref.getName());
+            //System.out.println("Had branch: " + name);
+            if(name.equals(branch) || name.equals("refs_heads_" + branch)) {
+                return ref.getObjectId().getName();
+            }
+        }
+
+        return null;
+    }
+
+    private List<Ref> readBranches() throws IOException {
+        final List<Ref> branchRefs;
+        try {
+            branchRefs = git.branchList().setListMode(null).call();
+        } catch (GitAPIException e) {
+            throw new IOException("Had error while reading the list of branches from the Git repository", e);
+        }
+        return branchRefs;
+    }
+
+
+    /**
+     * Return all remote branches and tags.
+     *
+     * To ease implementation, slashes in names are replaced by underscore. Also
+     * entries starting with refs/remotes/ are listed with their short name as well
+     *
+     * @return A list of remote-names
+     * @throws IOException If accessing the Git repository fails
+     */
+    public List<String> getRemotes() throws IOException {
+        final List<Ref> remoteRefs = readRemotes();
+        List<String> remotes = new ArrayList<>();
+        for(Ref ref : remoteRefs) {
+            String name = adjustName(ref.getName());
+            remotes.add(name);
+            if(name.startsWith("refs_remotes_")) {
+                remotes.add(StringUtils.removeStart(name, "refs_remotes_"));
+            }
+        }
+        return remotes;
+    }
+
+    /**
+     * Return the commit-id for the given remote.
+     *
+     * To ease implementation, slashes in names are replaced by underscore. Also
+     * entries starting with refs/remotes/ are listed with their short name as well
+     *
+     * @param remote The remote name to read data for, both the short-name and the name with refs/remotes/... is possible
+     * @return A commit-id if found or null if not found.
+     * @throws IOException If accessing the Git repository fails
+     */
+    public String getRemoteHeadCommit(String remote) throws IOException {
+        final List<Ref> remoteRefs = readRemotes();
+        for(Ref ref : remoteRefs) {
+            String name = adjustName(ref.getName());
+            //System.out.println("Had branch: " + name);
+            if(name.equals(remote) || name.equals("refs_remotes_" + remote)) {
+                return ref.getObjectId().getName();
+            }
+        }
+
+        return null;
+    }
+
+    private List<Ref> readRemotes() throws IOException {
+        final List<Ref> remoteRefs;
+        try {
+            remoteRefs = git.branchList().setListMode(ListMode.REMOTE).call();
+        } catch (GitAPIException e) {
+            throw new IOException("Had error while reading the list of remote branches/tags from the Git repository", e);
+        }
+        return remoteRefs;
+    }
+
+    /**
+     * Return all tags.
+     *
+     * To ease implementation, slashes in branch-names are replaced by underscore. Also
+     * entries starting with refs/tags/ are listed with their short name as well
+     *
+     * @return A list of branch-names
+     * @throws IOException If accessing the Git repository fails
+     */
+    public List<String> getTags() throws IOException {
+        List<Ref> tagRefs = readTags();
+        List<String> tags = new ArrayList<>();
+        for(Ref ref : tagRefs) {
+            String name = adjustName(ref.getName());
+            tags.add(name);
+            if(name.startsWith("refs_tags_")) {
+                tags.add(StringUtils.removeStart(name, "refs_tags_"));
+            }
+        }
+        return tags;
+    }
+
+    /**
+     * Return the commit-id for the given tag.
+     *
+     * To ease implementation, slashes in tag-names are replaced by underscore. Also
+     * entries starting with refs/tags/ are listed with their short name as well
+     *
+     * @param tag The tag to read data for, both the short-name and the name with refs/tags/... is possible
+     * @return A commit-id if found or null if not found.
+     * @throws IOException If accessing the Git repository fails
+     */
+    public String getTagHeadCommit(String tag) throws IOException {
+        List<Ref> tagRefs = readTags();
+        for(Ref ref : tagRefs) {
+            String name = adjustName(ref.getName());
+            //System.out.println("Had tag: " + name);
+            if(name.equals(tag) || name.equals("refs_tags_" + tag)) {
+                return ref.getObjectId().getName();
+            }
+        }
+
+        return null;
+    }
+
+    private List<Ref> readTags() throws IOException {
+        final List<Ref> tagRefs;
+        try {
+            tagRefs = git.tagList().call();
+        } catch (GitAPIException e) {
+            throw new IOException("Had error while reading the list of tags from the Git repository", e);
+        }
+        return tagRefs;
+    }
+
+    private String adjustName(String name) {
+        // TODO: handle tags with slash as sub-dirs instead of replacing with underscore
+        return name.replace("/", "_");
+    }
+
+    /**
+     * Returns a collection of all submodules in the current repository.
+     *
+     * @return A collection containing the name of all known submodules.
+     * @throws IOException If accessing the Git repository fails
+     */
+    public Collection<String> allSubmodules() throws IOException {
+        if(repository.isBare()) {
+            System.out.println("Cannot list submodules for bare repository at " + repository.getDirectory());
+            return Collections.emptyList();
+        }
 
         try {
             return git.submoduleStatus().call().keySet();
         } catch (GitAPIException e) {
             throw new IOException(e);
         }
-	}
+    }
 
-	/**
-	 * Returns the name of the git submodule linked at the given path.
-	 *
-	 * @param path the path where the git submodule is linked in.
-	 * @return The name of the git submodule.
-	 * @throws NoSuchElementException if the given path does not point to a git submodule
+    /**
+     * Returns the name of the git submodule linked at the given path.
+     *
+     * @param path the path where the git submodule is linked in.
+     * @return The name of the git submodule.
+     * @throws NoSuchElementException if the given path does not point to a git submodule
      * @throws IOException If accessing the Git repository fails
-	 */
-	public String getSubmoduleAt(String path) throws IOException {
+     */
+    public String getSubmoduleAt(String path) throws IOException {
         try {
             Map<String, SubmoduleStatus> set = git.submoduleStatus().addPath(path).call();
             if(set.isEmpty()) {
@@ -489,7 +489,7 @@ public class JGitHelper implements Closeable {
         } catch (GitAPIException e) {
             throw new IOException(e);
         }
-	}
+    }
 
     /**
      * Returns the path where the given submodule is linked.
@@ -617,187 +617,154 @@ public class JGitHelper implements Closeable {
     }
 
     /**
-	 * Retrieve a list of all two-digit commit-subs which allow to build the first directory level
-	 * of a commit-file-structure.
-	 *
-	 * @return A Set containing all used commit-subs where the filesystem can drill down to actual commits.
-	 * @throws IOException If access to the Git repository fails.
-	 */
-	public Set<String> allCommitSubs() throws IOException {
-		Set<String> commitSubs = new HashSet<>();
-
-		// we currently use all refs for finding commits quickly
-		try (RevWalk walk = new RevWalk(repository)) {
+     * Retrieve a list of all two-digit commit-subs which allow to build the first directory level
+     * of a commit-file-structure.
+     *
+     * @return A Set containing all used commit-subs where the filesystem can drill down to actual commits.
+     * @throws IOException If access to the Git repository fails.
+     */
+    public Set<String> allCommitSubs() throws IOException {
+        try (RevWalk walk = new RevWalk(repository)) {
 			// optimization: we only need the commit-ids here, so we can discard the contents right away
 			walk.setRetainBody(false);
 
-			Map<String, Ref> allRefs = repository.getAllRefs();
-			for(String ref : allRefs.keySet()) {
-				addCommitSubs(commitSubs, walk, ref);
-			}
+			// use all refs (tags, branches, remotes, ...) for finding commits quickly
+			addAllRefs(walk);
 
-			walk.dispose();
-
-			return commitSubs;
-		}
-	}
-
-	private void addCommitSubs(Collection<String> commits, RevWalk walk, String ref) throws IOException {
-		Ref head = repository.exactRef(ref);
-		final RevCommit commit;
-		try {
-			commit = walk.parseCommit(head.getObjectId());
-		} catch (IncorrectObjectTypeException e) {
-			System.out.println("Invalid head-commit for ref " + ref + " and id: " + head.getObjectId().getName() + ": " + e);
-			return;
-		}
-		walk.markStart(commit);
-		try {
+			// now iterate over all commits to find out which 2-hex-char sub-directories should be provided
+			Set<String> commitSubs = new HashSet<>();
 			for(RevCommit rev : walk) {
 				String name = rev.getName();
-				commits.add(name.substring(0,2));
+				commitSubs.add(name.substring(0,2));
 
 				// we can leave the loop as soon as we have all two-digit values, which is typically the case for large repositories
-				if(commits.size() >= 256) {
-					return;
+				if(commitSubs.size() >= 256) {
+					break;
 				}
 			}
-		} finally {
-			walk.reset();
-		}
-	}
+
+            walk.dispose();
+
+            return commitSubs;
+        }
+    }
 
 	/**
-	 * Retrieve a list of all or a certain range of commit-ids in this Git repository. This is used to
-	 * populate the second level beneath the /commit directory with the actual commit-ids. The parameter
-	 * "sub" allows to only return commits starting with a certain commit-sub.
-	 *
-	 * @param sub A two-digit which is used to filter commit-ids, or null if no filtering should be done.
-	 * @return A Set containing all commit-ids found in this Git repository if sub is null or only matching commit-ids if sub is specified.
-	 * @throws IOException If access to the Git repository fails.
-	 */
-	public Collection<String> allCommits(String sub) throws IOException {
-		ObjectIdSubclassMap<RevCommit> map = new ObjectIdSubclassMap<>();
-
-		// TODO: we do not read unreferenced commits here, it would be nice to be able to access these as well here
-		// see http://stackoverflow.com/questions/17178432/how-to-find-all-commits-using-jgit-not-just-referenceable-ones
-		// as a workaround we currently use all branches (includes master) and all tags for finding commits quickly
-		Map<String, Ref> allRefs = repository.getAllRefs();
-
-		try (RevWalk walk = new RevWalk(repository)) {
+     * Retrieve a list of all or a certain range of commit-ids in this Git repository. This is used to
+     * populate the second level beneath the /commit directory with the actual commit-ids. The parameter
+     * "sub" allows to only return commits starting with a certain commit-sub.
+     *
+     * @param sub A two-digit which is used to filter commit-ids, or null if no filtering should be done.
+     * @return A Set containing all commit-ids found in this Git repository if sub is null or only matching commit-ids if sub is specified.
+     * @throws IOException If access to the Git repository fails.
+     */
+    public Collection<String> allCommits(String sub) throws IOException {
+        try (RevWalk walk = new RevWalk(repository)) {
 			// optimization: we only need the commit-ids here, so we can discard the contents right away
 			walk.setRetainBody(false);
 
-			try {
-				// Store commits directly, not the SHA1 as getName() is a somewhat costly operation on RevCommit via formatHexChar()
-				Set<RevCommit> seenHeadCommits = new HashSet<>(allRefs.size());
-				for(String ref : allRefs.keySet()) {
-					Ref head = repository.exactRef(ref);
-					final RevCommit commit;
-					try {
-						commit = walk.parseCommit(head.getObjectId());
-					} catch (IncorrectObjectTypeException e) {
-						System.out.println("Invalid head-commit for ref " + ref + " and id: " + head.getObjectId().getName() + ": " + e);
-						continue;
-					}
+			// use all refs (tags, branches, remotes, ...) for finding commits quickly
+			addAllRefs(walk);
 
-					// only read commits of this ref if we did not add parents of this commit already
-					if(seenHeadCommits.add(commit)) {
-						addCommits(map, walk, commit, sub);
-					}
-				}
-				//System.out.println("Had " + seen + " duplicate commits");
-			} finally {
-				walk.dispose();
-			}
-
-			// use the ObjectIdSubclassMap for quick map-insertion and only afterwards convert the resulting commits
-			// to Strings. ObjectIds can be compared much quicker as Strings as they only are 4 ints, not 40 character strings
-			List<String> commits = new ArrayList<>(map.size());
-
-			for (RevCommit commit : map) {
-				commits.add(commit.getName());
-			}
-
-			return commits;
-		}
-	}
-
-	private void addCommits(ObjectIdSubclassMap<RevCommit> map, RevWalk walk, RevCommit commit, String sub) throws IOException {
-		walk.markStart(commit);
-		try {
+			ObjectIdSubclassMap<RevCommit> map = new ObjectIdSubclassMap<>();
 			for(RevCommit rev : walk) {
 				String name = rev.getName();
 				if(sub == null || name.startsWith(sub)) {
 					map.addIfAbsent(rev);
 				}
 			}
-		} finally {
-			walk.reset();
+
+			walk.dispose();
+
+            // use the ObjectIdSubclassMap for quick map-insertion and only afterwards convert the resulting commits
+            // to Strings. ObjectIds can be compared much quicker as Strings as they only are 4 ints, not 40 character strings
+            List<String> commits = new ArrayList<>(map.size());
+            for (RevCommit commit : map) {
+                commits.add(commit.getName());
+            }
+
+            return commits;
+        }
+    }
+
+	private void addAllRefs(RevWalk walk) throws IOException {
+		// TODO: we do not read unreferenced commits here, it would be nice to be able to access these as well here
+		// see http://stackoverflow.com/questions/17178432/how-to-find-all-commits-using-jgit-not-just-referenceable-ones
+		// as a workaround we currently use all branches (includes master) and all tags for finding commits quickly
+		Map<String, Ref> allRefs = repository.getAllRefs();
+		for(Ref head : allRefs.values()) {
+			final RevCommit commit;
+			try {
+				commit = walk.parseCommit(head.getObjectId());
+			} catch (IncorrectObjectTypeException e) {
+				System.out.println("Invalid head-commit for ref " + head + " and id: " + head.getObjectId().getName() + ": " + e);
+				continue;
+			}
+			walk.markStart(commit);
 		}
 	}
 
-	/**
-	 * Free resources held in the instance, i.e. by releasing the Git repository resources held internally.
-	 *
-	 * The instance is not usable after this call any more.
-	 */
-	@Override
-	public void close() throws IOException {
-		repository.close();
-	}
+    /**
+     * Free resources held in the instance, i.e. by releasing the Git repository resources held internally.
+     *
+     * The instance is not usable after this call any more.
+     */
+    @Override
+    public void close() throws IOException {
+        repository.close();
+    }
 
-	/**
-	 * Retrieve directory-entries based on a commit-id and a given directory in that commit.
-	 *
-	 * @param commit The commit-id to show the path as-of
-	 * @param path The path underneath the commit-id to list
-	 *
-	 * @return A list of file, directory and symlink elements underneath the given path
-	 *
-	 * @throws IllegalStateException If the path or the commit cannot be found or does not denote a directory
-	 * @throws IOException If access to the Git repository fails
-	 * @throws FileNotFoundException If the given path cannot be found as part of the commit-id
-	 */
-	public List<String> readElementsAt(String commit, String path) throws IOException {
-		RevCommit revCommit = buildRevCommit(commit);
+    /**
+     * Retrieve directory-entries based on a commit-id and a given directory in that commit.
+     *
+     * @param commit The commit-id to show the path as-of
+     * @param path The path underneath the commit-id to list
+     *
+     * @return A list of file, directory and symlink elements underneath the given path
+     *
+     * @throws IllegalStateException If the path or the commit cannot be found or does not denote a directory
+     * @throws IOException If access to the Git repository fails
+     * @throws FileNotFoundException If the given path cannot be found as part of the commit-id
+     */
+    public List<String> readElementsAt(String commit, String path) throws IOException {
+        RevCommit revCommit = buildRevCommit(commit);
 
-		// and using commit's tree find the path
-		RevTree tree = revCommit.getTree();
-		//System.out.println("Having tree: " + tree + " for commit " + commit);
+        // and using commit's tree find the path
+        RevTree tree = revCommit.getTree();
+        //System.out.println("Having tree: " + tree + " for commit " + commit);
 
-		List<String> items = new ArrayList<>();
+        List<String> items = new ArrayList<>();
 
-		// shortcut for root-path
-		if(path.isEmpty()) {
-			try (TreeWalk treeWalk = new TreeWalk(repository)) {
-				treeWalk.addTree(tree);
-				treeWalk.setRecursive(false);
-				treeWalk.setPostOrderTraversal(false);
+        // shortcut for root-path
+        if(path.isEmpty()) {
+            try (TreeWalk treeWalk = new TreeWalk(repository)) {
+                treeWalk.addTree(tree);
+                treeWalk.setRecursive(false);
+                treeWalk.setPostOrderTraversal(false);
 
-				while(treeWalk.next()) {
-					items.add(treeWalk.getPathString());
-				}
-			}
-		} else {
-			// now try to find a specific file
-			try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
-				if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_TREE) == 0) {
-					throw new IllegalStateException("Tried to read the elements of a non-tree for commit '" + commit + "' and path '" + path + "', had filemode " + treeWalk.getFileMode(0).getBits());
-				}
+                while(treeWalk.next()) {
+                    items.add(treeWalk.getPathString());
+                }
+            }
+        } else {
+            // now try to find a specific file
+            try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
+                if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_TREE) == 0) {
+                    throw new IllegalStateException("Tried to read the elements of a non-tree for commit '" + commit + "' and path '" + path + "', had filemode " + treeWalk.getFileMode(0).getBits());
+                }
 
-				try (TreeWalk dirWalk = new TreeWalk(repository)) {
-					dirWalk.addTree(treeWalk.getObjectId(0));
-					dirWalk.setRecursive(false);
-					while(dirWalk.next()) {
-						items.add(dirWalk.getPathString());
-					}
-				}
-			}
-		}
+                try (TreeWalk dirWalk = new TreeWalk(repository)) {
+                    dirWalk.addTree(treeWalk.getObjectId(0));
+                    dirWalk.setRecursive(false);
+                    while(dirWalk.next()) {
+                        items.add(dirWalk.getPathString());
+                    }
+                }
+            }
+        }
 
-		return items;
-	}
+        return items;
+    }
 
     @Override
     public String toString() {

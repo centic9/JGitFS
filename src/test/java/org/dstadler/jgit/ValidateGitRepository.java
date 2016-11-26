@@ -1,6 +1,8 @@
 package org.dstadler.jgit;
 
-import static org.junit.Assert.assertTrue;
+import net.fusejna.StructStat.StatWrapper;
+import org.dstadler.jgitfs.JGitFilesystemTest;
+import org.dstadler.jgitfs.util.JGitHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,17 +10,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import net.fusejna.StatWrapperFactory;
-import net.fusejna.StructStat.StatWrapper;
-
-import org.dstadler.jgitfs.util.JGitHelper;
-import org.junit.Assume;
+import static org.junit.Assert.assertTrue;
 
 
 public class ValidateGitRepository {
 
 	public static void main(String[] args) throws IOException {
-		final StatWrapper wrapper = getStatsWrapper();
+		final StatWrapper wrapper = JGitFilesystemTest.getStatsWrapper();
 		long count = 0;
 		for(String arg : args) {
 			JGitHelper jgitHelper = new JGitHelper(arg);
@@ -67,23 +65,5 @@ public class ValidateGitRepository {
 			lCount++;
 		}
 		return lCount;
-	}
-
-	private static StatWrapper getStatsWrapper() {
-		final StatWrapper wrapper;
-		try {
-			wrapper = StatWrapperFactory.create();
-		} catch (UnsatisfiedLinkError e) {
-			System.out.println("This might fail on machines without fuse-binaries.");
-			e.printStackTrace();
-			Assume.assumeNoException(e);	// stop test silently
-			return null;
-		} catch(NoClassDefFoundError e) {
-			System.out.println("This might fail on machines without fuse-binaries.");
-			e.printStackTrace();
-			Assume.assumeNoException(e);	// stop test silently
-			return null;
-		}
-		return wrapper;
 	}
 }

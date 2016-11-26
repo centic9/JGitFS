@@ -457,7 +457,7 @@ public class JGitFilesystemTest {
 		assertTrue(mountPoint.delete());
 	}
 
-	private StatWrapper getStatsWrapper() {
+	public static StatWrapper getStatsWrapper() {
 		final StatWrapper wrapper;
 		try {
 			wrapper = StatWrapperFactory.create();

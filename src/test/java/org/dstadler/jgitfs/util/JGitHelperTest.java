@@ -1,5 +1,6 @@
 package org.dstadler.jgitfs.util;
 
+import static org.dstadler.jgitfs.JGitFilesystemTest.getStatsWrapper;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -40,7 +41,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import net.fusejna.StatWrapperFactory;
 import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode;
 import net.fusejna.types.TypeMode.NodeType;
@@ -108,7 +108,7 @@ public class JGitHelperTest {
 	}
 
 	@Test
-	public void testNotexistingDir() throws Exception {
+	public void testNotExistingDir() throws Exception {
 		try {
 			JGitHelper jGitHelper = new JGitHelper("notexisting");
 			jGitHelper.close();
@@ -187,24 +187,6 @@ public class JGitHelperTest {
 		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) != 0);
 		assertTrue((wrapper.mode() & TypeMode.S_IXGRP) != 0);
 		assertTrue((wrapper.mode() & TypeMode.S_IXOTH) == 0);
-	}
-
-	private StatWrapper getStatsWrapper() {
-		final StatWrapper wrapper;
-		try {
-			wrapper = StatWrapperFactory.create();
-		} catch (UnsatisfiedLinkError e) {
-			System.out.println("This might fail on machines without fuse-binaries.");
-			e.printStackTrace();
-			Assume.assumeNoException(e);	// stop test silently
-			return null;
-		} catch(NoClassDefFoundError e) {
-			System.out.println("This might fail on machines without fuse-binaries.");
-			e.printStackTrace();
-			Assume.assumeNoException(e);	// stop test silently
-			return null;
-		}
-		return wrapper;
 	}
 
 	@Test
@@ -391,8 +373,20 @@ public class JGitHelperTest {
 		helper.close();
 		helper = new JGitHelper("/opt/jenkins/jenkins.git/.git");
 		//helper = new JGitHelper("G:\\workspaces\\linux\\.git");
-		//helper = new JGitHelper("/opt/poi/.git");
 
+		runAllCommitSubs();
+	}
+
+	@Ignore("local test")
+	@Test
+	public void testAllCommitSubsPOI() throws IOException {
+		helper.close();
+		helper = new JGitHelper("/opt/poi/.git");
+
+		runAllCommitSubs();
+	}
+
+	private void runAllCommitSubs() throws IOException {
 		System.out.println("warmup");
 		for(int i = 0;i < 3;i++) {
 			int size = helper.allCommitSubs().size();
@@ -400,7 +394,7 @@ public class JGitHelperTest {
 			System.out.print("." + size);
 		}
 
-		System.out.println("run");
+		System.out.println("\nrun");
 		long start = System.currentTimeMillis();
 		for(int i = 0;i < 10;i++) {
 			int size = helper.allCommitSubs().size();
@@ -416,8 +410,20 @@ public class JGitHelperTest {
 		helper.close();
 		helper = new JGitHelper("/opt/jenkins/jenkins.git/.git");
 		//helper = new JGitHelper("G:\\workspaces\\linux\\.git");
-		//helper = new JGitHelper("/opt/poi/.git");
 
+		runAllCommits();
+	}
+
+	@Ignore("local test")
+	@Test
+	public void testAllCommitsPOI() throws IOException {
+		helper.close();
+		helper = new JGitHelper("/opt/poi/.git");
+
+		runAllCommits();
+	}
+
+	private void runAllCommits() throws IOException {
 		long start;
 
 		System.out.println("warmup");
@@ -428,14 +434,14 @@ public class JGitHelperTest {
 			System.out.print("." + size + ": " + (System.currentTimeMillis() - start));
 		}
 
-		System.out.println("run");
+		System.out.println("\nrun");
 		start = System.currentTimeMillis();
 		for(int i = 0;i < 10;i++) {
 			int size = helper.allCommits(null).size();
 			assertTrue("Had size: " + size, size > 3);
 			System.out.print("." + size);
 		}
-		System.out.println("avg.time old: " + (System.currentTimeMillis() - start)/10);
+		System.out.println("avg.time: " + (System.currentTimeMillis() - start)/10);
 	}
 
 	@Ignore("local test")
@@ -785,9 +791,7 @@ public class JGitHelperTest {
 
 		        //listSubs(SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna"));
 		        {
-		            for(String ref : allRefs.keySet()) {
-		                System.out.println(ref);
-		            }
+					allRefs.keySet().forEach(System.out::println);
 		        }
 
 		        // find the commit
