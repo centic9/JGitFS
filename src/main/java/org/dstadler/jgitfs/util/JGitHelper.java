@@ -34,6 +34,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.storage.file.WindowCacheConfig;
 import org.eclipse.jgit.submodule.SubmoduleStatus;
 import org.eclipse.jgit.submodule.SubmoduleStatusType;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
@@ -65,6 +66,13 @@ public class JGitHelper implements Closeable {
         if(!new File(gitDir).exists()) {
             throw new IllegalStateException("Could not find git repository at " + gitDir);
         }
+
+        WindowCacheConfig cfg = new WindowCacheConfig();
+        // set a lower stream file threshold as we want to run the code with
+        // very limited memory, e.g. -Xmx60m and having the default of 50BM
+        // would cause OOM if access is done in parallel
+        cfg.setStreamFileThreshold(1024 * 1024);
+        cfg.install();
 
         System.out.println("Using git repo at " + gitDir);
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
