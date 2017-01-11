@@ -8,6 +8,7 @@ import net.fusejna.StatWrapperFactory;
 import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode.NodeType;
 import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.dstadler.commons.testing.ThreadTestHelper;
 import org.dstadler.jgitfs.util.FuseUtils;
 import org.dstadler.jgitfs.util.JGitHelper;
@@ -70,6 +71,8 @@ public class JGitFilesystemTest {
 
 	@Test
 	public void testConstructMountClose() throws UnsatisfiedLinkError, IOException, FuseException {
+		Assume.assumeFalse("Mounting the filesystem does not work on Windows", SystemUtils.IS_OS_WINDOWS);
+
 		// ensure that we can actually load FUSE-binaries before we try to mount/unmount
 		// an assumption will fail if the binaries are missing
 		assertNotNull(getStatsWrapper());
@@ -469,12 +472,7 @@ public class JGitFilesystemTest {
 		final StatWrapper wrapper;
 		try {
 			wrapper = StatWrapperFactory.create();
-		} catch (UnsatisfiedLinkError e) {
-			System.out.println("This might fail on machines without fuse-binaries.");
-			e.printStackTrace();
-			Assume.assumeNoException(e);	// stop test silently
-			return null;
-		} catch(NoClassDefFoundError e) {
+		} catch (UnsatisfiedLinkError | NoClassDefFoundError e) {
 			System.out.println("This might fail on machines without fuse-binaries.");
 			e.printStackTrace();
 			Assume.assumeNoException(e);	// stop test silently

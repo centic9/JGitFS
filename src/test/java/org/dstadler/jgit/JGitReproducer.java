@@ -1,5 +1,6 @@
 package org.dstadler.jgit;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.FileMode;
@@ -10,6 +11,7 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import org.junit.Assume;
 import org.junit.Test;
 
 import java.io.File;
@@ -25,6 +27,8 @@ import java.nio.file.Paths;
 public class JGitReproducer {
     @Test
     public void testSymlink() throws Exception {
+        Assume.assumeFalse("Symbolic links do not work on Windows", SystemUtils.IS_OS_WINDOWS);
+
         try(Repository repository = createNewRepository()) {
             commitSymbolicLink(repository);
 
@@ -51,7 +55,7 @@ public class JGitReproducer {
         }
     }
 
-    private TreeWalk buildTreeWalk(Repository repository, RevTree tree, final String path) throws IOException {
+    private TreeWalk buildTreeWalk(Repository repository, RevTree tree, @SuppressWarnings("SameParameterValue") final String path) throws IOException {
         TreeWalk treeWalk = TreeWalk.forPath(repository, path, tree);
 
         if(treeWalk == null) {
