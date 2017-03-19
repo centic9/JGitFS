@@ -84,10 +84,15 @@ public class JGitFilesystemTest {
 
 	@Test
     public void testGetStats() {
-        assertTrue("Had: " + fs.getStats(), fs.getStats().contains("getattr: 0"));
-        assertTrue("Had: " + fs.getStats(), fs.getStats().contains("read: 0"));
-        assertTrue("Had: " + fs.getStats(), fs.getStats().contains("readdir: 0"));
-        assertTrue("Had: " + fs.getStats(), fs.getStats().contains("readlink: 0"));
+        assertTrue("Had: " + fs.getStats(), fs.getStats().toString().contains("getattr,0"));
+        assertTrue("Had: " + fs.getStats(), fs.getStats().toString().contains("read,0"));
+        assertTrue("Had: " + fs.getStats(), fs.getStats().toString().contains("readdir,0"));
+        assertTrue("Had: " + fs.getStats(), fs.getStats().toString().contains("readlink,0"));
+
+		StatWrapper stat = getStatsWrapper();
+		assertNotNull(stat);
+        fs.getattr("", null);
+		assertTrue("Had: " + fs.getStats(), fs.getStats().toString().contains("getattr,1"));
     }
 
 	@Test
@@ -140,14 +145,14 @@ public class JGitFilesystemTest {
         assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/stashorig/123/.hidden", stat));
 		assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/master/some/file/direct/.hidden", stat));
         
-        assertFalse("Had: " + fs.getStats(), fs.getStats().contains("getattr: 0"));
+        assertFalse("Had: " + fs.getStats(), fs.getStats().toString().contains("getattr,0"));
 	}
 
 	@Test
 	public void testRead() {
 		assertEquals(100, fs.read(DEFAULT_COMMIT_PATH + "/README.md", ByteBuffer.allocate(100), 100, 0, null));
 
-        assertFalse("Had: " + fs.getStats(), fs.getStats().contains("read: 0"));
+        assertFalse("Had: " + fs.getStats(), fs.getStats().toString().contains("read,0"));
 	}
 
 	@Test
@@ -231,7 +236,7 @@ public class JGitFilesystemTest {
         fs.readdir("/submodule", filler);
         assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("fuse-jna"));
 
-        assertFalse("Had: " + fs.getStats(), fs.getStats().contains("readdir: 0"));
+        assertFalse("Had: " + fs.getStats(), fs.getStats().toString().contains("readdir,0"));
 	}
 
 	@Test
@@ -353,7 +358,7 @@ public class JGitFilesystemTest {
 		String target = new String(buffer.array(), 0, buffer.position());
 		assertTrue("Had: " + target, target.startsWith("../commit"));
 
-        assertFalse("Had: " + fs.getStats(), fs.getStats().contains("readlink: 0"));
+        assertFalse("Had: " + fs.getStats(), fs.getStats().toString().contains("readlink,0"));
 	}
 
 	@Test
