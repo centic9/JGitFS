@@ -35,8 +35,7 @@ public class JGitFS {
 	 * @throws FuseException If mounting fails.
 	 * @throws IOException If the given Git repository cannot be read or some other error happens during file access.
 	 */
-	public static void main(final String... args) throws FuseException, IOException
-	{
+	public static void main(final String... args) throws FuseException, IOException {
 		if (args.length % 2 != 0) {
 			System.err.println("Usage: GitFS <git-repo> <mountpoint> ...");
 			System.exit(1);

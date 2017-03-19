@@ -41,7 +41,7 @@ import org.eclipse.jgit.submodule.SubmoduleWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
 /**
- * Helper class which encapsulates access to the actual Git repository by
+ * Helper class which#apache-poi encapsulates access to the actual Git repository by
  * using JGit internally, but providing plain object/data as results, i.e.
  * no JGit objects should be necessary as part of the API.
  *
@@ -100,6 +100,15 @@ public class JGitHelper implements Closeable {
             throw new IllegalArgumentException("Could not open submodule at path " + submodulePath + " in repository " + parent.repository.getDirectory());
         }
         git = new Git(repository);
+    }
+
+    public String getName() {
+        if(!repository.isBare()) {
+            return repository.getWorkTree().getName();
+        }
+        return new File(StringUtils.removeEnd(
+                repository.getDirectory().getAbsolutePath(),
+                ".git")).getName();
     }
 
     /**

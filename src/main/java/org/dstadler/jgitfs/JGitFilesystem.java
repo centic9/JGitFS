@@ -128,6 +128,15 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
     }
 
     @Override
+    protected String getName() {
+        if(jgitHelper == null) {
+            return null;
+        }
+
+        return jgitHelper.getName();
+    }
+
+    @Override
     public int getattr(final String path, final StatWrapper stat) {
         getattrStat.incrementAndGet();
         
