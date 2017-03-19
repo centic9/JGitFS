@@ -5,6 +5,7 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -127,9 +128,22 @@ public class JGitFS {
      * Prints out a list of currently mounted git repositories.
      */
     public static void list() {
+    	// determine the max length of the name of the mounted repository and the mount point
+		int maxKey = 1, maxValue = 1;
+		for(Map.Entry<String,Pair<File, JGitFilesystem>> entry : mounts.entrySet()) {
+			maxKey = Math.max(maxKey, entry.getKey().length());
+			maxValue = Math.max(maxValue, entry.getValue().getLeft().getAbsolutePath().length());
+		}
+
         for(Map.Entry<String,Pair<File, JGitFilesystem>> entry : mounts.entrySet()) {
-            System.out.println(entry.getKey() + " mounted at " + entry.getValue().getLeft() +
-					", stats: " + entry.getValue().getRight().getStats());
+			List<Pair<String, Long>> stats = entry.getValue().getRight().getStats();
+			StringBuilder statsStr = new StringBuilder();
+			for(Pair<String, Long> stat : stats) {
+				statsStr.append(String.format("%8s: %8d, ", stat.getKey(), stat.getValue()));
+			}
+			System.out.println(
+            		String.format("%-" + maxKey + "s mounted at %-" + maxValue + "s, stats: %s",
+            		entry.getKey(), entry.getValue().getLeft().getAbsolutePath(), statsStr));
         }
     }
 }

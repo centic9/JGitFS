@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.google.common.collect.ImmutableList;
 import net.fusejna.DirectoryFiller;
 import net.fusejna.ErrorCodes;
 import net.fusejna.FuseException;
@@ -460,8 +461,12 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
         }
     }
     
-    public String getStats() {
-        return "getattr: " + getattrStat.get() + ", read: " + readStat.get() + 
-                ", readdir: " + readdirStat.get() + ", readlink: " + readlinkStat.get();
+    public List<Pair<String, Long>> getStats() {
+        return ImmutableList.of(
+                Pair.of("getattr", getattrStat.get()),
+                Pair.of("read", readStat.get()),
+                Pair.of("readdir", readdirStat.get()),
+                Pair.of("readlink", readlinkStat.get())
+        );
     }
 }
