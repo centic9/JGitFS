@@ -87,6 +87,7 @@ Because it is based on [fuse-jna], JGitFS should work with:
 * https://github.com/g2p/git-fs
 * https://bitbucket.org/billcroberts/gitfs
 * https://github.com/akiellor/githubfs
+* https://github.com/centic9/jgit-cookbook
 
 #### Licensing
 * JGitFS is licensed under the [BSD 2-Clause License].
