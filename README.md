@@ -72,7 +72,11 @@ Finally after some performance tuning sessions and adding some caching at the ri
 * Is there a way to include the current workspace via WorkingTreeIterator?
 * JGit also supports Notes, how could we show these?	
 * Sometimes the history of a single file is needed, what about having dirs perfile/branch, perfile/commit, perfile/tag, ...
-* Would be nice to get this on Windows via cygwin as well, seems there is https://github.com/openunix/fuse-cygwin/, but could not get it to compile yet. Another promising option is https://github.com/dokan-dev/dokany
+* Would be nice to get this on Windows via cygwin as well
+** It seems there is https://github.com/openunix/fuse-cygwin/, but could not get it to compile yet.
+** Another promising option is https://github.com/dokan-dev/dokany and http://www.secfs.net/winfsp/ https://github.com/billziss-gh/winfsp
+** Lately there was more discussion around this at https://cygwin.com/ml/cygwin/2016-06/threads.html#00250, http://cygwin.1069669.n5.nabble.com/ITP-FUSE-2-8-td128282.html and https://cygwin.com/ml/cygwin/2016-06/msg00253.html
+** Some more links are at https://news.ycombinator.com/item?id=11930888
 
 #### Compatibility
 
