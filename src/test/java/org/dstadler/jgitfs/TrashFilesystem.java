@@ -16,25 +16,33 @@ import java.util.concurrent.atomic.AtomicLong;
 public class TrashFilesystem {
     private static final BlockingQueue<File> queue = new ArrayBlockingQueue<>(1000);
 
+    private static final long start = System.currentTimeMillis();
     private static final AtomicLong pushedFiles = new AtomicLong(0);
     private static final AtomicLong consumedFiles = new AtomicLong(0);
 
     public static void main(String[] args) throws IOException, InterruptedException {
+        // starting two threads each was actually slower on my Laptop!
         PopulateThread populateThread = new PopulateThread(new File("/fs"));
         populateThread.start();
 
         ConsumeThread consumeThread = new ConsumeThread();
         consumeThread.start();
 
+        ConsumeThread consumeThread2 = new ConsumeThread();
+        consumeThread2.start();
+
         System.out.println("Press enter to stop");
         //noinspection ResultOfMethodCallIgnored
         System.in.read();
+        System.out.println("Stopping threads");
 
         populateThread.shouldStop();
         consumeThread.shouldStop();
+        consumeThread2.shouldStop();
 
         populateThread.join();
         consumeThread.join();
+        consumeThread2.join();
     }
 
     private static class PopulateThread extends Thread {
@@ -55,36 +63,41 @@ public class TrashFilesystem {
         public void run() {
             Stack<File> path = new Stack<>();
             File current = startDir;
-            long count = 0;
             while(!shouldStop) {
                 // go one down with probability 50%
-                if(current.equals(startDir) || (current.isDirectory() && RandomUtils.nextInt(0, 100) >= 50)) {
+                if(current.equals(startDir) || (current.isDirectory() && RandomUtils.nextInt(0, 100) >= 42)) {
                     File[] files = current.listFiles();
                     if(files != null && files.length > 0) {
                         path.push(current);
                         current = files[RandomUtils.nextInt(0, files.length)];
                     } else {
+                        // read the file and go one up again
+                        pushFile(current);
                         if(!path.isEmpty()) {
                             current = path.pop();
                         }
                     }
                 } else {
                     // read the file and go one up again
-                    try {
-                        long pushed = pushedFiles.incrementAndGet();
-                        count++;
-                        if(count % 100 == 0) {
-                            System.out.println("Using file (" + queue.size() + "/" + pushed + "/" + consumedFiles.get() + "): " + current);
-                        }
-                        queue.put(current);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
+                    pushFile(current);
                     if(!path.isEmpty()) {
                         current = path.pop();
                     }
                 }
+            }
+        }
+
+        private void pushFile(File current) {
+            try {
+                long pushed = pushedFiles.incrementAndGet();
+                if(pushed % 200 == 0) {
+                    System.out.println(String.format("Pushing file (%d/%d/%d/%.2f per sec): %s",
+                            queue.size(), pushed, consumedFiles.get(), pushed/((double)(System.currentTimeMillis() - start)/1000),
+                            current));
+                }
+                queue.put(current);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -103,15 +116,15 @@ public class TrashFilesystem {
         @Override
         public void run() {
             byte[] bytes = new byte[1024];
-            long count = 0;
             while(!shouldStop) {
                 try {
                     File file = queue.poll(5, TimeUnit.SECONDS);
                     if(file != null) {
                         long consumed = consumedFiles.incrementAndGet();
-                        count++;
-                        if(count % 100 == 0) {
-                            System.out.println("Handling file (" + queue.size() + "/" + pushedFiles.get() + "/" + consumed + "): " + file);
+                        if(consumed % 200 == 0) {
+                            System.out.println(String.format("Handling file (%d/%d/%d/%.2f per sec): %s",
+                                    queue.size(), pushedFiles.get(), consumed, consumed/((double)(System.currentTimeMillis() - start)/1000),
+                                    file));
                         }
 
                         // trigger some accesses to the attributes
