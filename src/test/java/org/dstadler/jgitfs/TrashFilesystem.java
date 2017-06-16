@@ -64,7 +64,7 @@ public class TrashFilesystem {
             Stack<File> path = new Stack<>();
             File current = startDir;
             while(!shouldStop) {
-                // go one down with probability 50%
+                // for directories go one down with probability 50%
                 if(current.equals(startDir) || (current.isDirectory() && RandomUtils.nextInt(0, 100) >= 40)) {
                     File[] files = current.listFiles();
                     if(files != null && files.length > 0) {
@@ -79,7 +79,7 @@ public class TrashFilesystem {
                         }
                     }
                 } else {
-                    // read the file and go one up again
+                    // read the file/directory and go one up again
                     pushFile(current);
                     if(!path.isEmpty()) {
                         current = path.pop();

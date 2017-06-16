@@ -69,7 +69,7 @@ public class JGitHelper implements Closeable {
 
         WindowCacheConfig cfg = new WindowCacheConfig();
         // set a lower stream file threshold as we want to run the code with
-        // very limited memory, e.g. -Xmx60m and having the default of 50BM
+        // very limited memory, e.g. -Xmx60m and having the default of 50MB
         // would cause OOM if access is done in parallel
         cfg.setStreamFileThreshold(1024 * 1024);
         cfg.install();
