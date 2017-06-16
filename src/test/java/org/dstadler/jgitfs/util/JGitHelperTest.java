@@ -862,4 +862,33 @@ public class JGitHelperTest {
             assertTrue(jgit.readSymlink(lcommit, dir).getBytes().length > 0);
         }
     }
+
+	@Ignore("Just a local test")
+	@Test
+	public void testStrangeBareRepo() throws IOException {
+		String gitDir = "/opt/openambit/openambit.git";
+		if (!gitDir.endsWith("/.git") && !gitDir.endsWith("/.git/")) {
+			gitDir = gitDir + "/.git";
+		}
+		if (!new File(gitDir).exists()) {
+			throw new IllegalStateException("Could not find git repository at " + gitDir);
+		}
+
+		/*WindowCacheConfig cfg = new WindowCacheConfig();
+		// set a lower stream file threshold as we want to run the code with
+		// very limited memory, e.g. -Xmx60m and having the default of 50BM
+		// would cause OOM if access is done in parallel
+		cfg.setStreamFileThreshold(1024 * 1024);
+		cfg.install();*/
+
+		System.out.println("Using git repo at " + gitDir);
+		FileRepositoryBuilder builder = new FileRepositoryBuilder();
+		Repository repository;
+		repository = builder.setGitDir(new File(gitDir))
+				.readEnvironment() // scan environment GIT_* variables
+				.findGitDir() // scan up the file system tree
+				.build();
+
+		assertFalse(repository.isBare());
+	}
 }
