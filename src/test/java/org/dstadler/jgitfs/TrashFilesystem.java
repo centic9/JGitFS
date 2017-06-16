@@ -65,11 +65,12 @@ public class TrashFilesystem {
             File current = startDir;
             while(!shouldStop) {
                 // go one down with probability 50%
-                if(current.equals(startDir) || (current.isDirectory() && RandomUtils.nextInt(0, 100) >= 42)) {
+                if(current.equals(startDir) || (current.isDirectory() && RandomUtils.nextInt(0, 100) >= 40)) {
                     File[] files = current.listFiles();
                     if(files != null && files.length > 0) {
                         path.push(current);
                         current = files[RandomUtils.nextInt(0, files.length)];
+                        pushFile(current);
                     } else {
                         // read the file and go one up again
                         pushFile(current);
