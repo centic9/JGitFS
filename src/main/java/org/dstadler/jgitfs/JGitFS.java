@@ -47,9 +47,7 @@ public class JGitFS {
 				mount(args[i], new File(args[i + 1]));
 			}
 
-		    @SuppressWarnings("resource")
-			InputStream inStream = new FileInputStream(FileDescriptor.in);
-			new Console().run(inStream, System.out);
+			new Console().run(System.in, System.out);
 		} finally {
 			// ensure that we try to close all filesystems that we created
 			for (Pair<File, JGitFilesystem> gitFS : mounts.values()) {

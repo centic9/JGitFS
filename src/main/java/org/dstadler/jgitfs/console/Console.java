@@ -26,14 +26,12 @@ public class Console {
             reader.setPrompt("jgitfs> ");
 
             reader.addCompleter(new FileNameCompleter());
-            reader.addCompleter(new StringsCompleter(Arrays.asList(new String[]{
-                    "mount",
+            reader.addCompleter(new StringsCompleter(Arrays.asList("mount",
                     "unmount",
                     "list",
                     "exit",
                     "quit",
-                    "cls",
-            })));
+                    "cls")));
 
             // TODO: the completers do not seem to work, is there more to do to make them work?
 
