@@ -1,12 +1,10 @@
 package org.dstadler.jgitfs;
 
 import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -133,7 +131,9 @@ public class JGitFS {
 			maxValue = Math.max(maxValue, entry.getValue().getLeft().getAbsolutePath().length());
 		}
 
-        for(Map.Entry<String,Pair<File, JGitFilesystem>> entry : mounts.entrySet()) {
+		TreeMap<String, Pair<File, JGitFilesystem>> sortedMap = new TreeMap<>(String::compareToIgnoreCase);
+		sortedMap.putAll(mounts);
+		for(Map.Entry<String,Pair<File, JGitFilesystem>> entry : sortedMap.entrySet()) {
 			List<Pair<String, Long>> stats = entry.getValue().getRight().getStats();
 			StringBuilder statsStr = new StringBuilder();
 			for(Pair<String, Long> stat : stats) {
