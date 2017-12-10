@@ -13,19 +13,19 @@ repositories {
 }
 
 dependencies {
-	compile 'org.dstadler:commons-dost:1.0.0.22'
-	compile 'commons-io:commons-io:2.5'
-	compile 'org.apache.commons:commons-lang3:3.6'
+	compile 'org.dstadler:commons-dost:1.0.0.23'
+	compile 'commons-io:commons-io:2.6'
+	compile 'org.apache.commons:commons-lang3:3.7'
 	compile 'net.java.dev.jna:jna:3.5.2'
-	compile 'org.eclipse.jgit:org.eclipse.jgit:4.7.1.201706071930-r'
+	compile 'org.eclipse.jgit:org.eclipse.jgit:4.9.1.201712030800-r'
 	compile 'com.google.guava:guava:20.0'
 	compile project(':fuse-jna')
-	compile 'jline:jline:2.14.3'
+	compile 'jline:jline:2.14.5'
 
-	runtime 'org.slf4j:slf4j-simple:1.7.21'
+	runtime 'org.slf4j:slf4j-simple:1.7.25'
 
 	testCompile 'junit:junit:4.12'
-	testCompile 'org.dstadler:commons-test:1.0.0.12'
+	testCompile 'org.dstadler:commons-test:1.0.0.13'
 }
 
 // work around unnecessary timestamp in generated file which always causes dirty files in version control
