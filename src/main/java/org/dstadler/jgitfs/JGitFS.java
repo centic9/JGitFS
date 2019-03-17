@@ -49,7 +49,6 @@ public class JGitFS {
 		} finally {
 			// ensure that we try to close all filesystems that we created
 			for (Pair<File, JGitFilesystem> gitFS : mounts.values()) {
-				//noinspection ThrowFromFinallyBlock
 				gitFS.getRight().close();
 			}
 		}

@@ -1,6 +1,4 @@
 apply plugin: 'java'
-//apply plugin: 'idea'
-apply plugin: 'eclipse'
 apply plugin:'application'
 apply plugin:'jacoco'
 
@@ -13,50 +11,35 @@ repositories {
 }
 
 dependencies {
-	compile 'org.dstadler:commons-dost:1.0.0.23'
+	compile 'org.dstadler:commons-dost:1.0.0.27'
 	compile 'commons-io:commons-io:2.6'
-	compile 'org.apache.commons:commons-lang3:3.7'
+	compile 'org.apache.commons:commons-lang3:3.8.1'
 	compile 'net.java.dev.jna:jna:3.5.2'
-	compile 'org.eclipse.jgit:org.eclipse.jgit:4.9.1.201712030800-r'
-	compile 'com.google.guava:guava:20.0'
+	compile 'org.eclipse.jgit:org.eclipse.jgit:5.2.1.201812262042-r'
+	compile 'com.google.guava:guava:27.0.1-jre'
 	compile project(':fuse-jna')
-	compile 'jline:jline:2.14.5'
+	compile 'jline:jline:2.14.6'
 
-	runtime 'org.slf4j:slf4j-simple:1.7.25'
+	runtime 'org.slf4j:slf4j-simple:1.7.26'
 
 	testCompile 'junit:junit:4.12'
-	testCompile 'org.dstadler:commons-test:1.0.0.13'
+	testCompile 'org.dstadler:commons-test:1.0.0.16'
 }
 
-// work around unnecessary timestamp in generated file which always causes dirty files in version control
-// https://issues.gradle.org/browse/GRADLE-2293
-task adjustEclipseSettingsFile << {
-	ant.replaceregexp(match:'^#.*', replace:'', flags:'g', byline:true) {
-		fileset(dir: project.projectDir, includes: '.settings/org.eclipse.jdt.core.prefs,.settings/com.google.gdt.eclipse.core.prefs')
-	}
-}
-task sortEclipseSettingsFile << {
-	new File(project.projectDir, '.settings/org.eclipse.jdt.core.prefs').with { it.text = it.readLines().findAll { it }.sort().join('\n') }
-	new File(project.projectDir, '.classpath').with { it.text = it.readLines().findAll { it }.unique().join('\n') }
-	File file = new File(project.projectDir, '.settings/com.google.gdt.eclipse.core.prefs')
-	if(file.exists()) {
-		file.with { it.text = it.readLines().findAll { it }.sort().join('\n') }
-	}
-	ant.fixcrlf(srcDir: '.settings', eol: 'lf')
-}
-eclipseJdt.finalizedBy adjustEclipseSettingsFile
-eclipseJdt.finalizedBy sortEclipseSettingsFile
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '3.4.1'
+wrapper {
+    gradleVersion = '4.10.3'
 }
 
-task adjustWrapperPropertiesFile << {
-	ant.replaceregexp(match:'^#.*', replace:'', flags:'g', byline:true) {
-		fileset(dir: project.projectDir, includes: 'gradle/wrapper/gradle-wrapper.properties')
-	}
-	new File(project.projectDir, 'gradle/wrapper/gradle-wrapper.properties').with { it.text = it.readLines().findAll { it }.sort().join('\n') }
-	ant.fixcrlf(file: 'gradle/wrapper/gradle-wrapper.properties', eol: 'lf')
+task adjustWrapperPropertiesFile {
+    doLast {
+        ant.replaceregexp(match: '^#.*', replace: '', flags: 'g', byline: true) {
+            fileset(dir: project.projectDir, includes: 'gradle/wrapper/gradle-wrapper.properties')
+        }
+        new File(project.projectDir, 'gradle/wrapper/gradle-wrapper.properties').with {
+            it.text = it.readLines().findAll { it }.sort().join('\n')
+        }
+        ant.fixcrlf(file: 'gradle/wrapper/gradle-wrapper.properties', eol: 'lf')
+    }
 }
 wrapper.finalizedBy adjustWrapperPropertiesFile
 
@@ -68,7 +51,7 @@ tasks.withType(JavaCompile){
 }
 
 jacoco {
-	toolVersion = '0.7.9'
+	toolVersion = '0.8.3'
 }
 
 jacocoTestReport {
