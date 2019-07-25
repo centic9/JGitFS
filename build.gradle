@@ -13,7 +13,7 @@ repositories {
 dependencies {
 	compile 'org.dstadler:commons-dost:1.0.0.27'
 	compile 'commons-io:commons-io:2.6'
-	compile 'org.apache.commons:commons-lang3:3.8.1'
+	compile 'org.apache.commons:commons-lang3:3.9'
 	compile 'net.java.dev.jna:jna:3.5.2'
 	compile 'org.eclipse.jgit:org.eclipse.jgit:5.2.1.201812262042-r'
 	compile 'com.google.guava:guava:27.0.1-jre'
