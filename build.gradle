@@ -23,7 +23,7 @@ dependencies {
 	runtime 'org.slf4j:slf4j-simple:1.7.26'
 
 	testCompile 'junit:junit:4.12'
-	testCompile 'org.dstadler:commons-test:1.0.0.16'
+	testCompile 'org.dstadler:commons-test:1.0.0.18'
 }
 
 wrapper {
@@ -51,7 +51,7 @@ tasks.withType(JavaCompile){
 }
 
 jacoco {
-	toolVersion = '0.8.3'
+	toolVersion = '0.8.4'
 }
 
 jacocoTestReport {
