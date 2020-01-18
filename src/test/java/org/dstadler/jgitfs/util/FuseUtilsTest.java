@@ -14,14 +14,16 @@ public class FuseUtilsTest {
 
     @Test
     public void testPrepareMountpoint() throws Exception {
-        assertNotNull(new FuseUtils());
+        FuseUtils object = new FuseUtils();
+        assertNotNull(object);
 
         FuseUtils.prepareMountpoint(new File("."));
     }
 
     @Test
-    public void testPrepareMountpointFails() throws Exception {
-        assertNotNull(new FuseUtils());
+    public void testPrepareMountpointFails() {
+        FuseUtils object = new FuseUtils();
+        assertNotNull(object);
 
         // how can we fail when trying to use a mountpoint?
         //FuseUtils.prepareMountpoint(new File("/tmp/!\"§$%&\t\r\n/()/=)%($§§\"$\\ÖÄ'*'*#+_:;:--.,;"));

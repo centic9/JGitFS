@@ -15,7 +15,8 @@ public class GitUtilsTest {
 
     @Test
     public void testCoverage() {
-        assertNotNull(new GitUtils());
+		GitUtils object = new GitUtils();
+		assertNotNull(object);
     }
 
 	@Test

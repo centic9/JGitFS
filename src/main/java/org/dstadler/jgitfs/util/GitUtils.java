@@ -11,7 +11,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
- * Utilities for checking if pathes match certain patterns to
+ * Utilities for checking if paths match certain patterns to
  * decide at which level in the filesystem we are currently as
  * well as other utilities and constants.
  *

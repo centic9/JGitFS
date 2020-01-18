@@ -36,6 +36,8 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
+import javax.annotation.Nonnull;
+
 /**
  * Implementation of the {@link FuseFilesystem} interfaces to
  * provide a view of branches/tags/stashes/commits of the given
@@ -140,7 +142,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
     @Override
     public int getattr(final String path, final StatWrapper stat) {
         getattrStat.incrementAndGet();
-        
+
         // known entries and directories beneath /commit are always directories
         if(DIRS.contains(path) || GitUtils.isCommitSub(path) || GitUtils.isCommitDir(path) || GitUtils.isSubmoduleName(path)) {
             stat.setMode(NodeType.DIRECTORY, true, false, true, true, false, true, false, false, false);
@@ -188,7 +190,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
     @Override
     public int read(final String path, final ByteBuffer buffer, final long size, final long offset, final FileInfoWrapper info) {
         readStat.incrementAndGet();
-        
+
         // delegate submodule-requests to the separate filesystem
         if (GitUtils.isSubmodulePath(path)) {
             Pair<String,String> sub = GitUtils.splitSubmodule(path);
@@ -223,7 +225,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
     @Override
     public int readdir(final String path, final DirectoryFiller filler) {
         readdirStat.incrementAndGet();
-        
+
         if(path.equals("/")) {
             // populate top-level directory with all supported sub-directories
             filler.add("/branch");
@@ -352,8 +354,8 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
                .expireAfterWrite(1, TimeUnit.MINUTES)
                .build(
                    new CacheLoader<String, byte[]>() {
-                     @Override
-                    public byte[] load(String path) {
+                    @Override
+                    public byte[] load(@Nonnull String path) {
                         try {
                             final String commit;
                             if(GitUtils.isBranchDir(path)) {
@@ -367,12 +369,12 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
                             } else if(GitUtils.isStashOrigDir(path)) {
                                 commit = jgitHelper.getStashOrigCommit(StringUtils.removeStart(path, GitUtils.STASHORIG_SLASH));
                             } else {
-                                String lcommit = jgitHelper.readCommit(path);
+                                String lCommit = jgitHelper.readCommit(path);
                                 String dir = jgitHelper.readPath(path);
 
                                 // for symlinks that are actually git-links for a submodule, we need to redirect back to the
                                 // separate submodule-folder with the correct submodule name filled in
-                                if(jgitHelper.isGitLink(lcommit, dir)) {
+                                if(jgitHelper.isGitLink(lCommit, dir)) {
                                     // TODO: does this still work with submodules in directories further down?
                                     String subName = jgitHelper.getSubmoduleAt(dir);
                                     String subHead = jgitHelper.getSubmoduleHead(subName);
@@ -380,7 +382,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
                                             subHead.substring(0,2) + "/" + subHead.substring(2)).getBytes();
                                 }
 
-                                return jgitHelper.readSymlink(lcommit, dir).getBytes();
+                                return jgitHelper.readSymlink(lCommit, dir).getBytes();
                             }
 
                             if(commit == null) {
@@ -397,7 +399,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
     @Override
     public int readlink(String path, ByteBuffer buffer, long size) {
         readlinkStat.incrementAndGet();
-        
+
         if (GitUtils.isSubmodulePath(path)) {
             // delegate submodule-requests to the separate filesystem
             Pair<String, String> sub = GitUtils.splitSubmodule(path);
@@ -460,7 +462,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
             }
         }
     }
-    
+
     public List<Pair<String, Long>> getStats() {
         return ImmutableList.of(
                 Pair.of("getattr", getattrStat.get()),

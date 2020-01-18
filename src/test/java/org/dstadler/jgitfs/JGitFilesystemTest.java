@@ -144,7 +144,7 @@ public class JGitFilesystemTest {
         assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/stash/123/.hidden", stat));
         assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/stashorig/123/.hidden", stat));
 		assertEquals(-ErrorCodes.ENOENT(), fs.getattr("/master/some/file/direct/.hidden", stat));
-        
+
         assertFalse("Had: " + fs.getStats(), fs.getStats().toString().contains("getattr,0"));
 	}
 
@@ -246,7 +246,6 @@ public class JGitFilesystemTest {
 
 		String path = DEFAULT_COMMIT_PATH + "/notexisting";
 		try {
-			filledFiles.clear();
 			fs.readdir(path, filler);
 			fail("Should throw exception as this should not occur");
 		} catch (IllegalStateException e) {
@@ -497,13 +496,13 @@ public class JGitFilesystemTest {
 
         helper.executeTest(new ThreadTestHelper.TestRunnable() {
             @Override
-            public void doEnd(int threadnum) throws Exception {
+            public void doEnd(int threadnum) {
                 // do stuff at the end ...
             }
 
             @Override
-            public void run(int threadnum, int iter) throws Exception {
-            	switch (RandomUtils.nextInt(0,6)) {
+            public void run(int threadnum, int iter) {
+            	switch (RandomUtils.nextInt(0,5)) {
 					case 0:
 						testGetAttr();
 						break;
@@ -517,9 +516,6 @@ public class JGitFilesystemTest {
 						testReadLinkBranch();
 						break;
 					case 4:
-						testReadLinkBranch();
-						break;
-					case 5:
 						testReadLinkTag();
 						break;
                     /*case 6:
@@ -756,7 +752,7 @@ public class JGitFilesystemTest {
         assertEquals("../../../build.gradle", new String(buffer.array(), 0, buffer.position()));
     }
 
-    private final class DirectoryFillerImplementation implements DirectoryFiller {
+    private static final class DirectoryFillerImplementation implements DirectoryFiller {
 		private final List<String> filledFiles;
 
 		private DirectoryFillerImplementation(List<String> filledFiles) {

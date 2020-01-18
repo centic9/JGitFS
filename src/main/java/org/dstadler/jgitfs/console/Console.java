@@ -85,7 +85,7 @@ public class Console {
         out.println("mount <git-dir> <mountpoint>");
         out.println("umount <git-dir>|<mountpoint>");
         out.println("list ... list current mounts");
-        out.println("quit ... quit the applicatoin");
+        out.println("quit ... quit the application");
         out.println("exit ... quit the application");
         out.println("cls  ... clear the screen");
     }

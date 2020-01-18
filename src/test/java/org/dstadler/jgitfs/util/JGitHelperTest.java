@@ -3,6 +3,7 @@ package org.dstadler.jgitfs.util;
 import static org.dstadler.jgitfs.JGitFilesystemTest.getStatsWrapper;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -13,9 +14,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.io.FileUtils;
@@ -52,7 +53,7 @@ public class JGitHelperTest {
     private static final String SYMLINK_COMMIT = "e81ba32d8d51cdd1463e9a0b704059bd8ccbfd19";
     private static final String GITLINK_COMMIT = "ca1767dc76fe104d0b94fb2a5c962c82121be3da";
     private static final String SUBMODULE_COMMIT = "39c1c4b78ff751b0b9e28f4fb35148a1acd6646f";
-	private static final Charset CHARSET = Charset.forName("UTF-8");
+	private static final Charset CHARSET = StandardCharsets.UTF_8;
 
 	private static boolean hasStashes = false;
 
@@ -89,7 +90,7 @@ public class JGitHelperTest {
 	}
 
 	@After
-	public void tearDown() throws IOException {
+	public void tearDown() {
 		helper.close();
 	}
 
@@ -119,14 +120,14 @@ public class JGitHelperTest {
 	}
 
 	@Test
-	public void testReadCommit() throws Exception {
+	public void testReadCommit() {
 		assertEquals("abcd", helper.readCommit("abcd"));
 		assertEquals("abcd", helper.readCommit("/commit/ab/cd"));
 		assertEquals("1234567890123456789012345678901234567890", helper.readCommit("/commit/12/345678901234567890123456789012345678901234567890"));
 	}
 
 	@Test
-	public void testReadPath() throws Exception {
+	public void testReadPath() {
 		assertEquals("", helper.readPath("abcd"));
 		assertEquals("", helper.readPath("/commit/ab/cd"));
 		assertEquals("blabla", helper.readPath("/commit/12/34567890123456789012345678901234567890/blabla"));
@@ -146,15 +147,15 @@ public class JGitHelperTest {
 
 		helper.readType(DEFAULT_COMMIT, "README.md", wrapper);
 		assertEquals(NodeType.FILE, wrapper.type());
-		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) == 0);
-		assertTrue((wrapper.mode() & TypeMode.S_IXGRP) == 0);
-		assertTrue((wrapper.mode() & TypeMode.S_IXOTH) == 0);
+		assertEquals(0, (wrapper.mode() & TypeMode.S_IXUSR));
+		assertEquals(0, (wrapper.mode() & TypeMode.S_IXGRP));
+		assertEquals(0, (wrapper.mode() & TypeMode.S_IXOTH));
 
 		helper.readType(DEFAULT_COMMIT, "src/main/java/org/dstadler/jgitfs/JGitFS.java", wrapper);
 		assertEquals(NodeType.FILE, wrapper.type());
-		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) == 0);
-		assertTrue((wrapper.mode() & TypeMode.S_IXGRP) == 0);
-		assertTrue((wrapper.mode() & TypeMode.S_IXOTH) == 0);
+		assertEquals(0, (wrapper.mode() & TypeMode.S_IXUSR));
+		assertEquals(0, (wrapper.mode() & TypeMode.S_IXGRP));
+		assertEquals(0, (wrapper.mode() & TypeMode.S_IXOTH));
 
 		// need a newer commit for gitlink/symlink
 		helper.readType(SYMLINK_COMMIT, "src/test/data/symlink", wrapper);
@@ -169,6 +170,7 @@ public class JGitHelperTest {
 	public void testReadTypeFails() throws Exception {
 		final StatWrapper wrapper = getStatsWrapper();
 		try {
+			assertNotNull(wrapper);
 			helper.readType(DEFAULT_COMMIT, "notexisting", wrapper);
 			fail("Should catch exception here");
 		} catch (FileNotFoundException e) {
@@ -186,7 +188,7 @@ public class JGitHelperTest {
 		assertEquals(NodeType.FILE, wrapper.type());
 		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) != 0);
 		assertTrue((wrapper.mode() & TypeMode.S_IXGRP) != 0);
-		assertTrue((wrapper.mode() & TypeMode.S_IXOTH) == 0);
+		assertEquals(0, (wrapper.mode() & TypeMode.S_IXOTH));
 	}
 
 	@Test
@@ -574,12 +576,12 @@ public class JGitHelperTest {
     }
 
 	@Test
-    public void testToString() throws Exception {
+    public void testToString() {
         // toString should not return null
         assertNotNull("A derived toString() should not return null!", helper.toString());
 
         // toString should not return an empty string
-        assertFalse("A derived toString() should not return an empty string!", helper.toString().equals(""));
+		assertNotEquals("A derived toString() should not return an empty string!", "", helper.toString());
 
         // check that calling it multiple times leads to the same value
         String value = helper.toString();
@@ -678,7 +680,6 @@ public class JGitHelperTest {
             	result.close();
             }
         } finally {
-			//noinspection ThrowFromFinallyBlock
 			FileUtils.deleteDirectory(localPath);
         }
     }
@@ -702,7 +703,6 @@ public class JGitHelperTest {
 
             System.out.println("Cloned to " + localPath + ", now opening repository");
         } finally {
-			//noinspection ThrowFromFinallyBlock
 			FileUtils.deleteDirectory(localPath);
         }
     }
@@ -766,7 +766,7 @@ public class JGitHelperTest {
 //                .build();
 
 		        assertFalse(subRepo.isBare());
-		        Map<String, Ref> allRefs = subRepo.getAllRefs();
+		        List<Ref> allRefs = subRepo.getRefDatabase().getRefs();
 		        assertFalse("We should find some refs via submodule-repository", allRefs.isEmpty());
 
 //        {
@@ -791,7 +791,7 @@ public class JGitHelperTest {
 
 		        //listSubs(SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna"));
 		        {
-					allRefs.keySet().forEach(System.out::println);
+					allRefs.forEach(System.out::println);
 		        }
 
 		        // find the commit
@@ -867,6 +867,7 @@ public class JGitHelperTest {
 	@Test
 	public void testStrangeBareRepo() throws IOException {
 		String gitDir = "/opt/openambit/openambit.git";
+		//noinspection ConstantConditions
 		if (!gitDir.endsWith("/.git") && !gitDir.endsWith("/.git/")) {
 			gitDir = gitDir + "/.git";
 		}

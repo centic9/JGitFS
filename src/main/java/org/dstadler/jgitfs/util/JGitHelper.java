@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -243,7 +243,7 @@ public class JGitHelper implements Closeable {
 
         // try to read the file-data as it contains the symlink target
         try (InputStream openFile = openFile(commit, path)) {
-            return IOUtils.toString(openFile, Charset.forName("UTF-8"));
+            return IOUtils.toString(openFile, StandardCharsets.UTF_8);
         }
     }
 
@@ -708,8 +708,8 @@ public class JGitHelper implements Closeable {
 		// TODO: we do not read unreferenced commits here, it would be nice to be able to access these as well here
 		// see http://stackoverflow.com/questions/17178432/how-to-find-all-commits-using-jgit-not-just-referenceable-ones
 		// as a workaround we currently use all branches (includes master) and all tags for finding commits quickly
-		Map<String, Ref> allRefs = repository.getAllRefs();
-		for(Ref head : allRefs.values()) {
+		List<Ref> allRefs = repository.getRefDatabase().getRefs();
+		for(Ref head : allRefs) {
 			final RevCommit commit;
 			try {
 				commit = walk.parseCommit(head.getObjectId());
@@ -727,7 +727,7 @@ public class JGitHelper implements Closeable {
      * The instance is not usable after this call any more.
      */
     @Override
-    public void close() throws IOException {
+    public void close() {
         repository.close();
     }
 

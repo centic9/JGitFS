@@ -57,7 +57,7 @@ public class ValidateGitRepository {
 					lCount += readRecursive(wrapper, count, jgitHelper, commit, path + item + "/");
 					break;
 				default:
-					throw new IllegalStateException("Had unkonwn type: " + wrapper.type());
+					throw new IllegalStateException("Had unknown type: " + wrapper.type());
 			}
 			System.out.print(".");
 			if(lCount % 100 == 0) {
