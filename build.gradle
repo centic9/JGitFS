@@ -17,17 +17,17 @@ dependencies {
 	compile 'net.java.dev.jna:jna:3.5.2'
 	compile 'org.eclipse.jgit:org.eclipse.jgit:5.6.0.201912101111-r'
 	compile 'com.google.guava:guava:27.0.1-jre'
-	compile project(':fuse-jna')
+	compile files('lib/fuse-jna-1.0.3.jar')
 	compile 'jline:jline:2.14.6'
 
 	runtime 'org.slf4j:slf4j-simple:1.7.30'
 
-	testCompile 'junit:junit:4.12'
+	testCompile 'junit:junit:4.13'
 	testCompile 'org.dstadler:commons-test:1.0.0.18'
 }
 
 wrapper {
-    gradleVersion = '4.10.3'
+    gradleVersion = '5.6.4'
 }
 
 task adjustWrapperPropertiesFile {
