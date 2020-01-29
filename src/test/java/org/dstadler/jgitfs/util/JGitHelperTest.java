@@ -1,13 +1,23 @@
 package org.dstadler.jgitfs.util;
 
-import static org.dstadler.jgitfs.JGitFilesystemTest.getStatsWrapper;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import net.fusejna.StructStat.StatWrapper;
+import net.fusejna.types.TypeMode;
+import net.fusejna.types.TypeMode.NodeType;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.submodule.SubmoduleWalk;
+import org.junit.After;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -17,42 +27,20 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
-import java.util.NoSuchElementException;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectLoader;
-import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
-import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.eclipse.jgit.submodule.SubmoduleWalk;
-import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.treewalk.filter.PathFilter;
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import net.fusejna.StructStat.StatWrapper;
-import net.fusejna.types.TypeMode;
-import net.fusejna.types.TypeMode.NodeType;
-
-
+import static org.dstadler.jgitfs.JGitFilesystemTest.getStatsWrapper;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class JGitHelperTest {
     public final static String DEFAULT_COMMIT = "ede9797616a805d6cbeca376bfbbac9a8b7eb64f";
     private static final String SYMLINK_COMMIT = "e81ba32d8d51cdd1463e9a0b704059bd8ccbfd19";
     private static final String GITLINK_COMMIT = "ca1767dc76fe104d0b94fb2a5c962c82121be3da";
-    private static final String SUBMODULE_COMMIT = "39c1c4b78ff751b0b9e28f4fb35148a1acd6646f";
 	private static final Charset CHARSET = StandardCharsets.UTF_8;
 
 	private static boolean hasStashes = false;
@@ -625,33 +613,6 @@ public class JGitHelperTest {
 	}
 
     @Test
-    public void testAllSubmodules() throws IOException {
-        assertEquals("[fuse-jna]", helper.allSubmodules().toString());
-    }
-
-    @Test
-    public void testGetSubmoduleAt() throws IOException {
-        assertEquals("fuse-jna", helper.getSubmoduleAt("fuse-jna"));
-        try {
-            helper.getSubmoduleAt("notexisting");
-            fail("Should catch exception here");
-        } catch (@SuppressWarnings("unused") NoSuchElementException e) {
-            // expected here
-        }
-    }
-
-    @Test
-    public void testGetSubmodulePath() throws IOException {
-        assertEquals("fuse-jna", helper.getSubmodulePath("fuse-jna"));
-        try {
-            helper.getSubmodulePath("notexisting");
-            fail("Should catch exception here");
-        } catch (@SuppressWarnings("unused") NoSuchElementException e) {
-            // expected here
-        }
-    }
-
-    @Test
     public void testGetSubmodulesBareRepository() throws Exception {
         File localPath = File.createTempFile("JGitHelperTest", ".test");
         assertTrue(localPath.delete());
@@ -704,31 +665,6 @@ public class JGitHelperTest {
             System.out.println("Cloned to " + localPath + ", now opening repository");
         } finally {
 			FileUtils.deleteDirectory(localPath);
-        }
-    }
-
-    @Test
-    public void testGetSubmoduleHead() throws IOException {
-        assertNotNull(helper.getSubmoduleHead("fuse-jna"));
-        try {
-            helper.getSubmoduleHead("notexisting");
-            fail("Should catch exception here");
-        } catch (@SuppressWarnings("unused") NoSuchElementException e) {
-            // expected here
-        }
-    }
-
-    @Test
-    public void testConstructForSubmodule() throws Exception {
-        try (JGitHelper subHelper = new JGitHelper(helper, "fuse-jna")) {
-            final StatWrapper wrapper = getStatsWrapper();
-			assertNotNull(wrapper);
-
-            subHelper.readType(SUBMODULE_COMMIT, "build.gradle", wrapper);
-            assertEquals(NodeType.FILE, wrapper.type());
-
-            subHelper.readType(SUBMODULE_COMMIT, "src", wrapper);
-            assertEquals(NodeType.DIRECTORY, wrapper.type());
         }
     }
 
@@ -795,7 +731,7 @@ public class JGitHelperTest {
 		        }
 
 		        // find the commit
-		        ObjectId lastCommitId = subRepo.resolve(SUBMODULE_COMMIT);
+		        /*ObjectId lastCommitId = subRepo.resolve(SUBMODULE_COMMIT);
 
 		        // .add(lastCommitId)
 //        Iterable<RevCommit> commits = new Git(subRepo).log().call();
@@ -823,7 +759,7 @@ public class JGitHelperTest {
 				        loader.copyTo(System.out);
 			        }
 			        revWalk.dispose();
-		        }
+		        }*/
 	        }
         }
 //        try (JGitHelper linkHelper = new JGitHelper("fuse-jna")) {
