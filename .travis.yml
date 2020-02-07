@@ -1,8 +1,7 @@
-# Use trusty to still have JDK 8 available
-dist: trusty
 language: java
 jdk:
-  - oraclejdk8
+# started to fail, replace by openjdk8  - oraclejdk8
+  - openjdk8
   - oraclejdk11
 # not available yet  - openjdk11
 
