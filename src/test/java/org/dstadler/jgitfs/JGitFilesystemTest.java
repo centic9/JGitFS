@@ -607,7 +607,7 @@ public class JGitFilesystemTest {
 	public void testWithTestDataRemote() {
 		ByteBuffer buffer = ByteBuffer.allocate(1000);
 		assertEquals(0, fs.readlink("/remote/origin_master", buffer, 1000));
-        verifyData(buffer, 0);
+        verifyData(buffer, -2);
 	}
 
     @Test
