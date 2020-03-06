@@ -1,17 +1,20 @@
+dist: bionic
 language: java
 jdk:
-# started to fail, replace by openjdk8  - oraclejdk8
   - openjdk8
-  - oraclejdk11
-# not available yet  - openjdk11
+  - openjdk11
 
 env:
   global:
     - RUNNING_IN_TRAVIS="true"
 
 before_install:
- - chmod +x gradlew
+ - chmod +x gradlew gradle/wrapper/gradle-wrapper.jar
  - git fetch --unshallow
+
+install: 
+- gradle wrapper
+- ./gradlew compileJava
 
 after_success:
 - ./gradlew jacocoTestReport
