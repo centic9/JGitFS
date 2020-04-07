@@ -41,9 +41,25 @@ public class Console {
             while ((line = reader.readLine()) != null) {
                 if (line.startsWith("mount")) {
                     String[] cmd = line.split("\\s+");
-                    if (cmd.length < 3) {
+                    if (cmd.length < 2) {
                         out.println("Invalid command");
                         help(out);
+                    } else if (cmd.length == 2) {
+                        // try to find mountpoint automatically with only one argument
+
+                        String name = new File(cmd[1]).getName();
+                        if("git".equals(name)) {
+                            // use a different name than "git" for automatically finding the name
+                            // for the mount
+                            name = new File(cmd[1]).getParentFile().getName();
+                        }
+
+                        out.println("Using mountpoint " + "/fs/" + name + " for repository at " + cmd[1]);
+                        try {
+                            JGitFS.mount(cmd[1], new File("/fs/" + name));
+                        } catch (IllegalArgumentException | IllegalStateException | IOException | FuseException e) {
+                            e.printStackTrace(out);
+                        }
                     } else {
                         //out.println("Mounting " + cmd[1] + " at " + cmd[2]);
                         try {

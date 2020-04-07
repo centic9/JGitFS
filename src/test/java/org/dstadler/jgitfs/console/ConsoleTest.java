@@ -165,7 +165,37 @@ public class ConsoleTest {
 	}
 
 	@Test
-	public void testMount() throws Exception {
+	public void testMountAutomount() throws Exception {
+		Console console = new Console();
+
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		console.run(new ByteArrayInputStream("mount test\nexit\n".getBytes()), out);
+		out.close();
+
+		String outStr = new String(out.toByteArray());
+		assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
+		assertTrue("Had: " + outStr, outStr.contains("mount"));
+		assertTrue("Had: " + outStr, outStr.contains("Could not find git repository at test/.git"));
+		assertTrue("Had: " + outStr, outStr.contains("exit"));
+	}
+
+	@Test
+	public void testMountAutomountGit() throws Exception {
+		Console console = new Console();
+
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		console.run(new ByteArrayInputStream("mount test/git\nexit\n".getBytes()), out);
+		out.close();
+
+		String outStr = new String(out.toByteArray());
+		assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
+		assertTrue("Had: " + outStr, outStr.contains("mount"));
+		assertTrue("Had: " + outStr, outStr.contains("Could not find git repository at test/git/.git"));
+		assertTrue("Had: " + outStr, outStr.contains("exit"));
+	}
+
+	@Test
+	public void testMountInvalidDir() throws Exception {
 		Console console = new Console();
 
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
