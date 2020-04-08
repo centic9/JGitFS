@@ -3,6 +3,7 @@ package org.dstadler.jgitfs.util;
 import java.io.File;
 import java.io.IOException;
 
+import net.fusejna.FuseException;
 import net.fusejna.FuseJna;
 
 
@@ -10,7 +11,11 @@ import net.fusejna.FuseJna;
 public class FuseUtils {
 	public static void prepareMountpoint(File mountPoint) throws IOException {
 		// if mountpoint exists, try to unmount it before re-using it
-		FuseJna.unmount(mountPoint);
+		try {
+			FuseJna.unmount(mountPoint);
+		} catch (FuseException e) {
+			// ignored here
+		}
 
 		// does not exist => create it
 		if(!mountPoint.exists()) {
@@ -23,6 +28,10 @@ public class FuseUtils {
 		}
 
 		// if mountpoint exists, try to unmount it before re-using it
-		FuseJna.unmount(mountPoint);
+		try {
+			FuseJna.unmount(mountPoint);
+		} catch (FuseException e) {
+			// ignored here
+		}
 	}
 }
