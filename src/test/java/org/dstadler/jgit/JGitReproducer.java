@@ -1,5 +1,6 @@
 package org.dstadler.jgit;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -52,6 +53,8 @@ public class JGitReproducer {
                     System.out.println("Had fileMode: " + fileMode);
                 }
             }
+
+            FileUtils.deleteDirectory(repository.getWorkTree());
         }
     }
 
