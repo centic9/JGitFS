@@ -11,13 +11,13 @@ repositories {
 }
 
 dependencies {
-	compile 'org.dstadler:commons-dost:1.0.0.30'
+	compile 'org.dstadler:commons-dost:1.0.0.31'
 	compile 'commons-io:commons-io:2.6'
 	compile 'org.apache.commons:commons-lang3:3.10'
 	compile 'net.java.dev.jna:jna:3.5.2'
-	compile 'org.eclipse.jgit:org.eclipse.jgit:5.6.1.202002131546-r'
+	compile 'org.eclipse.jgit:org.eclipse.jgit:5.7.0.202003110725-r'
 	compile 'com.google.guava:guava:28.2-jre'
-	compile files('lib/fuse-jna-1.0.3.1.jar')
+	compile files('lib/fuse-jna-1.0.3.2.jar')
 	compile 'jline:jline:2.14.6'
 
 	runtime 'org.slf4j:slf4j-simple:1.7.30'
