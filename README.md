@@ -109,7 +109,7 @@ Because it is based on [fuse-jna], JGitFS should work with:
 [OSXFUSE]: http://osxfuse.github.com/
 [Linux-FUSE]: http://fuse.sourceforge.net/
 [FreeBSD-FUSE]: http://wiki.freebsd.org/FuseFilesystem
-[BSD 2-Clause License]: http://www.opensource.org/licenses/bsd-license.php
-[LGPL v2.1]: http://www.opensource.org/licenses/lgpl-2.1.php
+[BSD 2-Clause License]: https://www.opensource.org/licenses/bsd-license.php
+[LGPL v2.1]: https://www.opensource.org/licenses/lgpl-2.1.php
 [EDL]: http://www.eclipse.org/org/documents/edl-v10.php
 [Apache 2.0 License]: http://www.apache.org/licenses/LICENSE-2.0
