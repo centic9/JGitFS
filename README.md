@@ -25,6 +25,10 @@ I.e. to get a view of the Git repository located at /opt/project mounted at /mnt
  
     build/install/JGitFS/bin/JGitFS /opt/project /mnt/git
 
+## Support this project
+
+If you find this tool useful and would like to support it, you can [Sponsor the author](https://github.com/sponsors/centic9)
+
 ## The longer stuff
 
 #### Details
