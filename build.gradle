@@ -12,7 +12,7 @@ repositories {
 
 dependencies {
 	compile 'org.dstadler:commons-dost:1.0.0.31'
-	compile 'commons-io:commons-io:2.6'
+	compile 'commons-io:commons-io:2.7'
 	compile 'org.apache.commons:commons-lang3:3.10'
 	compile 'net.java.dev.jna:jna:3.5.2'
 	compile 'org.eclipse.jgit:org.eclipse.jgit:5.7.0.202003110725-r'
