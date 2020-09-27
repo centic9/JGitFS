@@ -15,7 +15,7 @@ dependencies {
 	compile 'commons-io:commons-io:2.8.0'
 	compile 'org.apache.commons:commons-lang3:3.11'
 	compile 'net.java.dev.jna:jna:3.5.2'
-	compile 'org.eclipse.jgit:org.eclipse.jgit:5.8.1.202007141445-r'
+	compile 'org.eclipse.jgit:org.eclipse.jgit:5.9.0.202009080501-r'
 	compile 'com.google.guava:guava:29.0-jre'
 	compile files('lib/fuse-jna-1.0.3.2.jar')
 	compile 'jline:jline:2.14.6'
@@ -51,7 +51,7 @@ tasks.withType(JavaCompile){
 }
 
 jacoco {
-	toolVersion = '0.8.5'
+	toolVersion = '0.8.6'
 }
 
 jacocoTestReport {
