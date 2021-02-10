@@ -458,7 +458,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
             try {
                 unmount();
             } catch (FuseException e) {
-                throw new IOException(e);
+                throw new IOException("While trying to unmount " + getMountPoint() + ": " + getMountPoint().exists(), e);
             }
         }
     }
