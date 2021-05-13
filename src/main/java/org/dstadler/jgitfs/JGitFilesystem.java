@@ -1,6 +1,7 @@
 package org.dstadler.jgitfs;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,7 +62,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
     /**
      * static set of directories to handle them quickly in getattr().
      */
-    private static Set<String> DIRS = new HashSet<>();
+    private static final Set<String> DIRS = new HashSet<>();
     static {
         DIRS.add("/");
         DIRS.add("/branch");
@@ -77,7 +78,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
      * Don't print out a warning for some directories which are queried by
      * some apps, e.g. Nautilus on Gnome
      */
-    private static Set<String> IGNORED_DIRS = new HashSet<>();
+    private static final Set<String> IGNORED_DIRS = new HashSet<>();
     static {
         IGNORED_DIRS.add("/.hidden");
         IGNORED_DIRS.add("/.Trash");
@@ -349,7 +350,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
      * This makes use of the Google Guava LoadingCache features to automatically populate
      * entries when they are missing which makes the usage of the cache very simple.
      */
-    private LoadingCache<String, byte[]> linkCache = CacheBuilder.newBuilder()
+    private final LoadingCache<String, byte[]> linkCache = CacheBuilder.newBuilder()
                .maximumSize(1000)
                .expireAfterWrite(1, TimeUnit.MINUTES)
                .build(
@@ -458,7 +459,9 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
             try {
                 unmount();
             } catch (FuseException e) {
-                throw new IOException("While trying to unmount " + getMountPoint() + ": " + getMountPoint().exists(), e);
+                File mountPoint = getMountPoint();
+                throw new IOException("While trying to unmount " + mountPoint +
+                        ", exists: " + (mountPoint == null ? "<null>" : mountPoint.exists()), e);
             }
         }
     }
