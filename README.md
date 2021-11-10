@@ -5,6 +5,16 @@ userland filesystem.
 
 ## Getting started
 
+#### Required packages
+
+Make sure to have Java 8+ and libfuse2 installed.
+
+On Debian/Ubuntu based systems you can run:
+
+    sudo apt-get install openjdk-11-jdk libfuse2
+
+Note: [fuse-jna] is based on libfuse2, so having libfuse3 installed will not be sufficient.
+
 #### Grab it
 
     git clone --recursive git://github.com/centic9/JGitFS
