@@ -15,3 +15,4 @@ jobs:
     uses: centic9/actions/.github/workflows/gradle-build.yml@3
     with:
       isApplication: true
+      fullCheckout: true
