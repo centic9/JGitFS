@@ -20,7 +20,7 @@ dependencies {
 	compile files('lib/fuse-jna-1.0.3.2.jar')
 	compile 'jline:jline:2.14.6'
 
-	runtime 'org.slf4j:slf4j-simple:1.7.32'
+	runtime 'org.slf4j:slf4j-simple:1.7.35'
 
 	testCompile 'junit:junit:4.13.2'
 	testCompile 'org.dstadler:commons-test:1.0.0.19'
