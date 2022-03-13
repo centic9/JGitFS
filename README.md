@@ -1,5 +1,6 @@
 [![Build Status](https://github.com/centic9/JGitFS/actions/workflows/gradle-build.yml/badge.svg)](https://github.com/centic9/JGitFS/actions)
 [![Gradle Status](https://gradleupdate.appspot.com/centic9/JGitFS/status.svg?branch=master)](https://gradleupdate.appspot.com/centic9/JGitFS/status)
+[![Tag](https://img.shields.io/github/tag/centic9/JGitFS.svg)](https://github.com/centic9/JGitFS/tags)
 
 JGitFS provides access to Git branches/tags/commits like if they would be separate directories via a [FUSE][Linux-Fuse] 
 userland filesystem. 
