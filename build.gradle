@@ -16,7 +16,7 @@ dependencies {
 	compile 'org.apache.commons:commons-lang3:3.12.0'
 	compile 'net.java.dev.jna:jna:3.5.2'
 	compile 'org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r'
-	compile 'com.google.guava:guava:31.0.1-jre'
+	compile 'com.google.guava:guava:31.1-jre'
 	compile files('lib/fuse-jna-1.0.3.2.jar')
 	compile 'jline:jline:2.14.6'
 
