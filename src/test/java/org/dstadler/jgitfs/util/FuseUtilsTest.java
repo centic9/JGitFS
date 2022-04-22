@@ -29,7 +29,7 @@ public class FuseUtilsTest {
         //FuseUtils.prepareMountpoint(new File("/tmp/!\"§$%&\t\r\n/()/=)%($§§\"$\\ÖÄ'*'*#+_:;:--.,;"));
 
         try {
-            FuseUtils.prepareMountpoint(new File("/proc/123234"));
+            FuseUtils.prepareMountpoint(new File("/proc/cpu/mem/some"));
             if(!SystemUtils.IS_OS_WINDOWS) {
             	fail("Should not be able to create the invalid mountpoint");
             }
