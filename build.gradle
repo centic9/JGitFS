@@ -23,7 +23,7 @@ dependencies {
 	runtimeOnly 'org.slf4j:slf4j-simple:1.7.36'
 
 	testImplementation 'junit:junit:4.13.2'
-	testImplementation 'org.dstadler:commons-test:1.0.0.19'
+	testImplementation 'org.dstadler:commons-test:1.0.0.20'
 }
 
 wrapper {
