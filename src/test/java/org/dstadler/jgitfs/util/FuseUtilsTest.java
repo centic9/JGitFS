@@ -1,6 +1,5 @@
 package org.dstadler.jgitfs.util;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -14,17 +13,11 @@ public class FuseUtilsTest {
 
     @Test
     public void testPrepareMountpoint() throws Exception {
-        FuseUtils object = new FuseUtils();
-        assertNotNull(object);
-
         FuseUtils.prepareMountpoint(new File("."));
     }
 
     @Test
     public void testPrepareMountpointFails() {
-        FuseUtils object = new FuseUtils();
-        assertNotNull(object);
-
         // how can we fail when trying to use a mountpoint?
         //FuseUtils.prepareMountpoint(new File("/tmp/!\"§$%&\t\r\n/()/=)%($§§\"$\\ÖÄ'*'*#+_:;:--.,;"));
 
@@ -36,5 +29,11 @@ public class FuseUtilsTest {
         } catch (@SuppressWarnings("unused") IOException e) {
             // expected
         }
+    }
+
+    // helper method to get coverage of the unused constructor
+    @Test
+    public void testPrivateConstructor() throws Exception {
+        org.dstadler.commons.testing.PrivateConstructorCoverage.executePrivateConstructor(FuseUtils.class);
     }
 }

@@ -9,6 +9,10 @@ import net.fusejna.FuseJna;
 
 
 public class FuseUtils {
+	// utility class should not be constructed
+	private FuseUtils() {
+	}
+
 	public static void prepareMountpoint(File mountPoint) throws IOException {
 		// if mountpoint exists, try to unmount it before re-using it
 		try {
