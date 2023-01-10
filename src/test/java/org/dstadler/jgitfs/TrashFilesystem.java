@@ -63,25 +63,25 @@ public class TrashFilesystem {
         public void run() {
             Stack<File> path = new Stack<>();
             File current = startDir;
-            while(!shouldStop) {
+            while (!shouldStop) {
                 // for directories go one down with probability 50%
-                if(current.equals(startDir) || (current.isDirectory() && RandomUtils.nextInt(0, 100) >= 40)) {
+                if (current.equals(startDir) || (current.isDirectory() && RandomUtils.nextInt(0, 100) >= 40)) {
                     File[] files = current.listFiles();
-                    if(files != null && files.length > 0) {
+                    if (files != null && files.length > 0) {
                         path.push(current);
                         current = files[RandomUtils.nextInt(0, files.length)];
                         pushFile(current);
                     } else {
                         // read the file and go one up again
                         pushFile(current);
-                        if(!path.isEmpty()) {
+                        if (!path.isEmpty()) {
                             current = path.pop();
                         }
                     }
                 } else {
                     // read the file/directory and go one up again
                     pushFile(current);
-                    if(!path.isEmpty()) {
+                    if (!path.isEmpty()) {
                         current = path.pop();
                     }
                 }
@@ -91,9 +91,9 @@ public class TrashFilesystem {
         private void pushFile(File current) {
             try {
                 long pushed = pushedFiles.incrementAndGet();
-                if(pushed % 200 == 0) {
+                if (pushed % 200 == 0) {
                     System.out.println(String.format("Pushing file (%d/%d/%d/%.2f per sec): %s",
-                            queue.size(), pushed, consumedFiles.get(), pushed/((double)(System.currentTimeMillis() - start)/1000),
+                            queue.size(), pushed, consumedFiles.get(), pushed / ((double) (System.currentTimeMillis() - start) / 1000),
                             current));
                 }
                 queue.put(current);
@@ -117,14 +117,14 @@ public class TrashFilesystem {
         @Override
         public void run() {
             byte[] bytes = new byte[1024];
-            while(!shouldStop) {
+            while (!shouldStop) {
                 try {
                     File file = queue.poll(5, TimeUnit.SECONDS);
-                    if(file != null) {
+                    if (file != null) {
                         long consumed = consumedFiles.incrementAndGet();
-                        if(consumed % 200 == 0) {
+                        if (consumed % 200 == 0) {
                             System.out.println(String.format("Handling file (%d/%d/%d/%.2f per sec): %s",
-                                    queue.size(), pushedFiles.get(), consumed, consumed/((double)(System.currentTimeMillis() - start)/1000),
+                                    queue.size(), pushedFiles.get(), consumed, consumed / ((double) (System.currentTimeMillis() - start) / 1000),
                                     file));
                         }
 
@@ -144,7 +144,7 @@ public class TrashFilesystem {
                         file.length();
 
                         // then read the directory or the file-contents
-                        if(file.isDirectory()) {
+                        if (file.isDirectory()) {
                             //noinspection ResultOfMethodCallIgnored
                             file.list();
                         } else {

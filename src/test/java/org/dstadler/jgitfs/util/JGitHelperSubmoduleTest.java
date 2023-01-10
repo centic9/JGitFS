@@ -29,7 +29,7 @@ public class JGitHelperSubmoduleTest {
     @BeforeClass
     public static void setUpClass() throws GitAPIException {
         // clone sample repo if not available yet
-        if(!CLONE_DIR.exists()) {
+        if (!CLONE_DIR.exists()) {
             Git.cloneRepository()
                     .setURI(CLONE_URL)
                     // this is important to also get the submodule checked out

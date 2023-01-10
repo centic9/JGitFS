@@ -31,7 +31,7 @@ public class JGitFilesystemSubmodule {
     @BeforeClass
     public static void setUpClass() throws GitAPIException {
         // clone sample repo if not available yet
-        if(!CLONE_DIR.exists()) {
+        if (!CLONE_DIR.exists()) {
             Git.cloneRepository()
                     .setURI(CLONE_URL)
                     // this is important to also get the submodule checked out
@@ -58,7 +58,7 @@ public class JGitFilesystemSubmodule {
         assertEquals(0, fs.readlink("/branch/master", buffer, 1000));
 
         assertEquals("A commit-ish link should be written to the buffer, but had: " + new String(buffer.array(), 0, buffer.position()),
-                1000-51, buffer.remaining());
+                1000 - 51, buffer.remaining());
         // e.g. ../commit/43/27273e69afcd040ba1b4d3766ea1f43e0024f3
         String commit = new String(buffer.array(), 0, buffer.position()).substring(2);
 
@@ -79,7 +79,7 @@ public class JGitFilesystemSubmodule {
 
         assertEquals(0, fs.readlink("/branch/master", buffer, 1000));
         assertEquals("A commit-ish link should be written to the buffer, but had: " + new String(buffer.array(), 0, buffer.position()),
-                1000-51, buffer.remaining());
+                1000 - 51, buffer.remaining());
         // e.g. ../commit/43/27273e69afcd040ba1b4d3766ea1f43e0024f3
         String commit = new String(buffer.array(), 0, buffer.position()).substring(2);
 

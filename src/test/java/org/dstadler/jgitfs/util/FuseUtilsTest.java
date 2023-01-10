@@ -23,8 +23,8 @@ public class FuseUtilsTest {
 
         try {
             FuseUtils.prepareMountpoint(new File("/proc/cpu/mem/some"));
-            if(!SystemUtils.IS_OS_WINDOWS) {
-            	fail("Should not be able to create the invalid mountpoint");
+            if (!SystemUtils.IS_OS_WINDOWS) {
+                fail("Should not be able to create the invalid mountpoint");
             }
         } catch (@SuppressWarnings("unused") IOException e) {
             // expected

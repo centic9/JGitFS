@@ -56,14 +56,14 @@ public class JGitHelper implements Closeable {
      *
      * @param pGitDir A Git repository, either the root-dir or the .git directory directly.
      * @throws IllegalStateException If the .git directory is not found
-     * @throws IOException If opening the Git repository fails
+     * @throws IOException           If opening the Git repository fails
      */
     public JGitHelper(String pGitDir) throws IOException {
         String gitDir = pGitDir;
-        if(!gitDir.endsWith("/.git") && !gitDir.endsWith("/.git/")) {
+        if (!gitDir.endsWith("/.git") && !gitDir.endsWith("/.git/")) {
             gitDir = gitDir + "/.git";
         }
-        if(!new File(gitDir).exists()) {
+        if (!new File(gitDir).exists()) {
             throw new IllegalStateException("Could not find git repository at " + gitDir);
         }
 
@@ -77,9 +77,9 @@ public class JGitHelper implements Closeable {
         System.out.println("Using git repo at " + gitDir);
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
         repository = builder.setGitDir(new File(gitDir))
-          .readEnvironment() // scan environment GIT_* variables
-          .findGitDir() // scan up the file system tree
-          .build();
+                .readEnvironment() // scan environment GIT_* variables
+                .findGitDir() // scan up the file system tree
+                .build();
         git = new Git(repository);
     }
 
@@ -88,22 +88,22 @@ public class JGitHelper implements Closeable {
      * parent JGitHelper object in order to correct open the repository
      * for the submodule.
      *
-     * @param parent The JGitHelper object for the parent Git repository
+     * @param parent        The JGitHelper object for the parent Git repository
      * @param submodulePath The path where the submodule is linked in
      * @throws IllegalArgumentException If no submodule can be opened at the given path
-     * @throws IOException If opening the Git repository fails
+     * @throws IOException              If opening the Git repository fails
      */
     public JGitHelper(JGitHelper parent, String submodulePath) throws IOException {
         System.out.println("Using submodule at " + submodulePath + " via git repository at " + parent.repository.getDirectory());
         repository = SubmoduleWalk.getSubmoduleRepository(parent.repository, submodulePath);
-        if(repository == null) {
+        if (repository == null) {
             throw new IllegalArgumentException("Could not open submodule at path " + submodulePath + " in repository " + parent.repository.getDirectory());
         }
         git = new Git(repository);
     }
 
     public String getName() {
-        if(!repository.isBare()) {
+        if (!repository.isBare()) {
             return repository.getWorkTree().getName();
         }
         return new File(StringUtils.removeEnd(
@@ -139,11 +139,10 @@ public class JGitHelper implements Closeable {
      * Populate the StatWrapper with the necessary values like mode, uid, gid and type of file/directory/symlink.
      *
      * @param commit The commit-id as-of which we read the data
-     * @param path The path to the file/directory
-     * @param stat The StatWrapper instance to populate
-     *
+     * @param path   The path to the file/directory
+     * @param stat   The StatWrapper instance to populate
      * @throws IllegalStateException If the path or the commit cannot be found or an unknown type is encountered
-     * @throws IOException If access to the Git repository fails
+     * @throws IOException           If access to the Git repository fails
      * @throws FileNotFoundException If the given path cannot be found as part of the given commit-id
      */
     public void readType(String commit, String path, StatWrapper stat) throws IOException {
@@ -161,7 +160,7 @@ public class JGitHelper implements Closeable {
         // now read the file/directory attributes
         try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
             FileMode fileMode = treeWalk.getFileMode(0);
-            if(fileMode.equals(FileMode.EXECUTABLE_FILE) ||
+            if (fileMode.equals(FileMode.EXECUTABLE_FILE) ||
                     fileMode.equals(FileMode.REGULAR_FILE)) {
                 ObjectLoader loader = repository.open(treeWalk.getObjectId(0));
                 stat.size(loader.getSize());
@@ -170,13 +169,13 @@ public class JGitHelper implements Closeable {
                         true, false, fileMode.equals(FileMode.EXECUTABLE_FILE),
                         false, false, false);
                 return;
-            } else if(fileMode.equals(FileMode.TREE)) {
+            } else if (fileMode.equals(FileMode.TREE)) {
                 stat.setMode(NodeType.DIRECTORY, true, false, true, true, false, true, false, false, false);
                 return;
-            } else if(fileMode.equals(FileMode.SYMLINK)) {
+            } else if (fileMode.equals(FileMode.SYMLINK)) {
                 stat.setMode(NodeType.SYMBOLIC_LINK, true, false, true, true, false, true, false, false, false);
                 return;
-            } else if(fileMode.equals(FileMode.GITLINK)) {
+            } else if (fileMode.equals(FileMode.GITLINK)) {
                 stat.setMode(NodeType.SYMBOLIC_LINK, true, false, true, true, false, true, false, false, false);
                 return;
             }
@@ -190,7 +189,7 @@ public class JGitHelper implements Closeable {
      * Check if the given path in the given commit denotes a git link to a submodule.
      *
      * @param commit The commit-id as-of which we read the data
-     * @param path The path to the file/directory
+     * @param path   The path to the file/directory
      * @return true if the path in the given commit denotes a git submodule, false otherwise.
      * @throws IOException If access to the Git repository fails
      */
@@ -214,10 +213,10 @@ public class JGitHelper implements Closeable {
      * Read the target file for the given symlink as part of the given commit.
      *
      * @param commit the commit-id as-of which we read the symlink
-     * @param path the path to the symlink
+     * @param path   the path to the symlink
      * @return the target of the symlink, relative to the directory of the symlink itself
-     * @throws IOException If an error occurs while reading from the Git repository
-     * @throws FileNotFoundException If the given path cannot be found in the given commit-id
+     * @throws IOException              If an error occurs while reading from the Git repository
+     * @throws FileNotFoundException    If the given path cannot be found in the given commit-id
      * @throws IllegalArgumentException If the given path does not denote a symlink
      */
     public String readSymlink(String commit, String path) throws IOException {
@@ -232,12 +231,12 @@ public class JGitHelper implements Closeable {
             fileMode = treeWalk.getFileMode(0);
         }
 
-        if(!fileMode.equals(FileMode.SYMLINK) && !fileMode.equals(FileMode.GITLINK)) {
+        if (!fileMode.equals(FileMode.SYMLINK) && !fileMode.equals(FileMode.GITLINK)) {
             throw new IllegalArgumentException("Had request for symlink-target which is not a symlink, commit '" + commit + "' and path '" + path + "': " + fileMode.getBits());
         }
 
         // TODO: add full support for Submodules
-        if(fileMode.equals(FileMode.GITLINK)) {
+        if (fileMode.equals(FileMode.GITLINK)) {
             throw new UnsupportedOperationException("Support for git submodules is not yet available, cannot read path " + path + " of commit " + commit);
         }
 
@@ -251,12 +250,10 @@ public class JGitHelper implements Closeable {
      * Retrieve the contents of the given file as-of the given commit.
      *
      * @param commit The commit-id as-of which we read the data
-     * @param path The path to the file/directory
-     *
+     * @param path   The path to the file/directory
      * @return An InputStream which can be used to read the contents of the file.
-     *
      * @throws IllegalStateException If the path or the commit cannot be found or does not denote a file
-     * @throws IOException If access to the Git repository fails
+     * @throws IOException           If access to the Git repository fails
      * @throws FileNotFoundException If the given path cannot be found in the given commit-id
      */
     public InputStream openFile(String commit, String path) throws IOException {
@@ -268,7 +265,7 @@ public class JGitHelper implements Closeable {
 
         // now try to find a specific file
         try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
-            if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_FILE) == 0) {
+            if ((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_FILE) == 0) {
                 throw new IllegalStateException("Tried to read the contents of a non-file for commit '" + commit + "' and path '" + path + "', had filemode " + treeWalk.getFileMode(0).getBits());
             }
 
@@ -284,7 +281,7 @@ public class JGitHelper implements Closeable {
     private TreeWalk buildTreeWalk(RevTree tree, final String path) throws IOException {
         TreeWalk treeWalk = TreeWalk.forPath(repository, path, tree);
 
-        if(treeWalk == null) {
+        if (treeWalk == null) {
             throw new FileNotFoundException("Did not find expected file '" + path + "' in tree '" + tree.getName() + "'");
         }
 
@@ -300,7 +297,7 @@ public class JGitHelper implements Closeable {
 
     /**
      * Return all local branches, excluding any remote branches.
-     *
+     * <p>
      * To ease implementation, slashes in branch-names are replaced by underscore. Also
      * entries starting with refs/heads/ are listed with their short name as well
      *
@@ -310,10 +307,10 @@ public class JGitHelper implements Closeable {
     public List<String> getBranches() throws IOException {
         final List<Ref> branchRefs = readBranches();
         List<String> branches = new ArrayList<>();
-        for(Ref ref : branchRefs) {
+        for (Ref ref : branchRefs) {
             String name = adjustName(ref.getName());
             branches.add(name);
-            if(name.startsWith("refs_heads_")) {
+            if (name.startsWith("refs_heads_")) {
                 branches.add(StringUtils.removeStart(name, "refs_heads_"));
             }
         }
@@ -322,7 +319,7 @@ public class JGitHelper implements Closeable {
 
     /**
      * Return the commit-id for the given branch.
-     *
+     * <p>
      * To ease implementation, slashes in branch-names are replaced by underscore. Also
      * entries starting with refs/heads/ are listed with their short name as well
      *
@@ -332,10 +329,10 @@ public class JGitHelper implements Closeable {
      */
     public String getBranchHeadCommit(String branch) throws IOException {
         final List<Ref> branchRefs = readBranches();
-        for(Ref ref : branchRefs) {
+        for (Ref ref : branchRefs) {
             String name = adjustName(ref.getName());
             //System.out.println("Had branch: " + name);
-            if(name.equals(branch) || name.equals("refs_heads_" + branch)) {
+            if (name.equals(branch) || name.equals("refs_heads_" + branch)) {
                 return ref.getObjectId().getName();
             }
         }
@@ -356,7 +353,7 @@ public class JGitHelper implements Closeable {
 
     /**
      * Return all remote branches and tags.
-     *
+     * <p>
      * To ease implementation, slashes in names are replaced by underscore. Also
      * entries starting with refs/remotes/ are listed with their short name as well
      *
@@ -366,10 +363,10 @@ public class JGitHelper implements Closeable {
     public List<String> getRemotes() throws IOException {
         final List<Ref> remoteRefs = readRemotes();
         List<String> remotes = new ArrayList<>();
-        for(Ref ref : remoteRefs) {
+        for (Ref ref : remoteRefs) {
             String name = adjustName(ref.getName());
             remotes.add(name);
-            if(name.startsWith("refs_remotes_")) {
+            if (name.startsWith("refs_remotes_")) {
                 remotes.add(StringUtils.removeStart(name, "refs_remotes_"));
             }
         }
@@ -378,7 +375,7 @@ public class JGitHelper implements Closeable {
 
     /**
      * Return the commit-id for the given remote.
-     *
+     * <p>
      * To ease implementation, slashes in names are replaced by underscore. Also
      * entries starting with refs/remotes/ are listed with their short name as well
      *
@@ -388,10 +385,10 @@ public class JGitHelper implements Closeable {
      */
     public String getRemoteHeadCommit(String remote) throws IOException {
         final List<Ref> remoteRefs = readRemotes();
-        for(Ref ref : remoteRefs) {
+        for (Ref ref : remoteRefs) {
             String name = adjustName(ref.getName());
             //System.out.println("Had branch: " + name);
-            if(name.equals(remote) || name.equals("refs_remotes_" + remote)) {
+            if (name.equals(remote) || name.equals("refs_remotes_" + remote)) {
                 return ref.getObjectId().getName();
             }
         }
@@ -411,7 +408,7 @@ public class JGitHelper implements Closeable {
 
     /**
      * Return all tags.
-     *
+     * <p>
      * To ease implementation, slashes in branch-names are replaced by underscore. Also
      * entries starting with refs/tags/ are listed with their short name as well
      *
@@ -421,10 +418,10 @@ public class JGitHelper implements Closeable {
     public List<String> getTags() throws IOException {
         List<Ref> tagRefs = readTags();
         List<String> tags = new ArrayList<>();
-        for(Ref ref : tagRefs) {
+        for (Ref ref : tagRefs) {
             String name = adjustName(ref.getName());
             tags.add(name);
-            if(name.startsWith("refs_tags_")) {
+            if (name.startsWith("refs_tags_")) {
                 tags.add(StringUtils.removeStart(name, "refs_tags_"));
             }
         }
@@ -433,7 +430,7 @@ public class JGitHelper implements Closeable {
 
     /**
      * Return the commit-id for the given tag.
-     *
+     * <p>
      * To ease implementation, slashes in tag-names are replaced by underscore. Also
      * entries starting with refs/tags/ are listed with their short name as well
      *
@@ -443,10 +440,10 @@ public class JGitHelper implements Closeable {
      */
     public String getTagHeadCommit(String tag) throws IOException {
         List<Ref> tagRefs = readTags();
-        for(Ref ref : tagRefs) {
+        for (Ref ref : tagRefs) {
             String name = adjustName(ref.getName());
             //System.out.println("Had tag: " + name);
-            if(name.equals(tag) || name.equals("refs_tags_" + tag)) {
+            if (name.equals(tag) || name.equals("refs_tags_" + tag)) {
                 return ref.getObjectId().getName();
             }
         }
@@ -476,7 +473,7 @@ public class JGitHelper implements Closeable {
      * @throws IOException If accessing the Git repository fails
      */
     public Collection<String> allSubmodules() throws IOException {
-        if(repository.isBare()) {
+        if (repository.isBare()) {
             System.out.println("Cannot list submodules for bare repository at " + repository.getDirectory());
             return Collections.emptyList();
         }
@@ -494,12 +491,12 @@ public class JGitHelper implements Closeable {
      * @param path the path where the git submodule is linked in.
      * @return The name of the git submodule.
      * @throws NoSuchElementException if the given path does not point to a git submodule
-     * @throws IOException If accessing the Git repository fails
+     * @throws IOException            If accessing the Git repository fails
      */
     public String getSubmoduleAt(String path) throws IOException {
         try {
             Map<String, SubmoduleStatus> set = git.submoduleStatus().addPath(path).call();
-            if(set.isEmpty()) {
+            if (set.isEmpty()) {
                 throw new NoSuchElementException("Could not read submodule at path " + path);
             }
             return set.keySet().iterator().next();
@@ -514,13 +511,13 @@ public class JGitHelper implements Closeable {
      * @param name the name of the Git submodule.
      * @return The path where the Git submodule is linked.
      * @throws NoSuchElementException if the given name is not known.
-     * @throws IOException If accessing the Git repository fails
+     * @throws IOException            If accessing the Git repository fails
      */
     public String getSubmodulePath(String name) throws IOException {
         try {
             Map<String, SubmoduleStatus> set = git.submoduleStatus().call();
-            for(Map.Entry<String, SubmoduleStatus> entry : set.entrySet()) {
-                if(entry.getKey().equals(name)) {
+            for (Map.Entry<String, SubmoduleStatus> entry : set.entrySet()) {
+                if (entry.getKey().equals(name)) {
                     return entry.getValue().getPath();
                 }
             }
@@ -536,17 +533,17 @@ public class JGitHelper implements Closeable {
      * @param name the name of the Git submodule.
      * @return The path where the Git submodule is linked.
      * @throws NoSuchElementException if the given name is not known.
-     * @throws IOException If accessing the Git repository fails
+     * @throws IOException            If accessing the Git repository fails
      */
     public String getSubmoduleHead(String name) throws IOException {
         try {
             Map<String, SubmoduleStatus> set = git.submoduleStatus().call();
-            for(Map.Entry<String, SubmoduleStatus> entry : set.entrySet()) {
-                if(entry.getKey().equals(name)) {
+            for (Map.Entry<String, SubmoduleStatus> entry : set.entrySet()) {
+                if (entry.getKey().equals(name)) {
                     SubmoduleStatus value = entry.getValue();
                     SubmoduleStatusType type = value.getType();
-                    if(type == SubmoduleStatusType.MISSING ||
-                        type == SubmoduleStatusType.UNINITIALIZED) {
+                    if (type == SubmoduleStatusType.MISSING ||
+                            type == SubmoduleStatusType.UNINITIALIZED) {
                         throw new NoSuchElementException("Could not read submodule " + name + " because it is in state " + type);
                     }
                     return value.getHeadId().getName();
@@ -560,7 +557,7 @@ public class JGitHelper implements Closeable {
 
     /**
      * Return all stashes
-     *
+     * <p>
      * To ease implementation, slashes in stash-names are replaced by underscore. Also
      * entries starting with refs/heads/ are listed with their short name as well
      *
@@ -571,7 +568,7 @@ public class JGitHelper implements Closeable {
         List<String> stashNames = new ArrayList<>();
 
         // first a list of all stashes
-        for(int i = 0;i < readStashes().size();i++) {
+        for (int i = 0; i < readStashes().size(); i++) {
             // for now just use the simple numbering as done in git stash list without the commit message
             stashNames.add(getStashName(i));
         }
@@ -593,8 +590,8 @@ public class JGitHelper implements Closeable {
     public String getStashHeadCommit(String stash) throws IOException {
         final Collection<RevCommit> stashes = readStashes();
         int i = 0;
-        for(RevCommit rev : stashes) {
-            if(getStashName(i).equals(stash)) {
+        for (RevCommit rev : stashes) {
+            if (getStashName(i).equals(stash)) {
                 return rev.getName();
             }
             i++;
@@ -613,8 +610,8 @@ public class JGitHelper implements Closeable {
     public String getStashOrigCommit(String stash) throws IOException {
         final Collection<RevCommit> stashes = readStashes();
         int i = 0;
-        for(RevCommit rev : stashes) {
-            if(getStashName(i).equals(stash)) {
+        for (RevCommit rev : stashes) {
+            if (getStashName(i).equals(stash)) {
                 return rev.getParent(0).getName();
             }
             i++;
@@ -642,23 +639,23 @@ public class JGitHelper implements Closeable {
      */
     public Set<String> allCommitSubs() throws IOException {
         try (RevWalk walk = new RevWalk(repository)) {
-			// optimization: we only need the commit-ids here, so we can discard the contents right away
-			walk.setRetainBody(false);
+            // optimization: we only need the commit-ids here, so we can discard the contents right away
+            walk.setRetainBody(false);
 
-			// use all refs (tags, branches, remotes, ...) for finding commits quickly
-			addAllRefs(walk);
+            // use all refs (tags, branches, remotes, ...) for finding commits quickly
+            addAllRefs(walk);
 
-			// now iterate over all commits to find out which 2-hex-char sub-directories should be provided
-			Set<String> commitSubs = new HashSet<>();
-			for(RevCommit rev : walk) {
-				String name = rev.getName();
-				commitSubs.add(name.substring(0,2));
+            // now iterate over all commits to find out which 2-hex-char sub-directories should be provided
+            Set<String> commitSubs = new HashSet<>();
+            for (RevCommit rev : walk) {
+                String name = rev.getName();
+                commitSubs.add(name.substring(0, 2));
 
-				// we can leave the loop as soon as we have all two-digit values, which is typically the case for large repositories
-				if(commitSubs.size() >= 256) {
-					break;
-				}
-			}
+                // we can leave the loop as soon as we have all two-digit values, which is typically the case for large repositories
+                if (commitSubs.size() >= 256) {
+                    break;
+                }
+            }
 
             walk.dispose();
 
@@ -666,7 +663,7 @@ public class JGitHelper implements Closeable {
         }
     }
 
-	/**
+    /**
      * Retrieve a list of all or a certain range of commit-ids in this Git repository. This is used to
      * populate the second level beneath the /commit directory with the actual commit-ids. The parameter
      * "sub" allows to only return commits starting with a certain commit-sub.
@@ -677,21 +674,21 @@ public class JGitHelper implements Closeable {
      */
     public Collection<String> allCommits(String sub) throws IOException {
         try (RevWalk walk = new RevWalk(repository)) {
-			// optimization: we only need the commit-ids here, so we can discard the contents right away
-			walk.setRetainBody(false);
+            // optimization: we only need the commit-ids here, so we can discard the contents right away
+            walk.setRetainBody(false);
 
-			// use all refs (tags, branches, remotes, ...) for finding commits quickly
-			addAllRefs(walk);
+            // use all refs (tags, branches, remotes, ...) for finding commits quickly
+            addAllRefs(walk);
 
-			ObjectIdSubclassMap<RevCommit> map = new ObjectIdSubclassMap<>();
-			for(RevCommit rev : walk) {
-				String name = rev.getName();
-				if(sub == null || name.startsWith(sub)) {
-					map.addIfAbsent(rev);
-				}
-			}
+            ObjectIdSubclassMap<RevCommit> map = new ObjectIdSubclassMap<>();
+            for (RevCommit rev : walk) {
+                String name = rev.getName();
+                if (sub == null || name.startsWith(sub)) {
+                    map.addIfAbsent(rev);
+                }
+            }
 
-			walk.dispose();
+            walk.dispose();
 
             // use the ObjectIdSubclassMap for quick map-insertion and only afterwards convert the resulting commits
             // to Strings. ObjectIds can be compared much quicker as Strings as they only are 4 ints, not 40 character strings
@@ -704,26 +701,26 @@ public class JGitHelper implements Closeable {
         }
     }
 
-	private void addAllRefs(RevWalk walk) throws IOException {
-		// TODO: we do not read unreferenced commits here, it would be nice to be able to access these as well here
-		// see http://stackoverflow.com/questions/17178432/how-to-find-all-commits-using-jgit-not-just-referenceable-ones
-		// as a workaround we currently use all branches (includes master) and all tags for finding commits quickly
-		List<Ref> allRefs = repository.getRefDatabase().getRefs();
-		for(Ref head : allRefs) {
-			final RevCommit commit;
-			try {
-				commit = walk.parseCommit(head.getObjectId());
-			} catch (IncorrectObjectTypeException e) {
-				System.out.println("Invalid head-commit for ref " + head + " and id: " + head.getObjectId().getName() + ": " + e);
-				continue;
-			}
-			walk.markStart(commit);
-		}
-	}
+    private void addAllRefs(RevWalk walk) throws IOException {
+        // TODO: we do not read unreferenced commits here, it would be nice to be able to access these as well here
+        // see http://stackoverflow.com/questions/17178432/how-to-find-all-commits-using-jgit-not-just-referenceable-ones
+        // as a workaround we currently use all branches (includes master) and all tags for finding commits quickly
+        List<Ref> allRefs = repository.getRefDatabase().getRefs();
+        for (Ref head : allRefs) {
+            final RevCommit commit;
+            try {
+                commit = walk.parseCommit(head.getObjectId());
+            } catch (IncorrectObjectTypeException e) {
+                System.out.println("Invalid head-commit for ref " + head + " and id: " + head.getObjectId().getName() + ": " + e);
+                continue;
+            }
+            walk.markStart(commit);
+        }
+    }
 
     /**
      * Free resources held in the instance, i.e. by releasing the Git repository resources held internally.
-     *
+     * <p>
      * The instance is not usable after this call any more.
      */
     @Override
@@ -735,12 +732,10 @@ public class JGitHelper implements Closeable {
      * Retrieve directory-entries based on a commit-id and a given directory in that commit.
      *
      * @param commit The commit-id to show the path as-of
-     * @param path The path underneath the commit-id to list
-     *
+     * @param path   The path underneath the commit-id to list
      * @return A list of file, directory and symlink elements underneath the given path
-     *
      * @throws IllegalStateException If the path or the commit cannot be found or does not denote a directory
-     * @throws IOException If access to the Git repository fails
+     * @throws IOException           If access to the Git repository fails
      * @throws FileNotFoundException If the given path cannot be found as part of the commit-id
      */
     public List<String> readElementsAt(String commit, String path) throws IOException {
@@ -753,27 +748,27 @@ public class JGitHelper implements Closeable {
         List<String> items = new ArrayList<>();
 
         // shortcut for root-path
-        if(path.isEmpty()) {
+        if (path.isEmpty()) {
             try (TreeWalk treeWalk = new TreeWalk(repository)) {
                 treeWalk.addTree(tree);
                 treeWalk.setRecursive(false);
                 treeWalk.setPostOrderTraversal(false);
 
-                while(treeWalk.next()) {
+                while (treeWalk.next()) {
                     items.add(treeWalk.getPathString());
                 }
             }
         } else {
             // now try to find a specific file
             try (TreeWalk treeWalk = buildTreeWalk(tree, path)) {
-                if((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_TREE) == 0) {
+                if ((treeWalk.getFileMode(0).getBits() & FileMode.TYPE_TREE) == 0) {
                     throw new IllegalStateException("Tried to read the elements of a non-tree for commit '" + commit + "' and path '" + path + "', had filemode " + treeWalk.getFileMode(0).getBits());
                 }
 
                 try (TreeWalk dirWalk = new TreeWalk(repository)) {
                     dirWalk.addTree(treeWalk.getObjectId(0));
                     dirWalk.setRecursive(false);
-                    while(dirWalk.next()) {
+                    while (dirWalk.next()) {
                         items.add(dirWalk.getPathString());
                     }
                 }

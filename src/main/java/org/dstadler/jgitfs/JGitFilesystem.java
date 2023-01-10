@@ -63,6 +63,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
      * static set of directories to handle them quickly in getattr().
      */
     private static final Set<String> DIRS = new HashSet<>();
+
     static {
         DIRS.add("/");
         DIRS.add("/branch");
@@ -79,6 +80,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
      * some apps, e.g. Nautilus on Gnome
      */
     private static final Set<String> IGNORED_DIRS = new HashSet<>();
+
     static {
         IGNORED_DIRS.add("/.hidden");
         IGNORED_DIRS.add("/.Trash");
@@ -88,7 +90,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
     /**
      * Construct the filesystem and create internal helpers.
      *
-     * @param gitDir The directory where the Git repository can be found.
+     * @param gitDir        The directory where the Git repository can be found.
      * @param enableLogging If fuse-jna should log details about file/directory accesses
      * @throws IOException If opening the Git repository fails.
      */
@@ -101,11 +103,10 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
         jgitHelper = new JGitHelper(gitDir);
 
         // open a separate JGitFilesystem for any submodule found in the Git repository
-        for(String subName : jgitHelper.allSubmodules()) {
+        for (String subName : jgitHelper.allSubmodules()) {
             String subPath = jgitHelper.getSubmodulePath(subName);
             System.out.println("Preparing submodule " + subName + " at " + subPath);
             try {
-                @SuppressWarnings("resource")
                 JGitFilesystem jgitFS = new JGitFilesystem(this, subPath, enableLogging);
                 jgitSubmodules.put(subName, jgitFS);
             } catch (IllegalArgumentException e) {
@@ -117,7 +118,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
     /**
      * Creates a JGitFilesystem for a Git submodule.
      *
-     * @param parent The JGitFilesystem for the parent Git repository.
+     * @param parent        The JGitFilesystem for the parent Git repository.
      * @param submodulePath The path in the parent Git repository where the submodule is mounted.
      * @param enableLogging If fuse-jna should log details about file/directory accesses
      * @throws IOException If opening the Git repository fails.
@@ -133,7 +134,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 
     @Override
     protected String getName() {
-        if(jgitHelper == null) {
+        if (jgitHelper == null) {
             return null;
         }
 
@@ -145,7 +146,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
         getattrStat.incrementAndGet();
 
         // known entries and directories beneath /commit are always directories
-        if(DIRS.contains(path) || GitUtils.isCommitSub(path) || GitUtils.isCommitDir(path) || GitUtils.isSubmoduleName(path)) {
+        if (DIRS.contains(path) || GitUtils.isCommitSub(path) || GitUtils.isCommitDir(path) || GitUtils.isSubmoduleName(path)) {
             stat.setMode(NodeType.DIRECTORY, true, false, true, true, false, true, false, false, false);
             return 0;
         } else if (GitUtils.isCommitSubDir(path)) {
@@ -168,7 +169,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
             return 0;
         } else if (GitUtils.isSubmodulePath(path)) {
             // delegate submodule-requests to the separate filesystem
-            Pair<String,String> sub = GitUtils.splitSubmodule(path);
+            Pair<String, String> sub = GitUtils.splitSubmodule(path);
 
             return jgitSubmodules.get(sub.getLeft()).getattr(sub.getRight(), stat);
         }
@@ -176,13 +177,13 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
         // all others are reported as "not found"
         // don't throw an exception here as we get requests for some files/directories, e.g. .hidden or .Trash
         boolean show = true;
-        for(String ignore : IGNORED_DIRS) {
-            if(path.endsWith(ignore)) {
+        for (String ignore : IGNORED_DIRS) {
+            if (path.endsWith(ignore)) {
                 show = false;
                 break;
             }
         }
-        if(show) {
+        if (show) {
             System.out.println("Had unknown path " + path + " in getattr()");
         }
         return -ErrorCodes.ENOENT();
@@ -194,7 +195,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 
         // delegate submodule-requests to the separate filesystem
         if (GitUtils.isSubmodulePath(path)) {
-            Pair<String,String> sub = GitUtils.splitSubmodule(path);
+            Pair<String, String> sub = GitUtils.splitSubmodule(path);
 
             return jgitSubmodules.get(sub.getLeft()).read(sub.getRight(), buffer, size, offset, info);
         }
@@ -207,10 +208,10 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
                 // skip until we are at the offset
                 IOUtils.skip(openFile, offset);
 
-                byte[] arr = new byte[(int)size];
-                int read = openFile.read(arr, 0, (int)size);
+                byte[] arr = new byte[(int) size];
+                int read = openFile.read(arr, 0, (int) size);
                 // -1 indicates EOF => nothing to put into the buffer
-                if(read == -1) {
+                if (read == -1) {
                     return 0;
                 }
 
@@ -227,7 +228,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
     public int readdir(final String path, final DirectoryFiller filler) {
         readdirStat.incrementAndGet();
 
-        if(path.equals("/")) {
+        if (path.equals("/")) {
             // populate top-level directory with all supported sub-directories
             filler.add("/branch");
             filler.add("/commit");
@@ -265,7 +266,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
             try {
                 // list all commits for the requested sub
                 Collection<String> items = jgitHelper.allCommits(sub);
-                for(String item : items) {
+                for (String item : items) {
                     filler.add(item.substring(2));
                 }
             } catch (Exception e) {
@@ -346,56 +347,57 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
      * A cache for symlinks from branches/tags to commits, this is useful as queries for symlinks
      * are done very often as each access to a file on a branch also requires the symlink to the
      * actual commit to be resolved. This cache greatly improves the speed of these accesses.
-     *
+     * <p>
      * This makes use of the Google Guava LoadingCache features to automatically populate
      * entries when they are missing which makes the usage of the cache very simple.
      */
     private final LoadingCache<String, byte[]> linkCache = CacheBuilder.newBuilder()
-               .maximumSize(1000)
-               .expireAfterWrite(1, TimeUnit.MINUTES)
-               .build(
-                   new CacheLoader<String, byte[]>() {
-                    @Override
-                    public byte[] load(@Nonnull String path) {
-                        try {
-                            final String commit;
-                            if(GitUtils.isBranchDir(path)) {
-                                commit = jgitHelper.getBranchHeadCommit(StringUtils.removeStart(path, GitUtils.BRANCH_SLASH));
-                            } else if (GitUtils.isTagDir(path)) {
-                                commit = jgitHelper.getTagHeadCommit(StringUtils.removeStart(path, GitUtils.TAG_SLASH));
-                            } else if(GitUtils.isRemoteDir(path)) {
-                                commit = jgitHelper.getRemoteHeadCommit(StringUtils.removeStart(path, GitUtils.REMOTE_SLASH));
-                            } else if(GitUtils.isStashDir(path)) {
-                                commit = jgitHelper.getStashHeadCommit(StringUtils.removeStart(path, GitUtils.STASH_SLASH));
-                            } else if(GitUtils.isStashOrigDir(path)) {
-                                commit = jgitHelper.getStashOrigCommit(StringUtils.removeStart(path, GitUtils.STASHORIG_SLASH));
-                            } else {
-                                String lCommit = jgitHelper.readCommit(path);
-                                String dir = jgitHelper.readPath(path);
+            .maximumSize(1000)
+            .expireAfterWrite(1, TimeUnit.MINUTES)
+            .build(
+                    new CacheLoader<>() {
+                        @Override
+                        @Nonnull
+                        public byte[] load(@Nonnull String path) {
+                            try {
+                                final String commit;
+                                if (GitUtils.isBranchDir(path)) {
+                                    commit = jgitHelper.getBranchHeadCommit(StringUtils.removeStart(path, GitUtils.BRANCH_SLASH));
+                                } else if (GitUtils.isTagDir(path)) {
+                                    commit = jgitHelper.getTagHeadCommit(StringUtils.removeStart(path, GitUtils.TAG_SLASH));
+                                } else if (GitUtils.isRemoteDir(path)) {
+                                    commit = jgitHelper.getRemoteHeadCommit(StringUtils.removeStart(path, GitUtils.REMOTE_SLASH));
+                                } else if (GitUtils.isStashDir(path)) {
+                                    commit = jgitHelper.getStashHeadCommit(StringUtils.removeStart(path, GitUtils.STASH_SLASH));
+                                } else if (GitUtils.isStashOrigDir(path)) {
+                                    commit = jgitHelper.getStashOrigCommit(StringUtils.removeStart(path, GitUtils.STASHORIG_SLASH));
+                                } else {
+                                    String lCommit = jgitHelper.readCommit(path);
+                                    String dir = jgitHelper.readPath(path);
 
-                                // for symlinks that are actually git-links for a submodule, we need to redirect back to the
-                                // separate submodule-folder with the correct submodule name filled in
-                                if(jgitHelper.isGitLink(lCommit, dir)) {
-                                    // TODO: does this still work with submodules in directories further down?
-                                    String subName = jgitHelper.getSubmoduleAt(dir);
-                                    String subHead = jgitHelper.getSubmoduleHead(subName);
-                                    return ("../../.." + GitUtils.SUBMODULE_SLASH + subName + GitUtils.COMMIT_SLASH +
-                                            subHead.substring(0,2) + "/" + subHead.substring(2)).getBytes();
+                                    // for symlinks that are actually git-links for a submodule, we need to redirect back to the
+                                    // separate submodule-folder with the correct submodule name filled in
+                                    if (jgitHelper.isGitLink(lCommit, dir)) {
+                                        // TODO: does this still work with submodules in directories further down?
+                                        String subName = jgitHelper.getSubmoduleAt(dir);
+                                        String subHead = jgitHelper.getSubmoduleHead(subName);
+                                        return ("../../.." + GitUtils.SUBMODULE_SLASH + subName + GitUtils.COMMIT_SLASH +
+                                                subHead.substring(0, 2) + "/" + subHead.substring(2)).getBytes();
+                                    }
+
+                                    return jgitHelper.readSymlink(lCommit, dir).getBytes();
                                 }
 
-                                return jgitHelper.readSymlink(lCommit, dir).getBytes();
-                            }
+                                if (commit == null) {
+                                    throw new FileNotFoundException("Had unknown tag/branch/remote " + path + " in readlink()");
+                                }
 
-                            if(commit == null) {
-                                throw new FileNotFoundException("Had unknown tag/branch/remote " + path + " in readlink()");
+                                return (".." + GitUtils.COMMIT_SLASH + commit.substring(0, 2) + "/" + commit.substring(2)).getBytes();
+                            } catch (Exception e) {
+                                throw new IllegalStateException("Error reading commit of tag/branch-path " + path, e);
                             }
-
-                            return (".." + GitUtils.COMMIT_SLASH + commit.substring(0, 2) + "/" + commit.substring(2)).getBytes();
-                        } catch (Exception e) {
-                            throw new IllegalStateException("Error reading commit of tag/branch-path " + path, e);
                         }
-                     }
-                   });
+                    });
 
     @Override
     public int readlink(String path, ByteBuffer buffer, long size) {
@@ -410,8 +412,8 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
 
         // ensure that we evict caches sometimes, Google Guava does not make guarantees that
         // eviction happens automatically in a mostly read-only cache
-        if(System.currentTimeMillis() > (lastLinkCacheCleanup + CACHE_TIMEOUT)) {
-            System.out.println("Perform manual cache maintenance for " + jgitHelper.toString() + " after " + ((System.currentTimeMillis() - lastLinkCacheCleanup)/1000) + " seconds");
+        if (System.currentTimeMillis() > (lastLinkCacheCleanup + CACHE_TIMEOUT)) {
+            System.out.println("Perform manual cache maintenance for " + jgitHelper.toString() + " after " + ((System.currentTimeMillis() - lastLinkCacheCleanup) / 1000) + " seconds");
             lastLinkCacheCleanup = System.currentTimeMillis();
             linkCache.cleanUp();
         }
@@ -420,8 +422,8 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
         byte[] linkTarget;
         try {
             linkTarget = linkCache.get(path);
-            if(linkTarget == null) {
-                 throw new IllegalStateException("Error reading commit of tag/branch-path " + path);
+            if (linkTarget == null) {
+                throw new IllegalStateException("Error reading commit of tag/branch-path " + path);
             }
 
             // buffer overflow checks are done by the calls to put() itself per javadoc,
@@ -432,7 +434,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
             // returning the size as per readlink(2) spec causes fuse errors: return cachedCommit.length;
             return 0;
         } catch (UncheckedExecutionException e) {
-            if(e.getCause().getCause() instanceof FileNotFoundException) {
+            if (e.getCause().getCause() instanceof FileNotFoundException) {
                 return -ErrorCodes.ENOENT();
             }
             throw new IllegalStateException("Error reading commit of tag/branch-path " + path, e);
@@ -449,13 +451,13 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
     @Override
     public void close() throws IOException {
         // also close any submodules that we found
-        for(Map.Entry<String, JGitFilesystem> entry : jgitSubmodules.entrySet()) {
+        for (Map.Entry<String, JGitFilesystem> entry : jgitSubmodules.entrySet()) {
             System.out.println("Closing submodule " + entry.getKey());
             entry.getValue().close();
         }
 
         jgitHelper.close();
-        if(isMounted()) {
+        if (isMounted()) {
             try {
                 unmount();
             } catch (FuseException e) {

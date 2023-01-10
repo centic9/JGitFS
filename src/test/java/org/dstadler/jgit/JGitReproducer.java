@@ -30,7 +30,7 @@ public class JGitReproducer {
     public void testSymlink() throws Exception {
         Assume.assumeFalse("Symbolic links do not work on Windows", SystemUtils.IS_OS_WINDOWS);
 
-        try(Repository repository = createNewRepository()) {
+        try (Repository repository = createNewRepository()) {
             commitSymbolicLink(repository);
 
             // get Commit
@@ -61,7 +61,7 @@ public class JGitReproducer {
     private TreeWalk buildTreeWalk(Repository repository, RevTree tree, @SuppressWarnings("SameParameterValue") final String path) throws IOException {
         TreeWalk treeWalk = TreeWalk.forPath(repository, path, tree);
 
-        if(treeWalk == null) {
+        if (treeWalk == null) {
             throw new FileNotFoundException("Did not find expected file '" + path + "' in tree '" + tree.getName() + "'");
         }
 
@@ -93,7 +93,7 @@ public class JGitReproducer {
     public static Repository createNewRepository() throws IOException {
         // prepare a new folder
         File localPath = File.createTempFile("TestGitRepository", "");
-        if(!localPath.delete()) {
+        if (!localPath.delete()) {
             throw new IOException("Could not delete temporary file " + localPath);
         }
 

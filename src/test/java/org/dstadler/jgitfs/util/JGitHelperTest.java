@@ -41,259 +41,259 @@ public class JGitHelperTest {
     public final static String DEFAULT_COMMIT = "ede9797616a805d6cbeca376bfbbac9a8b7eb64f";
     private static final String SYMLINK_COMMIT = "e81ba32d8d51cdd1463e9a0b704059bd8ccbfd19";
     private static final String GITLINK_COMMIT = "ca1767dc76fe104d0b94fb2a5c962c82121be3da";
-	private static final Charset CHARSET = StandardCharsets.UTF_8;
+    private static final Charset CHARSET = StandardCharsets.UTF_8;
 
-	private static boolean hasStashes = false;
+    private static boolean hasStashes = false;
 
-	private JGitHelper helper;
+    private JGitHelper helper;
 
-	@BeforeClass
-	public static void setUpClass() throws GitAPIException, IOException {
-		FileRepositoryBuilder builder = new FileRepositoryBuilder();
-		try (Repository repository = builder.setGitDir(new File(".git"))
-		  .readEnvironment() // scan environment GIT_* variables
-		  .findGitDir() // scan up the file system tree
-		  .build()) {
-			try (Git git = new Git(repository)) {
-				List<Ref> tags = git.tagList().call();
-				boolean found = false;
-				for(Ref ref : tags) {
-					if(ref.getName().equals("refs/tags/testtag")) {
-						found = true;
-						break;
-					}
-				}
-				if(!found) {
-					git.tag().setName("testtag").call();
-				}
+    @BeforeClass
+    public static void setUpClass() throws GitAPIException, IOException {
+        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+        try (Repository repository = builder.setGitDir(new File(".git"))
+                .readEnvironment() // scan environment GIT_* variables
+                .findGitDir() // scan up the file system tree
+                .build()) {
+            try (Git git = new Git(repository)) {
+                List<Ref> tags = git.tagList().call();
+                boolean found = false;
+                for (Ref ref : tags) {
+                    if (ref.getName().equals("refs/tags/testtag")) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    git.tag().setName("testtag").call();
+                }
 
-				hasStashes = !git.stashList().call().isEmpty();
-			}
-		}
-	}
+                hasStashes = !git.stashList().call().isEmpty();
+            }
+        }
+    }
 
-	@Before
-	public void setUp() throws IOException {
-		helper = new JGitHelper(".");
-	}
+    @Before
+    public void setUp() throws IOException {
+        helper = new JGitHelper(".");
+    }
 
-	@After
-	public void tearDown() {
-		helper.close();
-	}
+    @After
+    public void tearDown() {
+        helper.close();
+    }
 
-	@Test
-	public void test() throws Exception {
-		assertNotNull(helper);
-		assertTrue(helper.allCommits(null).size() > 0);
-	}
+    @Test
+    public void test() throws Exception {
+        assertNotNull(helper);
+        assertTrue(helper.allCommits(null).size() > 0);
+    }
 
-	@Test
-	public void testWithGitdir() throws Exception {
-		JGitHelper lhelper = new JGitHelper("./.git");
-		assertNotNull(lhelper);
-		assertTrue(lhelper.allCommits(null).size() > 0);
-		lhelper.close();
-	}
+    @Test
+    public void testWithGitdir() throws Exception {
+        JGitHelper lhelper = new JGitHelper("./.git");
+        assertNotNull(lhelper);
+        assertTrue(lhelper.allCommits(null).size() > 0);
+        lhelper.close();
+    }
 
-	@Test
-	public void testNotExistingDir() throws Exception {
-		try {
-			JGitHelper jGitHelper = new JGitHelper("notexisting");
-			jGitHelper.close();
-			fail("Should catch exception here");
-		} catch (IllegalStateException e) {
-			assertTrue(e.getMessage().contains("notexisting"));
-		}
-	}
+    @Test
+    public void testNotExistingDir() throws Exception {
+        try {
+            JGitHelper jGitHelper = new JGitHelper("notexisting");
+            jGitHelper.close();
+            fail("Should catch exception here");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("notexisting"));
+        }
+    }
 
-	@Test
-	public void testReadCommit() {
-		assertEquals("abcd", helper.readCommit("abcd"));
-		assertEquals("abcd", helper.readCommit("/commit/ab/cd"));
-		assertEquals("1234567890123456789012345678901234567890", helper.readCommit("/commit/12/345678901234567890123456789012345678901234567890"));
-	}
+    @Test
+    public void testReadCommit() {
+        assertEquals("abcd", helper.readCommit("abcd"));
+        assertEquals("abcd", helper.readCommit("/commit/ab/cd"));
+        assertEquals("1234567890123456789012345678901234567890", helper.readCommit("/commit/12/345678901234567890123456789012345678901234567890"));
+    }
 
-	@Test
-	public void testReadPath() {
-		assertEquals("", helper.readPath("abcd"));
-		assertEquals("", helper.readPath("/commit/ab/cd"));
-		assertEquals("blabla", helper.readPath("/commit/12/34567890123456789012345678901234567890/blabla"));
-	}
+    @Test
+    public void testReadPath() {
+        assertEquals("", helper.readPath("abcd"));
+        assertEquals("", helper.readPath("/commit/ab/cd"));
+        assertEquals("blabla", helper.readPath("/commit/12/34567890123456789012345678901234567890/blabla"));
+    }
 
-	@Test
-	public void testReadType() throws Exception {
-		final StatWrapper wrapper = getStatsWrapper();
-		assertNotNull(wrapper);
+    @Test
+    public void testReadType() throws Exception {
+        final StatWrapper wrapper = getStatsWrapper();
+        assertNotNull(wrapper);
 
-		System.out.println("Had commit: " + DEFAULT_COMMIT);
-		helper.readType(DEFAULT_COMMIT, "src", wrapper);
-		assertEquals(NodeType.DIRECTORY, wrapper.type());
+        System.out.println("Had commit: " + DEFAULT_COMMIT);
+        helper.readType(DEFAULT_COMMIT, "src", wrapper);
+        assertEquals(NodeType.DIRECTORY, wrapper.type());
 
-		helper.readType(DEFAULT_COMMIT, "src/main/java/org", wrapper);
-		assertEquals(NodeType.DIRECTORY, wrapper.type());
+        helper.readType(DEFAULT_COMMIT, "src/main/java/org", wrapper);
+        assertEquals(NodeType.DIRECTORY, wrapper.type());
 
-		helper.readType(DEFAULT_COMMIT, "README.md", wrapper);
-		assertEquals(NodeType.FILE, wrapper.type());
-		assertEquals(0, (wrapper.mode() & TypeMode.S_IXUSR));
-		assertEquals(0, (wrapper.mode() & TypeMode.S_IXGRP));
-		assertEquals(0, (wrapper.mode() & TypeMode.S_IXOTH));
+        helper.readType(DEFAULT_COMMIT, "README.md", wrapper);
+        assertEquals(NodeType.FILE, wrapper.type());
+        assertEquals(0, (wrapper.mode() & TypeMode.S_IXUSR));
+        assertEquals(0, (wrapper.mode() & TypeMode.S_IXGRP));
+        assertEquals(0, (wrapper.mode() & TypeMode.S_IXOTH));
 
-		helper.readType(DEFAULT_COMMIT, "src/main/java/org/dstadler/jgitfs/JGitFS.java", wrapper);
-		assertEquals(NodeType.FILE, wrapper.type());
-		assertEquals(0, (wrapper.mode() & TypeMode.S_IXUSR));
-		assertEquals(0, (wrapper.mode() & TypeMode.S_IXGRP));
-		assertEquals(0, (wrapper.mode() & TypeMode.S_IXOTH));
+        helper.readType(DEFAULT_COMMIT, "src/main/java/org/dstadler/jgitfs/JGitFS.java", wrapper);
+        assertEquals(NodeType.FILE, wrapper.type());
+        assertEquals(0, (wrapper.mode() & TypeMode.S_IXUSR));
+        assertEquals(0, (wrapper.mode() & TypeMode.S_IXGRP));
+        assertEquals(0, (wrapper.mode() & TypeMode.S_IXOTH));
 
-		// need a newer commit for gitlink/symlink
-		helper.readType(SYMLINK_COMMIT, "src/test/data/symlink", wrapper);
-		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
-		helper.readType(SYMLINK_COMMIT, "src/test/data/rellink", wrapper);
-		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
-		helper.readType(GITLINK_COMMIT, "fuse-jna", wrapper);
-		assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
-	}
+        // need a newer commit for gitlink/symlink
+        helper.readType(SYMLINK_COMMIT, "src/test/data/symlink", wrapper);
+        assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
+        helper.readType(SYMLINK_COMMIT, "src/test/data/rellink", wrapper);
+        assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
+        helper.readType(GITLINK_COMMIT, "fuse-jna", wrapper);
+        assertEquals(NodeType.SYMBOLIC_LINK, wrapper.type());
+    }
 
-	@Test
-	public void testReadTypeFails() throws Exception {
-		final StatWrapper wrapper = getStatsWrapper();
-		try {
-			assertNotNull(wrapper);
-			helper.readType(DEFAULT_COMMIT, "notexisting", wrapper);
-			fail("Should catch exception here");
-		} catch (FileNotFoundException e) {
-			assertTrue(e.getMessage().contains("notexisting"));
-		}
-	}
+    @Test
+    public void testReadTypeFails() throws Exception {
+        final StatWrapper wrapper = getStatsWrapper();
+        try {
+            assertNotNull(wrapper);
+            helper.readType(DEFAULT_COMMIT, "notexisting", wrapper);
+            fail("Should catch exception here");
+        } catch (FileNotFoundException e) {
+            assertTrue(e.getMessage().contains("notexisting"));
+        }
+    }
 
-	@Test
-	public void testReadTypeExecutable() throws Exception {
-		final StatWrapper wrapper = getStatsWrapper();
-		assertNotNull(wrapper);
+    @Test
+    public void testReadTypeExecutable() throws Exception {
+        final StatWrapper wrapper = getStatsWrapper();
+        assertNotNull(wrapper);
 
-		// Look at a specific older commit to have an executable file
-		helper.readType("355ea52f1e38b1c8e6537c093332180918808b68", "run.sh", wrapper);
-		assertEquals(NodeType.FILE, wrapper.type());
-		assertTrue((wrapper.mode() & TypeMode.S_IXUSR) != 0);
-		assertTrue((wrapper.mode() & TypeMode.S_IXGRP) != 0);
-		assertEquals(0, (wrapper.mode() & TypeMode.S_IXOTH));
-	}
+        // Look at a specific older commit to have an executable file
+        helper.readType("355ea52f1e38b1c8e6537c093332180918808b68", "run.sh", wrapper);
+        assertEquals(NodeType.FILE, wrapper.type());
+        assertTrue((wrapper.mode() & TypeMode.S_IXUSR) != 0);
+        assertTrue((wrapper.mode() & TypeMode.S_IXGRP) != 0);
+        assertEquals(0, (wrapper.mode() & TypeMode.S_IXOTH));
+    }
 
-	@Test
-	public void testOpenFile() throws Exception {
-		System.out.println("Had commit: " + DEFAULT_COMMIT);
-		String runSh = IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "README.md"), CHARSET);
-		assertTrue("Had: " + runSh, StringUtils.isNotEmpty(runSh));
-	}
+    @Test
+    public void testOpenFile() throws Exception {
+        System.out.println("Had commit: " + DEFAULT_COMMIT);
+        String runSh = IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "README.md"), CHARSET);
+        assertTrue("Had: " + runSh, StringUtils.isNotEmpty(runSh));
+    }
 
-	@Test
-	public void testOpenFileFails() throws Exception {
-		try {
-			assertNotNull(IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "src"), CHARSET));
-			fail("Should catch exception here");
-		} catch (IllegalStateException e) {
-			assertTrue(e.getMessage().contains("src"));
-		}
+    @Test
+    public void testOpenFileFails() throws Exception {
+        try {
+            assertNotNull(IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "src"), CHARSET));
+            fail("Should catch exception here");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("src"));
+        }
 
-		try {
-			assertNotNull(IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "src/org"), CHARSET));
-			fail("Should catch exception here");
-		} catch (FileNotFoundException e) {
-			assertTrue(e.getMessage().contains("src/org"));
-		}
+        try {
+            assertNotNull(IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "src/org"), CHARSET));
+            fail("Should catch exception here");
+        } catch (FileNotFoundException e) {
+            assertTrue(e.getMessage().contains("src/org"));
+        }
 
-		try {
-			assertNotNull(IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "notexisting"), CHARSET));
-			fail("Should catch exception here");
-		} catch (FileNotFoundException e) {
-			assertTrue(e.getMessage().contains("notexisting"));
-		}
-	}
+        try {
+            assertNotNull(IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "notexisting"), CHARSET));
+            fail("Should catch exception here");
+        } catch (FileNotFoundException e) {
+            assertTrue(e.getMessage().contains("notexisting"));
+        }
+    }
 
-	@Test
-	public void testReadElementsAt() throws Exception {
-		System.out.println("Had commit: " + DEFAULT_COMMIT);
-		assertEquals("[main, test]", helper.readElementsAt(DEFAULT_COMMIT, "src").toString());
-		assertEquals("[dstadler]", helper.readElementsAt(DEFAULT_COMMIT, "src/main/java/org").toString());
+    @Test
+    public void testReadElementsAt() throws Exception {
+        System.out.println("Had commit: " + DEFAULT_COMMIT);
+        assertEquals("[main, test]", helper.readElementsAt(DEFAULT_COMMIT, "src").toString());
+        assertEquals("[dstadler]", helper.readElementsAt(DEFAULT_COMMIT, "src/main/java/org").toString());
 
-		String list = helper.readElementsAt(DEFAULT_COMMIT, "").toString();
-		assertTrue("Had: " + list, list.contains("src"));
-		assertTrue("Had: " + list, list.contains("README.md"));
-		assertTrue("Had: " + list, list.contains("build.gradle"));
-	}
+        String list = helper.readElementsAt(DEFAULT_COMMIT, "").toString();
+        assertTrue("Had: " + list, list.contains("src"));
+        assertTrue("Had: " + list, list.contains("README.md"));
+        assertTrue("Had: " + list, list.contains("build.gradle"));
+    }
 
-	@Test
-	public void testReadElementsAtFails() throws Exception {
-		try {
-			helper.readElementsAt(DEFAULT_COMMIT, "run.sh");
-			fail("Should catch exception here");
-		} catch (FileNotFoundException e) {
-			assertTrue(e.getMessage().contains("run.sh"));
-		}
+    @Test
+    public void testReadElementsAtFails() throws Exception {
+        try {
+            helper.readElementsAt(DEFAULT_COMMIT, "run.sh");
+            fail("Should catch exception here");
+        } catch (FileNotFoundException e) {
+            assertTrue(e.getMessage().contains("run.sh"));
+        }
 
-		try {
-			helper.readElementsAt(DEFAULT_COMMIT, "README.md");
-			fail("Should catch exception here");
-		} catch (IllegalStateException e) {
-			assertTrue(e.getMessage().contains("README.md"));
-		}
+        try {
+            helper.readElementsAt(DEFAULT_COMMIT, "README.md");
+            fail("Should catch exception here");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("README.md"));
+        }
 
-		try {
-			helper.readElementsAt(DEFAULT_COMMIT, "notexisting");
-			fail("Should catch exception here");
-		} catch (FileNotFoundException e) {
-			assertTrue(e.getMessage().contains("notexisting"));
-		}
-	}
+        try {
+            helper.readElementsAt(DEFAULT_COMMIT, "notexisting");
+            fail("Should catch exception here");
+        } catch (FileNotFoundException e) {
+            assertTrue(e.getMessage().contains("notexisting"));
+        }
+    }
 
-	@Test
-	public void testGetBranchHeadCommit() throws IOException {
-		assertNull(helper.getBranchHeadCommit("somebranch"));
-		assertNotNull(helper.getBranchHeadCommit("master"));
-		assertNotNull(helper.getBranchHeadCommit("refs_heads_master"));
-	}
+    @Test
+    public void testGetBranchHeadCommit() throws IOException {
+        assertNull(helper.getBranchHeadCommit("somebranch"));
+        assertNotNull(helper.getBranchHeadCommit("master"));
+        assertNotNull(helper.getBranchHeadCommit("refs_heads_master"));
+    }
 
-	@Test
-	public void testGetRemoteHeadCommit() throws IOException {
-		assertNull(helper.getRemoteHeadCommit("somebranch"));
-		assertNotNull(helper.getRemoteHeadCommit("origin_master"));
-		assertNotNull(helper.getRemoteHeadCommit("refs_remotes_origin_master"));
-	}
+    @Test
+    public void testGetRemoteHeadCommit() throws IOException {
+        assertNull(helper.getRemoteHeadCommit("somebranch"));
+        assertNotNull(helper.getRemoteHeadCommit("origin_master"));
+        assertNotNull(helper.getRemoteHeadCommit("refs_remotes_origin_master"));
+    }
 
-	@Test
-	public void testGetBranches() throws IOException {
-		List<String> branches = helper.getBranches();
-		assertTrue(branches.size() > 0);
-		assertTrue("Had: " + branches.toString(), branches.contains("master"));
-		assertTrue("Had: " + branches.toString(), branches.contains("refs_heads_master"));
-	}
+    @Test
+    public void testGetBranches() throws IOException {
+        List<String> branches = helper.getBranches();
+        assertTrue(branches.size() > 0);
+        assertTrue("Had: " + branches.toString(), branches.contains("master"));
+        assertTrue("Had: " + branches.toString(), branches.contains("refs_heads_master"));
+    }
 
-	@Test
-	public void testGetRemotes() throws IOException {
-		List<String> remotes = helper.getRemotes();
-		assertTrue(remotes.size() > 0);
-		assertTrue("Had: " + remotes.toString(), remotes.contains("origin_master"));
-		assertTrue("Had: " + remotes.toString(), remotes.contains("refs_remotes_origin_master"));
-	}
+    @Test
+    public void testGetRemotes() throws IOException {
+        List<String> remotes = helper.getRemotes();
+        assertTrue(remotes.size() > 0);
+        assertTrue("Had: " + remotes.toString(), remotes.contains("origin_master"));
+        assertTrue("Had: " + remotes.toString(), remotes.contains("refs_remotes_origin_master"));
+    }
 
-	@Test
-	public void testGetTagHead() throws IOException {
-		assertNull(helper.getTagHeadCommit("sometag"));
-		assertNotNull(helper.getTagHeadCommit("testtag"));
-		assertNotNull(helper.getTagHeadCommit("refs_tags_testtag"));
-	}
+    @Test
+    public void testGetTagHead() throws IOException {
+        assertNull(helper.getTagHeadCommit("sometag"));
+        assertNotNull(helper.getTagHeadCommit("testtag"));
+        assertNotNull(helper.getTagHeadCommit("refs_tags_testtag"));
+    }
 
-	@Test
-	public void testGetTags() throws IOException {
-		List<String> tags = helper.getTags();
-		assertTrue(tags.size() > 0);
-		assertTrue("Had: " + tags.toString(), tags.contains("testtag"));
-		assertTrue("Had: " + tags.toString(), tags.contains("refs_tags_testtag"));
-	}
+    @Test
+    public void testGetTags() throws IOException {
+        List<String> tags = helper.getTags();
+        assertTrue(tags.size() > 0);
+        assertTrue("Had: " + tags.toString(), tags.contains("testtag"));
+        assertTrue("Had: " + tags.toString(), tags.contains("refs_tags_testtag"));
+    }
 
-	@Test
+    @Test
     public void testGetStashHeadCommit() throws IOException {
-    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+        Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
 
         assertNull(helper.getStashHeadCommit("somestash"));
         assertNotNull(helper.getStashHeadCommit("stash@{0}"));
@@ -301,7 +301,7 @@ public class JGitHelperTest {
 
     @Test
     public void testGetStashOrigCommit() throws IOException {
-    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+        Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
 
         assertNull(helper.getStashOrigCommit("somestash"));
         assertNotNull(helper.getStashOrigCommit("stash@{0}"));
@@ -309,184 +309,184 @@ public class JGitHelperTest {
 
     @Test
     public void testGetStashes() throws IOException {
-    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+        Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
 
         List<String> stashes = helper.getStashes();
         assertTrue(stashes.size() > 0);
         assertTrue("Had: " + stashes.toString(), stashes.contains("stash@{0}"));
     }
 
-	@Test
-	public void testallCommitsNull() throws IOException {
-		Collection<String> allCommits = helper.allCommits(null);
-		int size = allCommits.size();
-		assertTrue("Had size: " + size, size > 3);
-		assertTrue(allCommits.contains(DEFAULT_COMMIT));
-	}
+    @Test
+    public void testallCommitsNull() throws IOException {
+        Collection<String> allCommits = helper.allCommits(null);
+        int size = allCommits.size();
+        assertTrue("Had size: " + size, size > 3);
+        assertTrue(allCommits.contains(DEFAULT_COMMIT));
+    }
 
-	@Test
-	public void testallCommits() throws IOException {
-		int size = helper.allCommits("zz").size();
-		assertEquals("Had size: " + size, 0, size);
+    @Test
+    public void testallCommits() throws IOException {
+        int size = helper.allCommits("zz").size();
+        assertEquals("Had size: " + size, 0, size);
 
-		Collection<String> allCommits = helper.allCommits(null);
-		assertTrue(allCommits.size() > 0);
-		assertTrue(allCommits.contains(DEFAULT_COMMIT));
+        Collection<String> allCommits = helper.allCommits(null);
+        assertTrue(allCommits.size() > 0);
+        assertTrue(allCommits.contains(DEFAULT_COMMIT));
 
-		allCommits = helper.allCommits(allCommits.iterator().next().substring(0, 2));
-		assertTrue(allCommits.size() > 0);
+        allCommits = helper.allCommits(allCommits.iterator().next().substring(0, 2));
+        assertTrue(allCommits.size() > 0);
 
-		allCommits = helper.allCommits("00");
-		assertFalse(allCommits.contains(DEFAULT_COMMIT));
+        allCommits = helper.allCommits("00");
+        assertFalse(allCommits.contains(DEFAULT_COMMIT));
 
-		allCommits = helper.allCommits(DEFAULT_COMMIT.substring(0,2));
-		assertTrue(allCommits.contains(DEFAULT_COMMIT));
-	}
+        allCommits = helper.allCommits(DEFAULT_COMMIT.substring(0, 2));
+        assertTrue(allCommits.contains(DEFAULT_COMMIT));
+    }
 
-	@Test
-	public void testAllCommitSubs() throws IOException {
-		Collection<String> subs = helper.allCommitSubs();
-		int subSize = subs.size();
-		assertTrue("Had: " + subs, subSize > 3);
+    @Test
+    public void testAllCommitSubs() throws IOException {
+        Collection<String> subs = helper.allCommitSubs();
+        int subSize = subs.size();
+        assertTrue("Had: " + subs, subSize > 3);
 
-		for(String tup : subs) {
-			assertEquals("Had: " + tup, 2, tup.length());
-			assertTrue("Had: " + tup, tup.matches("[a-f0-9]{2}"));
-		}
+        for (String tup : subs) {
+            assertEquals("Had: " + tup, 2, tup.length());
+            assertTrue("Had: " + tup, tup.matches("[a-f0-9]{2}"));
+        }
 
-		assertTrue(subs.contains(DEFAULT_COMMIT.substring(0,2)));
-	}
+        assertTrue(subs.contains(DEFAULT_COMMIT.substring(0, 2)));
+    }
 
-	@Ignore("local test")
-	@Test
-	public void testAllCommitSubsJenkins() throws IOException {
-		helper.close();
-		helper = new JGitHelper("/opt/jenkins/jenkins.git/.git");
-		//helper = new JGitHelper("G:\\workspaces\\linux\\.git");
+    @Ignore("local test")
+    @Test
+    public void testAllCommitSubsJenkins() throws IOException {
+        helper.close();
+        helper = new JGitHelper("/opt/jenkins/jenkins.git/.git");
+        //helper = new JGitHelper("G:\\workspaces\\linux\\.git");
 
-		runAllCommitSubs();
-	}
+        runAllCommitSubs();
+    }
 
-	@Ignore("local test")
-	@Test
-	public void testAllCommitSubsPOI() throws IOException {
-		helper.close();
-		helper = new JGitHelper("/opt/poi/.git");
+    @Ignore("local test")
+    @Test
+    public void testAllCommitSubsPOI() throws IOException {
+        helper.close();
+        helper = new JGitHelper("/opt/poi/.git");
 
-		runAllCommitSubs();
-	}
+        runAllCommitSubs();
+    }
 
-	private void runAllCommitSubs() throws IOException {
-		System.out.println("warmup");
-		for(int i = 0;i < 3;i++) {
-			int size = helper.allCommitSubs().size();
-			assertTrue("Had size: " + size, size > 3);
-			System.out.print("." + size);
-		}
+    private void runAllCommitSubs() throws IOException {
+        System.out.println("warmup");
+        for (int i = 0; i < 3; i++) {
+            int size = helper.allCommitSubs().size();
+            assertTrue("Had size: " + size, size > 3);
+            System.out.print("." + size);
+        }
 
-		System.out.println("\nrun");
-		long start = System.currentTimeMillis();
-		for(int i = 0;i < 10;i++) {
-			int size = helper.allCommitSubs().size();
-			assertTrue("Had size: " + size, size > 3);
-			System.out.print("." + size);
-		}
-		System.out.println("avg.time: " + (System.currentTimeMillis() - start)/10);
-	}
+        System.out.println("\nrun");
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < 10; i++) {
+            int size = helper.allCommitSubs().size();
+            assertTrue("Had size: " + size, size > 3);
+            System.out.print("." + size);
+        }
+        System.out.println("avg.time: " + (System.currentTimeMillis() - start) / 10);
+    }
 
-	@Ignore("local test")
-	@Test
-	public void testAllCommitsJenkins() throws IOException {
-		helper.close();
-		helper = new JGitHelper("/opt/jenkins/jenkins.git/.git");
-		//helper = new JGitHelper("G:\\workspaces\\linux\\.git");
+    @Ignore("local test")
+    @Test
+    public void testAllCommitsJenkins() throws IOException {
+        helper.close();
+        helper = new JGitHelper("/opt/jenkins/jenkins.git/.git");
+        //helper = new JGitHelper("G:\\workspaces\\linux\\.git");
 
-		runAllCommits();
-	}
+        runAllCommits();
+    }
 
-	@Ignore("local test")
-	@Test
-	public void testAllCommitsPOI() throws IOException {
-		helper.close();
-		helper = new JGitHelper("/opt/poi/.git");
+    @Ignore("local test")
+    @Test
+    public void testAllCommitsPOI() throws IOException {
+        helper.close();
+        helper = new JGitHelper("/opt/poi/.git");
 
-		runAllCommits();
-	}
+        runAllCommits();
+    }
 
-	private void runAllCommits() throws IOException {
-		long start;
+    private void runAllCommits() throws IOException {
+        long start;
 
-		System.out.println("warmup");
-		for(int i = 0;i < 3;i++) {
-			start = System.currentTimeMillis();
-			int size = helper.allCommits(null).size();
-			assertTrue("Had size: " + size, size > 3);
-			System.out.print("." + size + ": " + (System.currentTimeMillis() - start));
-		}
+        System.out.println("warmup");
+        for (int i = 0; i < 3; i++) {
+            start = System.currentTimeMillis();
+            int size = helper.allCommits(null).size();
+            assertTrue("Had size: " + size, size > 3);
+            System.out.print("." + size + ": " + (System.currentTimeMillis() - start));
+        }
 
-		System.out.println("\nrun");
-		start = System.currentTimeMillis();
-		for(int i = 0;i < 10;i++) {
-			int size = helper.allCommits(null).size();
-			assertTrue("Had size: " + size, size > 3);
-			System.out.print("." + size);
-		}
-		System.out.println("avg.time: " + (System.currentTimeMillis() - start)/10);
-	}
+        System.out.println("\nrun");
+        start = System.currentTimeMillis();
+        for (int i = 0; i < 10; i++) {
+            int size = helper.allCommits(null).size();
+            assertTrue("Had size: " + size, size > 3);
+            System.out.print("." + size);
+        }
+        System.out.println("avg.time: " + (System.currentTimeMillis() - start) / 10);
+    }
 
-	@Ignore("local test")
-	@Test
-	public void testSubversionEmptyFile() throws Exception {
-		JGitHelper jgitHelper = new JGitHelper("/opt/Subversion/git");
-		List<String> items = jgitHelper.getBranches();
-		assertNotNull(items);
-		assertTrue(items.contains("ppa_1.7.11"));
+    @Ignore("local test")
+    @Test
+    public void testSubversionEmptyFile() throws Exception {
+        JGitHelper jgitHelper = new JGitHelper("/opt/Subversion/git");
+        List<String> items = jgitHelper.getBranches();
+        assertNotNull(items);
+        assertTrue(items.contains("ppa_1.7.11"));
 
-		String commit = jgitHelper.getBranchHeadCommit("ppa_1.7.11");
-		assertNotNull(commit);
+        String commit = jgitHelper.getBranchHeadCommit("ppa_1.7.11");
+        assertNotNull(commit);
 
-		items = jgitHelper.readElementsAt(commit, "");
-		assertNotNull(items);
-		assertTrue(items.size() > 0);
+        items = jgitHelper.readElementsAt(commit, "");
+        assertNotNull(items);
+        assertTrue(items.size() > 0);
 
-		//subversion/branch/ppa_1.7.11/build/generator/__init__.py
+        //subversion/branch/ppa_1.7.11/build/generator/__init__.py
 
-		items = jgitHelper.readElementsAt(commit, "build");
-		assertNotNull(items);
-		assertTrue(items.size() > 0);
+        items = jgitHelper.readElementsAt(commit, "build");
+        assertNotNull(items);
+        assertTrue(items.size() > 0);
 
-		items = jgitHelper.readElementsAt(commit, "build/generator");
-		assertNotNull(items);
-		assertTrue(items.size() > 0);
-		assertTrue("Had: " + items, items.contains("__init__.py"));
+        items = jgitHelper.readElementsAt(commit, "build/generator");
+        assertNotNull(items);
+        assertTrue(items.size() > 0);
+        assertTrue("Had: " + items, items.contains("__init__.py"));
 
-		try (InputStream openFile = jgitHelper.openFile(commit, "build/generator/__init__.py")) {
-			String string = IOUtils.toString(openFile, CHARSET);
-			System.out.println("Having " + string.length() + " bytes: \n" + string);
-		}
+        try (InputStream openFile = jgitHelper.openFile(commit, "build/generator/__init__.py")) {
+            String string = IOUtils.toString(openFile, CHARSET);
+            System.out.println("Having " + string.length() + " bytes: \n" + string);
+        }
 
-		try (InputStream openFile = jgitHelper.openFile(commit, "build/generator/__init__.py")) {
-			// skip until we are at the offset
-			assertEquals(0, openFile.skip(0));
+        try (InputStream openFile = jgitHelper.openFile(commit, "build/generator/__init__.py")) {
+            // skip until we are at the offset
+            assertEquals(0, openFile.skip(0));
 
-			byte[] arr = new byte[4096];
-			int read = openFile.read(arr, 0, 4096);
-			System.out.println("Had: " + read);
-		}
+            byte[] arr = new byte[4096];
+            int read = openFile.read(arr, 0, 4096);
+            System.out.println("Had: " + read);
+        }
 
-		jgitHelper.close();
-	}
+        jgitHelper.close();
+    }
 
-	@Test
-	public void testWithTestdata() throws IOException {
-		String commit = helper.getBranchHeadCommit("master");
-		checkCommitContents(commit);
-	}
+    @Test
+    public void testWithTestdata() throws IOException {
+        String commit = helper.getBranchHeadCommit("master");
+        checkCommitContents(commit);
+    }
 
 
     @Test
     public void testStashWithTestData() throws IOException {
-    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+        Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
 
         String commit = helper.getStashHeadCommit("stash@{0}");
         checkCommitContents(commit);
@@ -494,7 +494,7 @@ public class JGitHelperTest {
 
     @Test
     public void testStashOrigWithTestData() throws IOException {
-    	Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+        Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
 
         String commit = helper.getStashOrigCommit("stash@{0}");
         checkCommitContents(commit);
@@ -513,7 +513,7 @@ public class JGitHelperTest {
 
         // check type of files
         final StatWrapper wrapper = getStatsWrapper();
-		assertNotNull(wrapper);
+        assertNotNull(wrapper);
 
         helper.readType(commit, "src/test/data", wrapper);
         assertEquals(NodeType.DIRECTORY, wrapper.type());
@@ -532,16 +532,16 @@ public class JGitHelperTest {
         }
 
         // check that the file has the correct content
-		try (InputStream stream = helper.openFile(commit, "src/test/data/one")) {
+        try (InputStream stream = helper.openFile(commit, "src/test/data/one")) {
             assertEquals("1", IOUtils.toString(stream, CHARSET).trim());
         }
 
         // check that we can read the symlink
-		try (InputStream stream = helper.openFile(commit, "src/test/data/symlink")) {
+        try (InputStream stream = helper.openFile(commit, "src/test/data/symlink")) {
             assertEquals("Should be 'one' as it contains the filename of the file pointed to!",
                     "one", IOUtils.toString(stream, CHARSET).trim());
         }
-		try (InputStream stream = helper.openFile(commit, "src/test/data/rellink")) {
+        try (InputStream stream = helper.openFile(commit, "src/test/data/rellink")) {
             assertEquals("Should be '../../../build.gradle' as it contains the filename of the file pointed to!",
                     "../../../build.gradle", IOUtils.toString(stream, CHARSET).trim());
         }
@@ -563,13 +563,13 @@ public class JGitHelperTest {
         }
     }
 
-	@Test
+    @Test
     public void testToString() {
         // toString should not return null
         assertNotNull("A derived toString() should not return null!", helper.toString());
 
         // toString should not return an empty string
-		assertNotEquals("A derived toString() should not return an empty string!", "", helper.toString());
+        assertNotEquals("A derived toString() should not return an empty string!", "", helper.toString());
 
         // check that calling it multiple times leads to the same value
         String value = helper.toString();
@@ -580,12 +580,12 @@ public class JGitHelperTest {
 
     }
 
-	@Test
+    @Test
     public void testReadSymlink() throws Exception {
-	    String link = helper.readSymlink(SYMLINK_COMMIT, "src/test/data/symlink");
-	    assertEquals("one", link);
+        String link = helper.readSymlink(SYMLINK_COMMIT, "src/test/data/symlink");
+        assertEquals("one", link);
 
-	    link = helper.readSymlink(SYMLINK_COMMIT, "src/test/data/rellink");
+        link = helper.readSymlink(SYMLINK_COMMIT, "src/test/data/rellink");
         assertEquals("../../../build.gradle", link);
 
         // TODO: add full support for Submodules
@@ -593,9 +593,9 @@ public class JGitHelperTest {
             link = helper.readSymlink(GITLINK_COMMIT, "fuse-jna");
             assertNotNull(link);
             assertEquals("one", link);
-		} catch (@SuppressWarnings("unused") UnsupportedOperationException e) {
-			// expected for now...
-		}
+        } catch (@SuppressWarnings("unused") UnsupportedOperationException e) {
+            // expected for now...
+        }
 
         try {
             helper.readSymlink(DEFAULT_COMMIT, "build.gradle");
@@ -606,11 +606,11 @@ public class JGitHelperTest {
         }
     }
 
-	@Test
-	public void testIsGitLink() throws IOException {
-	    assertFalse(helper.isGitLink(DEFAULT_COMMIT, "build.gradle"));
-	    assertTrue(helper.isGitLink(GITLINK_COMMIT, "fuse-jna"));
-	}
+    @Test
+    public void testIsGitLink() throws IOException {
+        assertFalse(helper.isGitLink(DEFAULT_COMMIT, "build.gradle"));
+        assertTrue(helper.isGitLink(GITLINK_COMMIT, "fuse-jna"));
+    }
 
     @Test
     public void testGetSubmodulesBareRepository() throws Exception {
@@ -621,13 +621,13 @@ public class JGitHelperTest {
             System.out.println("Cloning to " + localPath);
 
             Git result = Git.cloneRepository()
-            .setURI(new File(".").toURI().toURL().toString())
-            .setBare(true)
-            .setDirectory(new File(localPath, ".git"))
-            .call();
+                    .setURI(new File(".").toURI().toURL().toString())
+                    .setBare(true)
+                    .setDirectory(new File(localPath, ".git"))
+                    .call();
 
             try {
-	            System.out.println("Cloned to " + localPath + ", result: " + result.getRepository().getDirectory());
+                System.out.println("Cloned to " + localPath + ", result: " + result.getRepository().getDirectory());
 
                 assertTrue(result.getRepository().isBare());
 
@@ -638,10 +638,10 @@ public class JGitHelperTest {
                 // workaround for https://bugs.eclipse.org/bugs/show_bug.cgi?id=474093
                 result.getRepository().close();
 
-            	result.close();
+                result.close();
             }
         } finally {
-			FileUtils.deleteDirectory(localPath);
+            FileUtils.deleteDirectory(localPath);
         }
     }
 
@@ -653,9 +653,9 @@ public class JGitHelperTest {
         try {
             System.out.println("Cloning to " + localPath);
             Git result = Git.cloneRepository()
-            .setURI("https://github.com/centic9/jgit-cookbook.git")
-            .setDirectory(new File(localPath, ".git"))
-            .call();
+                    .setURI("https://github.com/centic9/jgit-cookbook.git")
+                    .setDirectory(new File(localPath, ".git"))
+                    .call();
 
             // workaround for https://bugs.eclipse.org/bugs/show_bug.cgi?id=474093
             result.getRepository().close();
@@ -664,7 +664,7 @@ public class JGitHelperTest {
 
             System.out.println("Cloned to " + localPath + ", now opening repository");
         } finally {
-			FileUtils.deleteDirectory(localPath);
+            FileUtils.deleteDirectory(localPath);
         }
     }
 
@@ -685,25 +685,25 @@ public class JGitHelperTest {
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
 
         try (Repository repository = builder.setGitDir(new File("./.git"))
-          .readEnvironment() // scan environment GIT_* variables
-          .findGitDir() // scan up the file system tree
-          .build()) {
+                .readEnvironment() // scan environment GIT_* variables
+                .findGitDir() // scan up the file system tree
+                .build()) {
 //        Repository repository = helper.getRepository();
 
 //        assertFalse("Repo should not be bare", repository.isBare());
 
-	        System.out.println("Found submodules" + helper.allSubmodules());
+            System.out.println("Found submodules" + helper.allSubmodules());
 
-	        try (Repository subRepo = SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna")) {
+            try (Repository subRepo = SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna")) {
 
 //        Repository subRepo = builder.setGitDir(new File("/opt/git-fs/JGitFS/fuse-jna/.git"))
 //                .readEnvironment() // scan environment GIT_* variables
 //                .findGitDir() // scan up the file system tree
 //                .build();
 
-		        assertFalse(subRepo.isBare());
-		        List<Ref> allRefs = subRepo.getRefDatabase().getRefs();
-		        assertFalse("We should find some refs via submodule-repository", allRefs.isEmpty());
+                assertFalse(subRepo.isBare());
+                List<Ref> allRefs = subRepo.getRefDatabase().getRefs();
+                assertFalse("We should find some refs via submodule-repository", allRefs.isEmpty());
 
 //        {
 //            SubmoduleWalk walk = SubmoduleWalk.forIndex( repository );
@@ -725,12 +725,12 @@ public class JGitHelperTest {
 //            walk.release();
 //        }
 
-		        //listSubs(SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna"));
-		        {
-					allRefs.forEach(System.out::println);
-		        }
+                //listSubs(SubmoduleWalk.getSubmoduleRepository(repository, "fuse-jna"));
+                {
+                    allRefs.forEach(System.out::println);
+                }
 
-		        // find the commit
+                // find the commit
 		        /*ObjectId lastCommitId = subRepo.resolve(SUBMODULE_COMMIT);
 
 		        // .add(lastCommitId)
@@ -760,7 +760,7 @@ public class JGitHelperTest {
 			        }
 			        revWalk.dispose();
 		        }*/
-	        }
+            }
         }
 //        try (JGitHelper linkHelper = new JGitHelper("fuse-jna")) {
 //            Set<String> allCommitSubs = linkHelper.allCommitSubs();
@@ -799,17 +799,17 @@ public class JGitHelperTest {
         }
     }
 
-	@Ignore("Just a local test")
-	@Test
-	public void testStrangeBareRepo() throws IOException {
-		String gitDir = "/opt/openambit/openambit.git";
-		//noinspection ConstantConditions
-		if (!gitDir.endsWith("/.git") && !gitDir.endsWith("/.git/")) {
-			gitDir = gitDir + "/.git";
-		}
-		if (!new File(gitDir).exists()) {
-			throw new IllegalStateException("Could not find git repository at " + gitDir);
-		}
+    @Ignore("Just a local test")
+    @Test
+    public void testStrangeBareRepo() throws IOException {
+        String gitDir = "/opt/openambit/openambit.git";
+        //noinspection ConstantConditions
+        if (!gitDir.endsWith("/.git") && !gitDir.endsWith("/.git/")) {
+            gitDir = gitDir + "/.git";
+        }
+        if (!new File(gitDir).exists()) {
+            throw new IllegalStateException("Could not find git repository at " + gitDir);
+        }
 
 		/*WindowCacheConfig cfg = new WindowCacheConfig();
 		// set a lower stream file threshold as we want to run the code with
@@ -818,14 +818,14 @@ public class JGitHelperTest {
 		cfg.setStreamFileThreshold(1024 * 1024);
 		cfg.install();*/
 
-		System.out.println("Using git repo at " + gitDir);
-		FileRepositoryBuilder builder = new FileRepositoryBuilder();
-		Repository repository;
-		repository = builder.setGitDir(new File(gitDir))
-				.readEnvironment() // scan environment GIT_* variables
-				.findGitDir() // scan up the file system tree
-				.build();
+        System.out.println("Using git repo at " + gitDir);
+        FileRepositoryBuilder builder = new FileRepositoryBuilder();
+        Repository repository;
+        repository = builder.setGitDir(new File(gitDir))
+                .readEnvironment() // scan environment GIT_* variables
+                .findGitDir() // scan up the file system tree
+                .build();
 
-		assertFalse(repository.isBare());
-	}
+        assertFalse(repository.isBare());
+    }
 }

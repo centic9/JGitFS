@@ -48,7 +48,7 @@ public class Console {
                         // try to find mountpoint automatically with only one argument
 
                         String name = new File(cmd[1]).getName();
-                        if("git".equals(name)) {
+                        if ("git".equals(name)) {
                             // use a different name than "git" for automatically finding the name
                             // for the mount
                             name = new File(cmd[1]).getParentFile().getName();
@@ -74,7 +74,7 @@ public class Console {
                         out.println("Invalid command");
                         help(out);
                     } else {
-                        //out.println("Umounting " + cmd[1]);
+                        //out.println("Unmounting " + cmd[1]);
                         try {
                             JGitFS.unmount(cmd[1]);
                         } catch (IOException e) {

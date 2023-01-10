@@ -49,14 +49,14 @@ public class JGitFSTest {
 
     @Test
     public void testMainMultiple() throws Exception {
-    	Assume.assumeFalse("Not executed on Windows for now because of https://github.com/EtiennePerot/fuse-jna/issues/44", SystemUtils.IS_OS_WINDOWS);
+        Assume.assumeFalse("Not executed on Windows for now because of https://github.com/EtiennePerot/fuse-jna/issues/44", SystemUtils.IS_OS_WINDOWS);
         try {
             // if we have one that works and the last one an invalid one we get an exception, but did the mounting
             // for the first one
             File mountPoint = File.createTempFile("JGitFSTest", ".dir2");
             assertTrue(mountPoint.delete());
             try {
-            	JGitFS.main(".", mountPoint.getPath(), "invalidrepo", "somemountpoint");
+                JGitFS.main(".", mountPoint.getPath(), "invalidrepo", "somemountpoint");
             } finally {
                 FileUtils.deleteDirectory(mountPoint);
             }
@@ -79,9 +79,9 @@ public class JGitFSTest {
             File mountPoint = File.createTempFile("JGitFSTest", ".dir");
             assertTrue(mountPoint.delete());
             try {
-	            JGitFS.mount(".", mountPoint);
-	            JGitFS.list();
-	            assertTrue(JGitFS.unmount("."));
+                JGitFS.mount(".", mountPoint);
+                JGitFS.list();
+                assertTrue(JGitFS.unmount("."));
 
                 JGitFS.mount("./.git", mountPoint);
                 JGitFS.list();
@@ -91,9 +91,9 @@ public class JGitFSTest {
                 JGitFS.list();
                 assertTrue(JGitFS.unmount("./.git/"));
 
-	            JGitFS.mount(".", mountPoint);
-	            JGitFS.list();
-	            assertTrue(JGitFS.unmount(mountPoint.getPath()));
+                JGitFS.mount(".", mountPoint);
+                JGitFS.list();
+                assertTrue(JGitFS.unmount(mountPoint.getPath()));
             } finally {
                 FileUtils.deleteDirectory(mountPoint);
             }
@@ -101,7 +101,7 @@ public class JGitFSTest {
             // happens when run in CloudBees, but could not find out details...
             Assume.assumeNoException("In some CI environments this will fail", e);
         } catch (UnsatisfiedLinkError e) {
-			Assume.assumeNoException("Will fail on Windows", e);
+            Assume.assumeNoException("Will fail on Windows", e);
         }
     }
 
@@ -153,7 +153,7 @@ public class JGitFSTest {
                         JGitFS.mount("someother", mountPoint);
                         fail("Should fail due to double mount here");
                     } catch (IllegalArgumentException e) {
-                    	TestHelpers.assertContains(e, "already used for mount at");
+                        TestHelpers.assertContains(e, "already used for mount at");
                     }
                 } finally {
                     assertTrue(JGitFS.unmount(mountPoint.getPath()));
