@@ -25,7 +25,7 @@ import java.nio.file.Paths;
 /**
  * Some tests to try to narrow down/reproduce some problems in JGit itself.
  */
-public class JGitReproducer {
+public class JGitReproducerTest {
     @Test
     public void testSymlink() throws Exception {
         Assume.assumeFalse("Symbolic links do not work on Windows", SystemUtils.IS_OS_WINDOWS);

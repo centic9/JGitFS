@@ -28,7 +28,7 @@ public class ListObjects {
             List<Ref> branches = git.branchList().call();
             System.out.println("Listing " + branches.size() + " branches");
             for (Ref ref : branches) {
-                System.out.println("Branch: " + ref.getName() + ", " + ref.toString() + ", " + ref.getLeaf().getName() + ", " + ref.getObjectId() + ", " + ref.getTarget().getName());
+                System.out.println("Branch: " + ref.getName() + ", " + ref + ", " + ref.getLeaf().getName() + ", " + ref.getObjectId() + ", " + ref.getTarget().getName());
             }
 
             List<Ref> tags = git.tagList().call();

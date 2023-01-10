@@ -27,6 +27,9 @@ import net.fusejna.FuseException;
 public class JGitFS {
     private static final ConcurrentMap<String, Pair<File, JGitFilesystem>> mounts = new ConcurrentHashMap<>();
 
+    // private constructor to not instantiate utility class
+    private JGitFS() {}
+
     /**
      * Main method for JGitFS.
      *

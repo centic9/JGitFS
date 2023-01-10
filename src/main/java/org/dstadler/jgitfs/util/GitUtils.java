@@ -43,6 +43,10 @@ public class GitUtils {
     private final static Pattern STASH_PATTERN = Pattern.compile("/stash/[^/]+");
     private final static Pattern STASHORIG_PATTERN = Pattern.compile("/stashorig/[^/]+");
 
+    // private constructor to not instantiate utility class
+    private GitUtils() {
+    }
+
     public static boolean isTagDir(final String path) {
         return TAG_PATTERN.matcher(path).matches() && !path.endsWith(".hidden");
     }

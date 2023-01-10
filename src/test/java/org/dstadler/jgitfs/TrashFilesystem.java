@@ -92,9 +92,9 @@ public class TrashFilesystem {
             try {
                 long pushed = pushedFiles.incrementAndGet();
                 if (pushed % 200 == 0) {
-                    System.out.println(String.format("Pushing file (%d/%d/%d/%.2f per sec): %s",
+                    System.out.printf("Pushing file (%d/%d/%d/%.2f per sec): %s%n",
                             queue.size(), pushed, consumedFiles.get(), pushed / ((double) (System.currentTimeMillis() - start) / 1000),
-                            current));
+                            current);
                 }
                 queue.put(current);
             } catch (InterruptedException e) {
@@ -123,9 +123,9 @@ public class TrashFilesystem {
                     if (file != null) {
                         long consumed = consumedFiles.incrementAndGet();
                         if (consumed % 200 == 0) {
-                            System.out.println(String.format("Handling file (%d/%d/%d/%.2f per sec): %s",
+                            System.out.printf("Handling file (%d/%d/%d/%.2f per sec): %s%n",
                                     queue.size(), pushedFiles.get(), consumed, consumed / ((double) (System.currentTimeMillis() - start) / 1000),
-                                    file));
+                                    file);
                         }
 
                         // trigger some accesses to the attributes

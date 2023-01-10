@@ -20,7 +20,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class JGitFilesystemSubmodule {
+public class JGitFilesystemSubmoduleTest {
     private static final String CLONE_URL = "https://github.com/githubtraining/example-dependency.git";
     private static final File CLONE_DIR = new File(System.getProperty("java.io.tmpdir"), "example-dependency");
 

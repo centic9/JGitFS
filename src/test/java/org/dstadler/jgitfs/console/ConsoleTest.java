@@ -27,7 +27,7 @@ public class ConsoleTest {
         console.run(new ByteArrayInputStream("quit\n".getBytes()), out);
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertTrue("Had: " + outStr, outStr.contains("quit"));
     }
@@ -40,7 +40,7 @@ public class ConsoleTest {
         console.run(new ByteArrayInputStream("".getBytes()), out);
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertFalse("Had: " + outStr, outStr.contains("quit"));
     }
@@ -53,7 +53,7 @@ public class ConsoleTest {
         console.run(new ByteArrayInputStream("blabla\n".getBytes()), out);
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertTrue("Had: " + outStr, outStr.contains("quit"));
         assertTrue("Had: " + outStr, outStr.contains("mountpoint"));
@@ -68,7 +68,7 @@ public class ConsoleTest {
         console.run(new ByteArrayInputStream("exit\n".getBytes()), out);
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertTrue("Had: " + outStr, outStr.contains("exit"));
     }
@@ -81,7 +81,7 @@ public class ConsoleTest {
         console.run(new ByteArrayInputStream("help\nquit\n".getBytes()), out);
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertTrue("Had: " + outStr, outStr.contains("help"));
         assertTrue("Had: " + outStr, outStr.contains("umount"));
@@ -101,7 +101,7 @@ public class ConsoleTest {
         console.run(new ByteArrayInputStream("list\nexit\n".getBytes()), out);
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertTrue("Had: " + outStr, outStr.contains("list"));
         assertTrue("Had: " + outStr, outStr.contains("exit"));
@@ -115,7 +115,7 @@ public class ConsoleTest {
         console.run(new ByteArrayInputStream("cls\nexit\n".getBytes()), out);
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertTrue("Had: " + outStr, outStr.contains("cls"));
         assertTrue("Had: " + outStr, outStr.contains("exit"));
@@ -144,7 +144,7 @@ public class ConsoleTest {
 
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertTrue("Had: " + outStr, outStr.contains("cls"));
         assertTrue("Had: " + outStr, outStr.contains("exit"));
@@ -158,7 +158,7 @@ public class ConsoleTest {
         console.run(new ByteArrayInputStream("mount\nexit\n".getBytes()), out);
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertTrue("Had: " + outStr, outStr.contains("mount"));
         assertTrue("Had: " + outStr, outStr.contains("exit"));
@@ -172,7 +172,7 @@ public class ConsoleTest {
         console.run(new ByteArrayInputStream("mount test\nexit\n".getBytes()), out);
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertTrue("Had: " + outStr, outStr.contains("mount"));
         assertTrue("Had: " + outStr, outStr.contains("Could not find git repository at test/.git"));
@@ -187,7 +187,7 @@ public class ConsoleTest {
         console.run(new ByteArrayInputStream("mount test/git\nexit\n".getBytes()), out);
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertTrue("Had: " + outStr, outStr.contains("mount"));
         assertTrue("Had: " + outStr, outStr.contains("Could not find git repository at test/git/.git"));
@@ -202,7 +202,7 @@ public class ConsoleTest {
         console.run(new ByteArrayInputStream("mount test test\nexit\n".getBytes()), out);
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertTrue("Had: " + outStr, outStr.contains("mount"));
         assertTrue("Had: " + outStr, outStr.contains("Could not find git repository at test/.git"));
@@ -217,7 +217,7 @@ public class ConsoleTest {
         console.run(new ByteArrayInputStream("unmount\nexit\n".getBytes()), out);
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertTrue("Had: " + outStr, outStr.contains("unmount"));
         assertTrue("Had: " + outStr, outStr.contains("exit"));
@@ -231,7 +231,7 @@ public class ConsoleTest {
         console.run(new ByteArrayInputStream("unmount test\nexit\n".getBytes()), out);
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertTrue("Had: " + outStr, outStr.contains("unmount"));
         assertTrue("Had: " + outStr, outStr.contains("exit"));
@@ -245,7 +245,7 @@ public class ConsoleTest {
         console.run(new ByteArrayInputStream("umount test\nexit\n".getBytes()), out);
         out.close();
 
-        String outStr = new String(out.toByteArray());
+        String outStr = out.toString();
         assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
         assertTrue("Had: " + outStr, outStr.contains("umount"));
         assertTrue("Had: " + outStr, outStr.contains("exit"));

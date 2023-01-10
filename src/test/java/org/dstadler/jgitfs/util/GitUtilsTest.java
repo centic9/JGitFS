@@ -1,22 +1,18 @@
 package org.dstadler.jgitfs.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.apache.commons.lang3.tuple.Pair;
+import org.dstadler.commons.testing.PrivateConstructorCoverage;
+import org.junit.Test;
 
 import java.util.NoSuchElementException;
 
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Test;
-
+import static org.junit.Assert.*;
 
 public class GitUtilsTest {
-
+    // helper method to get coverage of the unused constructor
     @Test
-    public void testCoverage() {
-        GitUtils object = new GitUtils();
-        assertNotNull(object);
+    public void testPrivateConstructor() throws Exception {
+        PrivateConstructorCoverage.executePrivateConstructor(GitUtils.class);
     }
 
     @Test

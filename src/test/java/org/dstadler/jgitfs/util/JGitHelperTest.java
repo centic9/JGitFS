@@ -264,16 +264,16 @@ public class JGitHelperTest {
     public void testGetBranches() throws IOException {
         List<String> branches = helper.getBranches();
         assertTrue(branches.size() > 0);
-        assertTrue("Had: " + branches.toString(), branches.contains("master"));
-        assertTrue("Had: " + branches.toString(), branches.contains("refs_heads_master"));
+        assertTrue("Had: " + branches, branches.contains("master"));
+        assertTrue("Had: " + branches, branches.contains("refs_heads_master"));
     }
 
     @Test
     public void testGetRemotes() throws IOException {
         List<String> remotes = helper.getRemotes();
         assertTrue(remotes.size() > 0);
-        assertTrue("Had: " + remotes.toString(), remotes.contains("origin_master"));
-        assertTrue("Had: " + remotes.toString(), remotes.contains("refs_remotes_origin_master"));
+        assertTrue("Had: " + remotes, remotes.contains("origin_master"));
+        assertTrue("Had: " + remotes, remotes.contains("refs_remotes_origin_master"));
     }
 
     @Test
@@ -287,8 +287,8 @@ public class JGitHelperTest {
     public void testGetTags() throws IOException {
         List<String> tags = helper.getTags();
         assertTrue(tags.size() > 0);
-        assertTrue("Had: " + tags.toString(), tags.contains("testtag"));
-        assertTrue("Had: " + tags.toString(), tags.contains("refs_tags_testtag"));
+        assertTrue("Had: " + tags, tags.contains("testtag"));
+        assertTrue("Had: " + tags, tags.contains("refs_tags_testtag"));
     }
 
     @Test
@@ -313,7 +313,7 @@ public class JGitHelperTest {
 
         List<String> stashes = helper.getStashes();
         assertTrue(stashes.size() > 0);
-        assertTrue("Had: " + stashes.toString(), stashes.contains("stash@{0}"));
+        assertTrue("Had: " + stashes, stashes.contains("stash@{0}"));
     }
 
     @Test
@@ -820,12 +820,12 @@ public class JGitHelperTest {
 
         System.out.println("Using git repo at " + gitDir);
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
-        Repository repository;
-        repository = builder.setGitDir(new File(gitDir))
+        try (Repository repository = builder.setGitDir(new File(gitDir))
                 .readEnvironment() // scan environment GIT_* variables
                 .findGitDir() // scan up the file system tree
-                .build();
+                .build()) {
 
-        assertFalse(repository.isBare());
+            assertFalse(repository.isBare());
+        }
     }
 }

@@ -192,47 +192,47 @@ public class JGitFilesystemTest {
 
         filledFiles.clear();
         fs.readdir("/tag", filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("testtag"));
+        assertTrue("Had: " + filledFiles, filledFiles.contains("testtag"));
 
         filledFiles.clear();
         fs.readdir("/branch", filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("master"));
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("refs_heads_master"));
+        assertTrue("Had: " + filledFiles, filledFiles.contains("master"));
+        assertTrue("Had: " + filledFiles, filledFiles.contains("refs_heads_master"));
 
         filledFiles.clear();
         fs.readdir("/remote", filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("origin_master"));
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("refs_remotes_origin_master"));
+        assertTrue("Had: " + filledFiles, filledFiles.contains("origin_master"));
+        assertTrue("Had: " + filledFiles, filledFiles.contains("refs_remotes_origin_master"));
 
         if (hasStashes) {
             filledFiles.clear();
             fs.readdir("/stash", filler);
-            assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("stash@{0}"));
+            assertTrue("Had: " + filledFiles, filledFiles.contains("stash@{0}"));
 
             filledFiles.clear();
             fs.readdir("/stashorig", filler);
-            assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("stash@{0}"));
+            assertTrue("Had: " + filledFiles, filledFiles.contains("stash@{0}"));
         }
 
         filledFiles.clear();
         fs.readdir("/commit", filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains(DEFAULT_COMMIT_SUB));
+        assertTrue("Had: " + filledFiles, filledFiles.contains(DEFAULT_COMMIT_SUB));
 
         filledFiles.clear();
         fs.readdir("/commit/" + DEFAULT_COMMIT_SUB, filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains(DEFAULT_COMMIT_PREFIX));
+        assertTrue("Had: " + filledFiles, filledFiles.contains(DEFAULT_COMMIT_PREFIX));
 
         filledFiles.clear();
         fs.readdir(DEFAULT_COMMIT_PATH, filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("README.md"));
+        assertTrue("Had: " + filledFiles, filledFiles.contains("README.md"));
 
         filledFiles.clear();
         fs.readdir(DEFAULT_COMMIT_PATH + "/src", filler);
-        assertEquals("Had: " + filledFiles.toString(), "[main, test]", filledFiles.toString());
+        assertEquals("Had: " + filledFiles, "[main, test]", filledFiles.toString());
 
         filledFiles.clear();
         fs.readdir("/submodule", filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.isEmpty());
+        assertTrue("Had: " + filledFiles, filledFiles.isEmpty());
 
         assertFalse("Had: " + fs.getStats(), fs.getStats().toString().contains("readdir,0"));
     }
@@ -258,7 +258,7 @@ public class JGitFilesystemTest {
         DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
         fs.readdir("/tag", filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("testtag"));
+        assertTrue("Had: " + filledFiles, filledFiles.contains("testtag"));
     }
 
     @Test
@@ -271,7 +271,7 @@ public class JGitFilesystemTest {
 
         // for some reason this does not fail, seems the Git repository still works even if closed
         fs.readdir("/tag", filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("testtag"));
+        assertTrue("Had: " + filledFiles, filledFiles.contains("testtag"));
     }
 
     @Test
@@ -280,15 +280,15 @@ public class JGitFilesystemTest {
         try (JGitHelper helper = new JGitHelper(".")) {
             List<String> branches = helper.getBranches();
             assertTrue("Had: " + branches.toString(), branches.contains("master"));
-            assertTrue("Had: " + branches.toString(), branches.contains("refs_heads_master"));
+            assertTrue("Had: " + branches, branches.contains("refs_heads_master"));
         }
 
         final List<String> filledFiles = new ArrayList<>();
         DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
         fs.readdir("/branch", filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("master"));
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("refs_heads_master"));
+        assertTrue("Had: " + filledFiles, filledFiles.contains("master"));
+        assertTrue("Had: " + filledFiles, filledFiles.contains("refs_heads_master"));
     }
 
     @Test
@@ -297,8 +297,8 @@ public class JGitFilesystemTest {
         DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
         fs.readdir("/remote", filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("origin_master"));
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("refs_remotes_origin_master"));
+        assertTrue("Had: " + filledFiles, filledFiles.contains("origin_master"));
+        assertTrue("Had: " + filledFiles, filledFiles.contains("refs_remotes_origin_master"));
     }
 
     @Test
@@ -315,7 +315,7 @@ public class JGitFilesystemTest {
         DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
         fs.readdir("/stash", filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("stash@{0}"));
+        assertTrue("Had: " + filledFiles, filledFiles.contains("stash@{0}"));
     }
 
     @Test
@@ -332,7 +332,7 @@ public class JGitFilesystemTest {
         DirectoryFiller filler = new DirectoryFillerImplementation(filledFiles);
 
         fs.readdir("/stashorig", filler);
-        assertTrue("Had: " + filledFiles.toString(), filledFiles.contains("stash@{0}"));
+        assertTrue("Had: " + filledFiles, filledFiles.contains("stash@{0}"));
     }
 
     @Test

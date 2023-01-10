@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.dstadler.commons.testing.PrivateConstructorCoverage;
 import org.dstadler.commons.testing.TestHelpers;
 import org.junit.Assume;
 import org.junit.Test;
@@ -24,10 +25,10 @@ public class JGitFSTest {
         // calls System.exit(): JGitFS.main(new String[] {"some"});
     }
 
+    // helper method to get coverage of the unused constructor
     @Test
-    public void testConstruct() {
-        JGitFS object = new JGitFS();
-        assertNotNull(object);
+    public void testPrivateConstructor() throws Exception {
+       PrivateConstructorCoverage.executePrivateConstructor(JGitFS.class);
     }
 
     @Test
