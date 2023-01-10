@@ -100,10 +100,24 @@ public class GitUtils {
         return STASHORIG_PATTERN.matcher(path).matches() && !path.endsWith(".hidden");
     }
 
+    /**
+     * Retrieve the numerical user id of the current user.
+     *
+     * It uses the system property user.name as current user.
+     *
+     * @return The numerical user id or 0 if not available.
+     */
     public static long getUID() {
         return getID(true);
     }
 
+    /**
+     * Retrieve the numerical group id of the current user.
+     *
+     * It uses the system property user.name as current user.
+     *
+     * @return The numerical group id or 0 if not available.
+     */
     public static long getGID() {
         return getID(false);
     }
