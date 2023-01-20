@@ -37,7 +37,23 @@ public class JGitFS {
      * @throws FuseException If mounting fails.
      * @throws IOException   If the given Git repository cannot be read or some other error happens during file access.
      */
-    public static void main(final String... args) throws FuseException, IOException {
+    public static void main(String... args) throws FuseException, IOException {
+        // try to determine mountpoint if only one path to a git-repository is given
+        if (args.length == 1) {
+            String name = new File(args[0]).getName();
+            if ("git".equals(name)) {
+                // use a different name than "git" for automatically finding the name
+                // for the mount
+                name = new File(args[0]).getParentFile().getName();
+            }
+
+            System.out.println("Using mountpoint " + "/fs/" + name + " for repository at " + args[0]);
+            args = new String[]{
+                    args[0],
+                    "/fs/" + name
+            };
+        }
+
         if (args.length % 2 != 0) {
             System.err.println("Usage: GitFS <git-repo> <mountpoint> ...");
             System.exit(1);
