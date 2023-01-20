@@ -71,13 +71,25 @@ public class JGitFilesystemTest {
     public void testConstructMountClose() throws UnsatisfiedLinkError, IOException, FuseException {
         Assume.assumeFalse("Mounting the filesystem does not work on Windows", SystemUtils.IS_OS_WINDOWS);
 
+        assertFalse("Not nounted at start",
+                fs.isMounted());
+
         // ensure that we can actually load FUSE-binaries before we try to mount/unmount
         // an assumption will fail if the binaries are missing
         assertNotNull(getStatsWrapper());
 
+        assertFalse("Not mounted after getStatsWrapper",
+                fs.isMounted());
+
         File mountPoint = mount();
 
+        assertTrue("Mounted after calling mount",
+                fs.isMounted());
+
         unmount(mountPoint);
+
+        assertFalse("Not mounted any more after calling unmount",
+                fs.isMounted());
     }
 
     @Test
@@ -461,6 +473,9 @@ public class JGitFilesystemTest {
 
         fs.mount(mountPoint, false);
 
+        assertTrue("Mounted after mounting",
+                fs.isMounted());
+
         return mountPoint;
     }
 
@@ -699,7 +714,7 @@ public class JGitFilesystemTest {
     protected static final class DirectoryFillerImplementation implements DirectoryFiller {
         private final List<String> filledFiles;
 
-        protected DirectoryFillerImplementation(List<String> filledFiles) {
+        DirectoryFillerImplementation(List<String> filledFiles) {
             this.filledFiles = filledFiles;
         }
 
