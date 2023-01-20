@@ -21,13 +21,13 @@ public class JGitFSTest {
     }
 
     @Test
-    public void testMainOneArg() throws Exception {
+    public void testMainOneArg() {
         assertThrows(IllegalStateException.class,
                 () -> JGitFS.main("invalidrepo"));
     }
 
     @Test
-    public void testMainOneArgGit() throws Exception {
+    public void testMainOneArgGit() {
         assertThrows(IllegalStateException.class,
                 () -> JGitFS.main("invalidrepo/git"));
     }
@@ -39,7 +39,7 @@ public class JGitFSTest {
     }
 
     @Test
-    public void testMainInvalidLocation() throws Exception {
+    public void testMainInvalidLocation() {
         assertThrows(IllegalStateException.class,
                 () -> JGitFS.main("invalidrepo", "somemountpoint"));
     }
