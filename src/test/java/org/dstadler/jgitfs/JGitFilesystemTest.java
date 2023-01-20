@@ -68,7 +68,7 @@ public class JGitFilesystemTest {
     }
 
     @Test
-    public void testConstructMountClose() throws UnsatisfiedLinkError, IOException, FuseException {
+    public void testConstructMountClose() throws Exception {
         Assume.assumeFalse("Mounting the filesystem does not work on Windows", SystemUtils.IS_OS_WINDOWS);
 
         assertFalse("Not nounted at start",
@@ -479,8 +479,21 @@ public class JGitFilesystemTest {
         return mountPoint;
     }
 
-    private void unmount(File mountPoint) throws IOException, FuseException {
+    private void unmount(File mountPoint) throws IOException, FuseException, InterruptedException {
         fs.unmount();
+
+        // Fuse invokes netFuseFilesystem._destroy() asynchronously,
+        // so we should give it a bit of time until we expect it to have finished
+        for (int i = 0; i < 10; i++) {
+            if (!fs.isMounted()) {
+                break;
+            }
+
+            Thread.sleep(100);
+        }
+
+        assertFalse("Not mounted any more after calling unmount",
+                fs.isMounted());
 
         assertTrue(mountPoint.delete());
     }
@@ -544,7 +557,6 @@ public class JGitFilesystemTest {
                         throw new IllegalStateException("Invalid random number");
                 }
             }
-
         });
     }
 
