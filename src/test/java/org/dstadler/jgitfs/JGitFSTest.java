@@ -1,16 +1,16 @@
 package org.dstadler.jgitfs;
 
-import static org.junit.Assert.*;
-
-import java.io.File;
-import java.io.IOException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.dstadler.commons.testing.PrivateConstructorCoverage;
 import org.dstadler.commons.testing.TestHelpers;
 import org.junit.Assume;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
+
+import static org.junit.Assert.*;
 
 
 public class JGitFSTest {
@@ -21,8 +21,15 @@ public class JGitFSTest {
     }
 
     @Test
-    public void testMainOneArg() {
-        // calls System.exit(): JGitFS.main(new String[] {"some"});
+    public void testMainOneArg() throws Exception {
+        assertThrows(IllegalStateException.class,
+                () -> JGitFS.main("invalidrepo"));
+    }
+
+    @Test
+    public void testMainOneArgGit() throws Exception {
+        assertThrows(IllegalStateException.class,
+                () -> JGitFS.main("invalidrepo/git"));
     }
 
     // helper method to get coverage of the unused constructor
@@ -33,12 +40,8 @@ public class JGitFSTest {
 
     @Test
     public void testMainInvalidLocation() throws Exception {
-        try {
-            JGitFS.main("invalidrepo", "somemountpoint");
-            fail("Should throw exception with invalid git repository");
-        } catch (@SuppressWarnings("unused") IllegalStateException e) {
-            // expected
-        }
+        assertThrows(IllegalStateException.class,
+                () -> JGitFS.main("invalidrepo", "somemountpoint"));
     }
 
 
