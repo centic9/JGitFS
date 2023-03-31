@@ -13,6 +13,7 @@ import org.dstadler.jgitfs.console.Console;
 import org.dstadler.jgitfs.util.FuseUtils;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import net.fusejna.FuseException;
 
@@ -37,34 +38,52 @@ public class JGitFS {
      * @throws FuseException If mounting fails.
      * @throws IOException   If the given Git repository cannot be read or some other error happens during file access.
      */
-    public static void main(String... args) throws FuseException, IOException {
+    public static void main(String... args) throws FuseException, IOException, InterruptedException {
+        // Setup command line cmdLineOptions
+        Commandline cmd = new Commandline();
+        try {
+            cmd.parse(args);
+        } catch (Commandline.SystemExitException e) {
+            System.exit(e.getExitCode());
+        }
+
         // try to determine mountpoint if only one path to a git-repository is given
-        if (args.length == 1) {
-            String name = new File(args[0]).getName();
+        List<String> argList = cmd.getArgList();
+        if (argList.size() == 1) {
+            String name = new File(argList.get(0)).getName();
             if ("git".equals(name)) {
                 // use a different name than "git" for automatically finding the name
                 // for the mount
-                name = new File(args[0]).getParentFile().getName();
+                name = new File(argList.get(0)).getParentFile().getName();
             }
 
-            System.out.println("Using mountpoint " + "/fs/" + name + " for repository at " + args[0]);
-            args = new String[]{
-                    args[0],
-                    "/fs/" + name
-            };
+            System.out.println("Using mountpoint " + "/fs/" + name + " for repository at " + argList.get(0));
+            argList = ImmutableList.of(argList.get(0), "/fs/" + name);
         }
 
-        if (args.length % 2 != 0) {
-            System.err.println("Usage: GitFS <git-repo> <mountpoint> ...");
+        if (argList.size() % 2 != 0) {
+            System.err.println(Commandline.USAGE_TEXT);
+            System.exit(1);
+        }
+        if (cmd.isNoConsole() && argList.isEmpty()) {
+            System.err.println("Need a mountpoint when not starting console");
+            System.err.println(Commandline.USAGE_TEXT);
             System.exit(1);
         }
 
         try {
-            for (int i = 0; i < args.length; i += 2) {
-                mount(args[i], new File(args[i + 1]));
+            for (int i = 0; i < argList.size(); i += 2) {
+                mount(argList.get(i), new File(argList.get(i + 1)));
             }
 
-            new Console().run(System.in, System.out);
+            if (cmd.isNoConsole()) {
+                // just loop endlessly
+                while (true) {
+                    Thread.sleep(5000);
+                }
+            } else {
+                new Console().run(System.in, System.out);
+            }
         } finally {
             // ensure that we try to close all filesystems that we created
             for (Pair<File, JGitFilesystem> gitFS : mounts.values()) {
