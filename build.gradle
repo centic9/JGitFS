@@ -29,24 +29,24 @@ wrapper {
     gradleVersion = '7.6.1'
 }
 
-task adjustWrapperPropertiesFile {
-    doLast {
-        ant.replaceregexp(match: '^#.*', replace: '', flags: 'g', byline: true) {
-            fileset(dir: project.projectDir, includes: 'gradle/wrapper/gradle-wrapper.properties')
-        }
-        new File(project.projectDir, 'gradle/wrapper/gradle-wrapper.properties').with {
-            it.text = it.readLines().findAll { it }.sort().join('\n')
-        }
-        ant.fixcrlf(file: 'gradle/wrapper/gradle-wrapper.properties', eol: 'lf')
-    }
+tasks.register('adjustWrapperPropertiesFile') {
+	doLast {
+		ant.replaceregexp(match: '^#.*', replace: '', flags: 'g', byline: true) {
+			fileset(dir: project.projectDir, includes: 'gradle/wrapper/gradle-wrapper.properties')
+		}
+		new File(project.projectDir, 'gradle/wrapper/gradle-wrapper.properties').with {
+			it.text = it.readLines().findAll { it }.sort().join('\n')
+		}
+		ant.fixcrlf(file: 'gradle/wrapper/gradle-wrapper.properties', eol: 'lf')
+	}
 }
 wrapper.finalizedBy adjustWrapperPropertiesFile
 
-tasks.withType(JavaCompile){
+tasks.withType(JavaCompile).configureEach {
 	// avoid: :compileJavawarning: [options] bootstrap class path not set in conjunction with -source 1.7
 	options.warnings = false
-	options.compilerArgs = [ '-Xlint:deprecation' ]
-    options.encoding = 'UTF-8'
+	options.compilerArgs = ['-Xlint:deprecation']
+	options.encoding = 'UTF-8'
 }
 
 jacoco {
