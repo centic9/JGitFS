@@ -58,11 +58,7 @@ Note: Access is strictly read-only, no writing of new commits on branches is pos
 
 #### Change it
 
-Implementation should be straightforward, the class `JGitFS` implements the commandline handling, `JGitFilesystem` implements the filesystem interfaces that are neede for simple read-only access as well as some caching, `JGitHelper` encapsulates access to Git, `GitUtils` are local utils for computing commits, ...
-
-Create matching Eclipse project files
-
-	./gradlew eclipse
+Implementation should be straightforward, the class `JGitFS` implements the commandline handling, `JGitFilesystem` implements the filesystem interfaces that are needed for simple read-only access as well as some caching, `JGitHelper` encapsulates access to Git, `GitUtils` are local utils for computing commits, ...
 
 Run unit tests
 
