@@ -41,7 +41,14 @@ public class JGitFSTest {
 
     @Test
     public void testMainOneArgDot() throws FuseException, IOException, InterruptedException {
-        JGitFS.main("--test-only", ".");
+        try {
+			JGitFS.main("--test-only", ".");
+		} catch (IOException e) {
+			// this can happen if /fs does not exist yet and cannot be created
+			if (!e.getMessage().contains("Could not create mountpoint")) {
+				throw e;
+			}
+		}
     }
 
     // helper method to get coverage of the unused constructor
