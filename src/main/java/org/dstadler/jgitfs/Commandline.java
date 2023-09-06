@@ -16,12 +16,14 @@ public class Commandline {
     private final static Logger log = LoggerFactory.make();
 
     private static final String OPTION_NO_CONSOLE = "n";
+    private static final String OPTION_TEST_ONLY = "t";
 
     public static final String USAGE_TEXT = "JGitFS [<option> ...] <git-repo> [<mountpoint>] ...";
 
     private final Options cmdLineOptions;
 
     private boolean noConsole;
+    private boolean testOnly;
     private List<String> argList;
 
     public Commandline() {
@@ -31,6 +33,11 @@ public class Commandline {
                 Option.builder(OPTION_NO_CONSOLE).
                         longOpt("no-console").
                         desc("Do not open the command-console").
+                        build());
+        cmdLineOptions.addOption(
+                Option.builder(OPTION_TEST_ONLY).
+                        longOpt("test-only").
+                        desc("Only try to mount and then exit again").
                         build());
     }
 
@@ -52,8 +59,13 @@ public class Commandline {
                 noConsole = true;
             }
 
+            if(cmdLineParser.hasOption(OPTION_TEST_ONLY)) {
+                testOnly = true;
+            }
+
             log.info("Having commandline options: " +
                     "no-console: " + noConsole +
+                    "test-only: " + testOnly +
                     "remaining: " + argList);
         } catch (Exception e) {
             System.err.println("Error parsing arguments: " + ExceptionUtils.getStackTrace(e));
@@ -65,6 +77,10 @@ public class Commandline {
 
     public boolean isNoConsole() {
         return noConsole;
+    }
+
+    public boolean isTestOnly() {
+        return testOnly;
     }
 
     public List<String> getArgList() {

@@ -76,6 +76,11 @@ public class JGitFS {
                 mount(argList.get(i), new File(argList.get(i + 1)));
             }
 
+			// unmount and exit immediately if requested via commandline argument
+			if (cmd.isTestOnly()) {
+				return;
+			}
+
             if (cmd.isNoConsole()) {
                 // just loop endlessly
                 while (true) {
