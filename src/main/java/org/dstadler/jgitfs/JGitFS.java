@@ -51,6 +51,11 @@ public class JGitFS {
         List<String> argList = cmd.getArgList();
         if (argList.size() == 1) {
             String name = new File(argList.get(0)).getName();
+
+			if (".".equals(name)) {
+				name = new File(argList.get(0)).getCanonicalFile().getName();
+			}
+
             if ("git".equals(name)) {
                 // use a different name than "git" for automatically finding the name
                 // for the mount
@@ -94,6 +99,8 @@ public class JGitFS {
             for (Pair<File, JGitFilesystem> gitFS : mounts.values()) {
                 gitFS.getRight().close();
             }
+
+			mounts.clear();
         }
     }
 

@@ -12,6 +12,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.*;
 
+import net.fusejna.FuseException;
 
 public class JGitFSTest {
 
@@ -30,6 +31,17 @@ public class JGitFSTest {
     public void testMainOneArgGit() {
         assertThrows(IllegalStateException.class,
                 () -> JGitFS.main("invalidrepo/git"));
+    }
+
+    @Test
+    public void testMainOneArgFileDot() {
+        assertThrows(IllegalStateException.class,
+                () -> JGitFS.main("invalidrepo/."));
+    }
+
+    @Test
+    public void testMainOneArgDot() throws FuseException, IOException, InterruptedException {
+        JGitFS.main("--test-only", ".");
     }
 
     // helper method to get coverage of the unused constructor
