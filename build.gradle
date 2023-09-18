@@ -14,7 +14,7 @@ dependencies {
 	implementation 'commons-io:commons-io:2.13.0'
 	implementation 'org.apache.commons:commons-lang3:3.13.0'
 	implementation 'net.java.dev.jna:jna:3.5.2'
-	implementation 'org.eclipse.jgit:org.eclipse.jgit:6.6.0.202305301015-r'
+	implementation 'org.eclipse.jgit:org.eclipse.jgit:6.7.0.202309050840-r'
 	implementation 'com.google.guava:guava:32.1.2-jre'
 	implementation files('lib/fuse-jna-1.0.3.2.jar')
 	implementation 'jline:jline:2.14.6'
