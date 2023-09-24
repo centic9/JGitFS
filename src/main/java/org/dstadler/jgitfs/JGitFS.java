@@ -59,7 +59,7 @@ public class JGitFS {
             if ("git".equals(name)) {
                 // use a different name than "git" for automatically finding the name
                 // for the mount
-                name = new File(argList.get(0)).getParentFile().getName();
+                name = new File(argList.get(0)).getCanonicalFile().getParentFile().getName();
             }
 
             System.out.println("Using mountpoint " + "/fs/" + name + " for repository at " + argList.get(0));
