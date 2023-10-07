@@ -10,8 +10,8 @@ repositories {
 
 dependencies {
     implementation 'commons-cli:commons-cli:1.5.0'
-	implementation 'org.dstadler:commons-dost:1.2.0.2'
-	implementation 'commons-io:commons-io:2.13.0'
+	implementation 'org.dstadler:commons-dost:1.2.0.3'
+	implementation 'commons-io:commons-io:2.14.0'
 	implementation 'org.apache.commons:commons-lang3:3.13.0'
 	implementation 'net.java.dev.jna:jna:3.5.2'
 	implementation 'org.eclipse.jgit:org.eclipse.jgit:6.7.0.202309050840-r'
@@ -21,7 +21,7 @@ dependencies {
 
 	runtimeOnly 'org.slf4j:slf4j-simple:1.7.36'
 
-	testImplementation 'junit:junit:4.13.2'
+	testImplementation 'org.junit.vintage:junit-vintage-engine:5.10.0'
 	testImplementation 'org.dstadler:commons-test:1.0.0.20'
 }
 
