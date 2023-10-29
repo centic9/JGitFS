@@ -9,13 +9,13 @@ repositories {
 }
 
 dependencies {
-    implementation 'commons-cli:commons-cli:1.5.0'
+    implementation 'commons-cli:commons-cli:1.6.0'
 	implementation 'org.dstadler:commons-dost:1.2.0.3'
-	implementation 'commons-io:commons-io:2.14.0'
+	implementation 'commons-io:commons-io:2.15.0'
 	implementation 'org.apache.commons:commons-lang3:3.13.0'
 	implementation 'net.java.dev.jna:jna:3.5.2'
 	implementation 'org.eclipse.jgit:org.eclipse.jgit:6.7.0.202309050840-r'
-	implementation 'com.google.guava:guava:32.1.2-jre'
+	implementation 'com.google.guava:guava:32.1.3-jre'
 	implementation files('lib/fuse-jna-1.0.3.2.jar')
 	implementation 'jline:jline:2.14.6'
 
@@ -50,7 +50,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 jacoco {
-	toolVersion = '0.8.10'
+	toolVersion = '0.8.11'
 }
 
 jacocoTestReport {
