@@ -12,8 +12,6 @@ import java.io.IOException;
 
 import static org.junit.Assert.*;
 
-import net.fusejna.FuseException;
-
 public class JGitFSTest {
 
     @Test
@@ -40,7 +38,10 @@ public class JGitFSTest {
     }
 
     @Test
-    public void testMainOneArgDot() throws FuseException, IOException, InterruptedException {
+    public void testMainOneArgDot() throws Exception {
+		Assume.assumeFalse("Not executed on Windows for now because of https://github.com/EtiennePerot/fuse-jna/issues/40",
+				SystemUtils.IS_OS_WINDOWS);
+
         try {
 			JGitFS.main("--test-only", ".");
 		} catch (IOException e) {
@@ -72,7 +73,9 @@ public class JGitFSTest {
 
     @Test
     public void testMainMultiple() throws Exception {
-        Assume.assumeFalse("Not executed on Windows for now because of https://github.com/EtiennePerot/fuse-jna/issues/44", SystemUtils.IS_OS_WINDOWS);
+        Assume.assumeFalse("Not executed on Windows for now because of https://github.com/EtiennePerot/fuse-jna/issues/44",
+				SystemUtils.IS_OS_WINDOWS);
+
         try {
             // if we have one that works and the last one an invalid one we get an exception, but did the mounting
             // for the first one
