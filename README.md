@@ -55,7 +55,6 @@ This allows to use a Git repository a bit like IBM/Rational ClearCase dynamic vi
 
 Note: Access is strictly read-only, no writing of new commits on branches is possible. Branches and Tags are actually implemented as symbolic links to the respective commit. The commit-directory uses the same two-byte directory-substructure like Git uses in .git/objects.
 
-
 #### Change it
 
 Implementation should be straightforward, the class `JGitFS` implements the commandline handling, `JGitFilesystem` implements the filesystem interfaces that are needed for simple read-only access as well as some caching, `JGitHelper` encapsulates access to Git, `GitUtils` are local utils for computing commits, ...
@@ -75,6 +74,14 @@ As part of some further research I stumbled upon the great [fuse-jna] library wh
 On the Git side I had heard about [JGit] and wanted to give it a try anyway, using it was a bit of a rough ride and in order to get to grips with it I ended up putting together a collection of code-snippets at [jgit-cookbook], but in the end pure-Java access to Git repositories worked fine as well.
 
 Finally after some performance tuning sessions and adding some caching at the right spots I was also satisfied with the performance, naturally there is a bit of overhead but overall I am able to work with fairly large repositories without large delays, only some more CPU is used because of all the compression/format reading in JGit and this doesn't seem to be a big concern with fairly up-to-date hardware.
+
+#### Load testing
+
+Some scripts that might be useful for reading lots of data from the fuse filesystems:
+
+    while true;do find /fs/ > /dev/null;done
+
+    find /fs/ -type f -exec cat "{}" > /dev/null \;
 
 #### Todos
 
