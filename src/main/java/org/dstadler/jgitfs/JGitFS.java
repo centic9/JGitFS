@@ -185,7 +185,7 @@ public class JGitFS {
             List<Pair<String, Long>> stats = entry.getValue().getRight().getStats();
             StringBuilder statsStr = new StringBuilder();
             for (Pair<String, Long> stat : stats) {
-                statsStr.append(String.format("%8s: %8d, ", stat.getKey(), stat.getValue()));
+                statsStr.append("%8s: %8d, ".formatted(stat.getKey(), stat.getValue()));
             }
             System.out.printf(
                     "%-" + maxKey + "s mounted at %-" + maxValue + "s, stats: %s%n",
