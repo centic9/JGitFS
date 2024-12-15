@@ -2,7 +2,9 @@ apply plugin: 'java'
 apply plugin:'application'
 apply plugin:'jacoco'
 
-mainClassName = "org.dstadler.jgitfs.JGitFS"
+application {
+	mainClass = 'org.dstadler.jgitfs.JGitFS'
+}
 
 repositories {
   mavenCentral()
@@ -12,14 +14,14 @@ dependencies {
     implementation 'commons-cli:commons-cli:1.9.0'
 	implementation 'org.dstadler:commons-dost:1.3.4'
 	implementation 'commons-io:commons-io:2.18.0'
-	implementation 'org.apache.commons:commons-lang3:3.17.0'
+    implementation 'org.apache.commons:commons-lang3:3.17.0'
 	implementation 'net.java.dev.jna:jna:3.5.2'
 	implementation 'org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r'
 	implementation 'com.google.guava:guava:33.3.1-jre'
 	implementation files('lib/fuse-jna-1.0.3.2.jar')
 	implementation 'jline:jline:2.14.6'
 
-	runtimeOnly 'org.slf4j:slf4j-simple:2.0.10'
+	runtimeOnly 'org.slf4j:slf4j-simple:2.0.16'
 
 	testImplementation 'org.junit.vintage:junit-vintage-engine:5.11.3'
 	testImplementation 'org.dstadler:commons-test:1.0.0.21'
@@ -28,19 +30,6 @@ dependencies {
 wrapper {
     gradleVersion = '8.5'
 }
-
-tasks.register('adjustWrapperPropertiesFile') {
-	doLast {
-		ant.replaceregexp(match: '^#.*', replace: '', flags: 'g', byline: true) {
-			fileset(dir: project.projectDir, includes: 'gradle/wrapper/gradle-wrapper.properties')
-		}
-		new File(project.projectDir, 'gradle/wrapper/gradle-wrapper.properties').with {
-			it.text = it.readLines().findAll { it }.sort().join('\n')
-		}
-		ant.fixcrlf(file: 'gradle/wrapper/gradle-wrapper.properties', eol: 'lf')
-	}
-}
-wrapper.finalizedBy adjustWrapperPropertiesFile
 
 tasks.withType(JavaCompile).configureEach {
 	// avoid: :compileJavawarning: [options] bootstrap class path not set in conjunction with -source 1.7
