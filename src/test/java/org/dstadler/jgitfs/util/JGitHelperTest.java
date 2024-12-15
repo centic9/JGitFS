@@ -12,12 +12,7 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.submodule.SubmoduleWalk;
-import org.junit.After;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,13 +24,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static org.dstadler.jgitfs.JGitFilesystemTest.getStatsWrapper;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class JGitHelperTest {
     public final static String DEFAULT_COMMIT = "ede9797616a805d6cbeca376bfbbac9a8b7eb64f";
@@ -47,7 +36,7 @@ public class JGitHelperTest {
 
     private JGitHelper helper;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws GitAPIException, IOException {
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
         try (Repository repository = builder.setGitDir(new File(".git"))
@@ -72,12 +61,12 @@ public class JGitHelperTest {
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         helper = new JGitHelper(".");
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         helper.close();
     }
@@ -183,7 +172,7 @@ public class JGitHelperTest {
     public void testOpenFile() throws Exception {
         System.out.println("Had commit: " + DEFAULT_COMMIT);
         String runSh = IOUtils.toString(helper.openFile(DEFAULT_COMMIT, "README.md"), CHARSET);
-        assertTrue("Had: " + runSh, StringUtils.isNotEmpty(runSh));
+        assertTrue(StringUtils.isNotEmpty(runSh), "Had: " + runSh);
     }
 
     @Test
@@ -217,9 +206,9 @@ public class JGitHelperTest {
         assertEquals("[dstadler]", helper.readElementsAt(DEFAULT_COMMIT, "src/main/java/org").toString());
 
         String list = helper.readElementsAt(DEFAULT_COMMIT, "").toString();
-        assertTrue("Had: " + list, list.contains("src"));
-        assertTrue("Had: " + list, list.contains("README.md"));
-        assertTrue("Had: " + list, list.contains("build.gradle"));
+        assertTrue(list.contains("src"), "Had: " + list);
+        assertTrue(list.contains("README.md"), "Had: " + list);
+        assertTrue(list.contains("build.gradle"), "Had: " + list);
     }
 
     @Test
@@ -264,16 +253,16 @@ public class JGitHelperTest {
     public void testGetBranches() throws IOException {
         List<String> branches = helper.getBranches();
         assertTrue(branches.size() > 0);
-        assertTrue("Had: " + branches, branches.contains("master"));
-        assertTrue("Had: " + branches, branches.contains("refs_heads_master"));
+        assertTrue(branches.contains("master"), "Had: " + branches);
+        assertTrue(branches.contains("refs_heads_master"), "Had: " + branches);
     }
 
     @Test
     public void testGetRemotes() throws IOException {
         List<String> remotes = helper.getRemotes();
         assertTrue(remotes.size() > 0);
-        assertTrue("Had: " + remotes, remotes.contains("origin_master"));
-        assertTrue("Had: " + remotes, remotes.contains("refs_remotes_origin_master"));
+        assertTrue(remotes.contains("origin_master"), "Had: " + remotes);
+        assertTrue(remotes.contains("refs_remotes_origin_master"), "Had: " + remotes);
     }
 
     @Test
@@ -287,13 +276,13 @@ public class JGitHelperTest {
     public void testGetTags() throws IOException {
         List<String> tags = helper.getTags();
         assertTrue(tags.size() > 0);
-        assertTrue("Had: " + tags, tags.contains("testtag"));
-        assertTrue("Had: " + tags, tags.contains("refs_tags_testtag"));
+        assertTrue(tags.contains("testtag"), "Had: " + tags);
+        assertTrue(tags.contains("refs_tags_testtag"), "Had: " + tags);
     }
 
     @Test
     public void testGetStashHeadCommit() throws IOException {
-        Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+        Assumptions.assumeTrue(hasStashes, "Cannot test stashes without having local stashes");
 
         assertNull(helper.getStashHeadCommit("somestash"));
         assertNotNull(helper.getStashHeadCommit("stash@{0}"));
@@ -301,7 +290,7 @@ public class JGitHelperTest {
 
     @Test
     public void testGetStashOrigCommit() throws IOException {
-        Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+        Assumptions.assumeTrue(hasStashes, "Cannot test stashes without having local stashes");
 
         assertNull(helper.getStashOrigCommit("somestash"));
         assertNotNull(helper.getStashOrigCommit("stash@{0}"));
@@ -309,25 +298,25 @@ public class JGitHelperTest {
 
     @Test
     public void testGetStashes() throws IOException {
-        Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+        Assumptions.assumeTrue(hasStashes, "Cannot test stashes without having local stashes");
 
         List<String> stashes = helper.getStashes();
         assertTrue(stashes.size() > 0);
-        assertTrue("Had: " + stashes, stashes.contains("stash@{0}"));
+        assertTrue(stashes.contains("stash@{0}"), "Had: " + stashes);
     }
 
     @Test
     public void testallCommitsNull() throws IOException {
         Collection<String> allCommits = helper.allCommits(null);
         int size = allCommits.size();
-        assertTrue("Had size: " + size, size > 3);
+        assertTrue(size > 3, "Had size: " + size);
         assertTrue(allCommits.contains(DEFAULT_COMMIT));
     }
 
     @Test
     public void testallCommits() throws IOException {
         int size = helper.allCommits("zz").size();
-        assertEquals("Had size: " + size, 0, size);
+        assertEquals(0, size, "Had size: " + size);
 
         Collection<String> allCommits = helper.allCommits(null);
         assertTrue(allCommits.size() > 0);
@@ -347,17 +336,17 @@ public class JGitHelperTest {
     public void testAllCommitSubs() throws IOException {
         Collection<String> subs = helper.allCommitSubs();
         int subSize = subs.size();
-        assertTrue("Had: " + subs, subSize > 3);
+        assertTrue(subSize > 3, "Had: " + subs);
 
         for (String tup : subs) {
-            assertEquals("Had: " + tup, 2, tup.length());
-            assertTrue("Had: " + tup, tup.matches("[a-f0-9]{2}"));
+            assertEquals(2, tup.length(), "Had: " + tup);
+            assertTrue(tup.matches("[a-f0-9]{2}"), "Had: " + tup);
         }
 
         assertTrue(subs.contains(DEFAULT_COMMIT.substring(0, 2)));
     }
 
-    @Ignore("local test")
+    @Disabled("local test")
     @Test
     public void testAllCommitSubsJenkins() throws IOException {
         helper.close();
@@ -367,7 +356,7 @@ public class JGitHelperTest {
         runAllCommitSubs();
     }
 
-    @Ignore("local test")
+    @Disabled("local test")
     @Test
     public void testAllCommitSubsPOI() throws IOException {
         helper.close();
@@ -380,7 +369,7 @@ public class JGitHelperTest {
         System.out.println("warmup");
         for (int i = 0; i < 3; i++) {
             int size = helper.allCommitSubs().size();
-            assertTrue("Had size: " + size, size > 3);
+            assertTrue(size > 3, "Had size: " + size);
             System.out.print("." + size);
         }
 
@@ -388,13 +377,13 @@ public class JGitHelperTest {
         long start = System.currentTimeMillis();
         for (int i = 0; i < 10; i++) {
             int size = helper.allCommitSubs().size();
-            assertTrue("Had size: " + size, size > 3);
+            assertTrue(size > 3, "Had size: " + size);
             System.out.print("." + size);
         }
         System.out.println("avg.time: " + (System.currentTimeMillis() - start) / 10);
     }
 
-    @Ignore("local test")
+    @Disabled("local test")
     @Test
     public void testAllCommitsJenkins() throws IOException {
         helper.close();
@@ -404,7 +393,7 @@ public class JGitHelperTest {
         runAllCommits();
     }
 
-    @Ignore("local test")
+    @Disabled("local test")
     @Test
     public void testAllCommitsPOI() throws IOException {
         helper.close();
@@ -420,7 +409,7 @@ public class JGitHelperTest {
         for (int i = 0; i < 3; i++) {
             start = System.currentTimeMillis();
             int size = helper.allCommits(null).size();
-            assertTrue("Had size: " + size, size > 3);
+            assertTrue(size > 3, "Had size: " + size);
             System.out.print("." + size + ": " + (System.currentTimeMillis() - start));
         }
 
@@ -428,13 +417,13 @@ public class JGitHelperTest {
         start = System.currentTimeMillis();
         for (int i = 0; i < 10; i++) {
             int size = helper.allCommits(null).size();
-            assertTrue("Had size: " + size, size > 3);
+            assertTrue(size > 3, "Had size: " + size);
             System.out.print("." + size);
         }
         System.out.println("avg.time: " + (System.currentTimeMillis() - start) / 10);
     }
 
-    @Ignore("local test")
+    @Disabled("local test")
     @Test
     public void testSubversionEmptyFile() throws Exception {
         JGitHelper jgitHelper = new JGitHelper("/opt/Subversion/git");
@@ -458,7 +447,7 @@ public class JGitHelperTest {
         items = jgitHelper.readElementsAt(commit, "build/generator");
         assertNotNull(items);
         assertTrue(items.size() > 0);
-        assertTrue("Had: " + items, items.contains("__init__.py"));
+        assertTrue(items.contains("__init__.py"), "Had: " + items);
 
         try (InputStream openFile = jgitHelper.openFile(commit, "build/generator/__init__.py")) {
             String string = IOUtils.toString(openFile, CHARSET);
@@ -486,7 +475,7 @@ public class JGitHelperTest {
 
     @Test
     public void testStashWithTestData() throws IOException {
-        Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+        Assumptions.assumeTrue(hasStashes, "Cannot test stashes without having local stashes");
 
         String commit = helper.getStashHeadCommit("stash@{0}");
         checkCommitContents(commit);
@@ -494,7 +483,7 @@ public class JGitHelperTest {
 
     @Test
     public void testStashOrigWithTestData() throws IOException {
-        Assume.assumeTrue("Cannot test stashes without having local stashes", hasStashes);
+        Assumptions.assumeTrue(hasStashes, "Cannot test stashes without having local stashes");
 
         String commit = helper.getStashOrigCommit("stash@{0}");
         checkCommitContents(commit);
@@ -505,7 +494,7 @@ public class JGitHelperTest {
 
         // check that the test-data is there
         List<String> elements = helper.readElementsAt(commit, "src/test/data");
-        assertEquals("Had: " + elements, 4, elements.size());
+        assertEquals(4, elements.size(), "Had: " + elements);
         assertTrue(elements.contains("emptytestfile"));
         assertTrue(elements.contains("one"));
         assertTrue(elements.contains("symlink"));
@@ -538,12 +527,10 @@ public class JGitHelperTest {
 
         // check that we can read the symlink
         try (InputStream stream = helper.openFile(commit, "src/test/data/symlink")) {
-            assertEquals("Should be 'one' as it contains the filename of the file pointed to!",
-                    "one", IOUtils.toString(stream, CHARSET).trim());
+            assertEquals("one", IOUtils.toString(stream, CHARSET).trim(), "Should be 'one' as it contains the filename of the file pointed to!");
         }
         try (InputStream stream = helper.openFile(commit, "src/test/data/rellink")) {
-            assertEquals("Should be '../../../build.gradle' as it contains the filename of the file pointed to!",
-                    "../../../build.gradle", IOUtils.toString(stream, CHARSET).trim());
+            assertEquals("../../../build.gradle", IOUtils.toString(stream, CHARSET).trim(), "Should be '../../../build.gradle' as it contains the filename of the file pointed to!");
         }
 
         // read the symlinks
@@ -566,16 +553,17 @@ public class JGitHelperTest {
     @Test
     public void testToString() {
         // toString should not return null
-        assertNotNull("A derived toString() should not return null!", helper.toString());
+        assertNotNull(helper.toString(), "A derived toString() should not return null!");
 
         // toString should not return an empty string
-        assertNotEquals("A derived toString() should not return an empty string!", "", helper.toString());
+        assertNotEquals("", helper.toString(), "A derived toString() should not return an empty string!");
 
         // check that calling it multiple times leads to the same value
         String value = helper.toString();
         for (int i = 0; i < 10; i++) {
-            assertEquals("toString() is expected to result in the same result across repeated calls!", value,
-                    helper.toString());
+            assertEquals(value,
+                    helper.toString(),
+                    "toString() is expected to result in the same result across repeated calls!");
         }
 
     }
@@ -679,7 +667,7 @@ public class JGitHelperTest {
         }
     }
 
-    @Ignore("Just used for testing")
+    @Disabled("Just used for testing")
     @Test
     public void testGitLinkRepository() throws Exception {
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
@@ -703,7 +691,7 @@ public class JGitHelperTest {
 
                 assertFalse(subRepo.isBare());
                 List<Ref> allRefs = subRepo.getRefDatabase().getRefs();
-                assertFalse("We should find some refs via submodule-repository", allRefs.isEmpty());
+                assertFalse(allRefs.isEmpty(), "We should find some refs via submodule-repository");
 
 //        {
 //            SubmoduleWalk walk = SubmoduleWalk.forIndex( repository );
@@ -769,7 +757,7 @@ public class JGitHelperTest {
 //        }
     }
 
-    @Ignore("Used for local testing")
+    @Disabled("Used for local testing")
     @Test
     public void testPOIInvalidSubmodule() throws IOException {
         try (JGitHelper jgit = new JGitHelper("/opt/poi")) {
@@ -799,7 +787,7 @@ public class JGitHelperTest {
         }
     }
 
-    @Ignore("Just a local test")
+    @Disabled("Just a local test")
     @Test
     public void testStrangeBareRepo() throws IOException {
         String gitDir = "/opt/openambit/openambit.git";

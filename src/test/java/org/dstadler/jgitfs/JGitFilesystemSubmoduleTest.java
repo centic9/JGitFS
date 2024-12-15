@@ -6,10 +6,10 @@ import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode.NodeType;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,8 +17,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class JGitFilesystemSubmoduleTest {
     private static final String CLONE_URL = "https://github.com/githubtraining/example-dependency.git";
@@ -28,7 +28,7 @@ public class JGitFilesystemSubmoduleTest {
 
     private JGitFilesystem fs;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws GitAPIException {
         // clone sample repo if not available yet
         if (!CLONE_DIR.exists()) {
@@ -42,12 +42,12 @@ public class JGitFilesystemSubmoduleTest {
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         fs = new JGitFilesystem(CLONE_DIR.getAbsolutePath(), false);
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws IOException {
         fs.close();
     }
@@ -57,8 +57,7 @@ public class JGitFilesystemSubmoduleTest {
         ByteBuffer buffer = ByteBuffer.allocate(1000);
         assertEquals(0, fs.readlink("/branch/master", buffer, 1000));
 
-        assertEquals("A commit-ish link should be written to the buffer, but had: " + new String(buffer.array(), 0, buffer.position()),
-                1000 - 51, buffer.remaining());
+        assertEquals(1000 - 51, buffer.remaining(), "A commit-ish link should be written to the buffer, but had: " + new String(buffer.array(), 0, buffer.position()));
         // e.g. ../commit/43/27273e69afcd040ba1b4d3766ea1f43e0024f3
         String commit = new String(buffer.array(), 0, buffer.position()).substring(2);
 
@@ -78,15 +77,14 @@ public class JGitFilesystemSubmoduleTest {
         ByteBuffer buffer = ByteBuffer.allocate(1000);
 
         assertEquals(0, fs.readlink("/branch/master", buffer, 1000));
-        assertEquals("A commit-ish link should be written to the buffer, but had: " + new String(buffer.array(), 0, buffer.position()),
-                1000 - 51, buffer.remaining());
+        assertEquals(1000 - 51, buffer.remaining(), "A commit-ish link should be written to the buffer, but had: " + new String(buffer.array(), 0, buffer.position()));
         // e.g. ../commit/43/27273e69afcd040ba1b4d3766ea1f43e0024f3
         String commit = new String(buffer.array(), 0, buffer.position()).substring(2);
 
         // check that we can read the gitlink
         buffer = ByteBuffer.allocate(1000);
         assertEquals(0, fs.readlink(commit + "/js", buffer, 1000));
-        assertEquals("Incorrect number of bytes written to the buffer", 930, buffer.remaining());
+        assertEquals(930, buffer.remaining(), "Incorrect number of bytes written to the buffer");
 
         assertEquals("../../../submodule/js/commit/c3/c588713233609f5bbbb2d9e7f3fb4a660f3f72",
                 new String(buffer.array(), 0, buffer.position()));

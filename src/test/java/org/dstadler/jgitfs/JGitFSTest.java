@@ -2,15 +2,16 @@ package org.dstadler.jgitfs;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.dstadler.commons.testing.PrivateConstructorCoverage;
 import org.dstadler.commons.testing.TestHelpers;
-import org.junit.Assume;
-import org.junit.Test;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class JGitFSTest {
 
@@ -39,8 +40,8 @@ public class JGitFSTest {
 
     @Test
     public void testMainOneArgDot() throws Exception {
-		Assume.assumeFalse("Not executed on Windows for now because of https://github.com/EtiennePerot/fuse-jna/issues/40",
-				SystemUtils.IS_OS_WINDOWS);
+		Assumptions.assumeFalse(SystemUtils.IS_OS_WINDOWS,
+				"Not executed on Windows for now because of https://github.com/EtiennePerot/fuse-jna/issues/40");
 
         try {
 			JGitFS.main("--test-only", ".");
@@ -73,8 +74,8 @@ public class JGitFSTest {
 
     @Test
     public void testMainMultiple() throws Exception {
-        Assume.assumeFalse("Not executed on Windows for now because of https://github.com/EtiennePerot/fuse-jna/issues/44",
-				SystemUtils.IS_OS_WINDOWS);
+        Assumptions.assumeFalse(SystemUtils.IS_OS_WINDOWS,
+				"Not executed on Windows for now because of https://github.com/EtiennePerot/fuse-jna/issues/44");
 
         try {
             // if we have one that works and the last one an invalid one we get an exception, but did the mounting
@@ -90,7 +91,7 @@ public class JGitFSTest {
         } catch (@SuppressWarnings("unused") IOException e) {
             // happens when run in CloudBees, but could not find out details...
         } catch (IllegalStateException e) {
-            assertTrue("Had: " + e.getMessage(), e.getMessage().contains("invalidrepo"));
+            assertTrue(e.getMessage().contains("invalidrepo"), "Had: " + e.getMessage());
         }
     }
 
@@ -125,9 +126,9 @@ public class JGitFSTest {
             }
         } catch (IOException e) {
             // happens when run in CloudBees, but could not find out details...
-            Assume.assumeNoException("In some CI environments this will fail", e);
+            Assumptions.abort("In some CI environments this will fail\n" + ExceptionUtils.getStackTrace(e));
         } catch (UnsatisfiedLinkError e) {
-            Assume.assumeNoException("Will fail on Windows", e);
+            Assumptions.abort("Will fail on Windows\n" + ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -157,9 +158,9 @@ public class JGitFSTest {
             }
         } catch (IOException e) {
             // happens when run in CloudBees, but could not find out details...
-            Assume.assumeNoException("In some CI environments this will fail", e);
+            Assumptions.abort("In some CI environments this will fail\n" + ExceptionUtils.getStackTrace(e));
         } catch (UnsatisfiedLinkError e) {
-            Assume.assumeNoException("Will fail on Windows", e);
+            Assumptions.abort("Will fail on Windows\n" + ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -189,9 +190,9 @@ public class JGitFSTest {
             }
         } catch (IOException e) {
             // happens when run in CloudBees, but could not find out details...
-            Assume.assumeNoException("In some CI environments this will fail", e);
+            Assumptions.abort("In some CI environments this will fail\n" + ExceptionUtils.getStackTrace(e));
         } catch (UnsatisfiedLinkError e) {
-            Assume.assumeNoException("Will fail on Windows", e);
+            Assumptions.abort("Will fail on Windows\n" + ExceptionUtils.getStackTrace(e));
         }
     }
 }

@@ -2,11 +2,11 @@ package org.dstadler.jgitfs.util;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.dstadler.commons.testing.PrivateConstructorCoverage;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.NoSuchElementException;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class GitUtilsTest {
     // helper method to get coverage of the unused constructor

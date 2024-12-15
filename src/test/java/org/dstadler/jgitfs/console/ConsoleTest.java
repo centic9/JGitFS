@@ -1,22 +1,22 @@
 package org.dstadler.jgitfs.console;
 
 import jline.console.ConsoleReader;
-import org.junit.Assume;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ConsoleTest {
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {
         String travis = System.getenv("RUNNING_IN_TRAVIS");
-        Assume.assumeTrue("Disable this test when running on travis",
-                travis == null || !travis.equalsIgnoreCase("true"));
+        Assumptions.assumeTrue(travis == null || !travis.equalsIgnoreCase("true"),
+                "Disable this test when running on travis");
     }
 
     @Test
@@ -28,8 +28,8 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertTrue("Had: " + outStr, outStr.contains("quit"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertTrue(outStr.contains("quit"), "Had: " + outStr);
     }
 
     @Test
@@ -41,8 +41,8 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertFalse("Had: " + outStr, outStr.contains("quit"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertFalse(outStr.contains("quit"), "Had: " + outStr);
     }
 
     @Test
@@ -54,10 +54,10 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertTrue("Had: " + outStr, outStr.contains("quit"));
-        assertTrue("Had: " + outStr, outStr.contains("mountpoint"));
-        assertTrue("Had: " + outStr, outStr.contains("blabla"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertTrue(outStr.contains("quit"), "Had: " + outStr);
+        assertTrue(outStr.contains("mountpoint"), "Had: " + outStr);
+        assertTrue(outStr.contains("blabla"), "Had: " + outStr);
     }
 
     @Test
@@ -69,8 +69,8 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertTrue("Had: " + outStr, outStr.contains("exit"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertTrue(outStr.contains("exit"), "Had: " + outStr);
     }
 
     @Test
@@ -82,15 +82,15 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertTrue("Had: " + outStr, outStr.contains("help"));
-        assertTrue("Had: " + outStr, outStr.contains("umount"));
-        assertTrue("Had: " + outStr, outStr.contains("exit"));
-        assertTrue("Had: " + outStr, outStr.contains("list"));
-        assertTrue("Had: " + outStr, outStr.contains("mountpoint"));
-        assertTrue("Had: " + outStr, outStr.contains("git-dir"));
-        assertTrue("Had: " + outStr, outStr.contains("cls"));
-        assertTrue("Had: " + outStr, outStr.contains("quit"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertTrue(outStr.contains("help"), "Had: " + outStr);
+        assertTrue(outStr.contains("umount"), "Had: " + outStr);
+        assertTrue(outStr.contains("exit"), "Had: " + outStr);
+        assertTrue(outStr.contains("list"), "Had: " + outStr);
+        assertTrue(outStr.contains("mountpoint"), "Had: " + outStr);
+        assertTrue(outStr.contains("git-dir"), "Had: " + outStr);
+        assertTrue(outStr.contains("cls"), "Had: " + outStr);
+        assertTrue(outStr.contains("quit"), "Had: " + outStr);
     }
 
     @Test
@@ -102,9 +102,9 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertTrue("Had: " + outStr, outStr.contains("list"));
-        assertTrue("Had: " + outStr, outStr.contains("exit"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertTrue(outStr.contains("list"), "Had: " + outStr);
+        assertTrue(outStr.contains("exit"), "Had: " + outStr);
     }
 
     @Test
@@ -116,9 +116,9 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertTrue("Had: " + outStr, outStr.contains("cls"));
-        assertTrue("Had: " + outStr, outStr.contains("exit"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertTrue(outStr.contains("cls"), "Had: " + outStr);
+        assertTrue(outStr.contains("exit"), "Had: " + outStr);
     }
 
     // try to narrow down a test-failure in travis
@@ -145,9 +145,9 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertTrue("Had: " + outStr, outStr.contains("cls"));
-        assertTrue("Had: " + outStr, outStr.contains("exit"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertTrue(outStr.contains("cls"), "Had: " + outStr);
+        assertTrue(outStr.contains("exit"), "Had: " + outStr);
     }
 
     @Test
@@ -159,9 +159,9 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertTrue("Had: " + outStr, outStr.contains("mount"));
-        assertTrue("Had: " + outStr, outStr.contains("exit"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertTrue(outStr.contains("mount"), "Had: " + outStr);
+        assertTrue(outStr.contains("exit"), "Had: " + outStr);
     }
 
     @Test
@@ -173,10 +173,10 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertTrue("Had: " + outStr, outStr.contains("mount"));
-        assertTrue("Had: " + outStr, outStr.contains("Could not find git repository at test/.git"));
-        assertTrue("Had: " + outStr, outStr.contains("exit"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertTrue(outStr.contains("mount"), "Had: " + outStr);
+        assertTrue(outStr.contains("Could not find git repository at test/.git"), "Had: " + outStr);
+        assertTrue(outStr.contains("exit"), "Had: " + outStr);
     }
 
     @Test
@@ -188,10 +188,10 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertTrue("Had: " + outStr, outStr.contains("mount"));
-        assertTrue("Had: " + outStr, outStr.contains("Could not find git repository at test/git/.git"));
-        assertTrue("Had: " + outStr, outStr.contains("exit"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertTrue(outStr.contains("mount"), "Had: " + outStr);
+        assertTrue(outStr.contains("Could not find git repository at test/git/.git"), "Had: " + outStr);
+        assertTrue(outStr.contains("exit"), "Had: " + outStr);
     }
 
     @Test
@@ -203,10 +203,10 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertTrue("Had: " + outStr, outStr.contains("mount"));
-        assertTrue("Had: " + outStr, outStr.contains("Could not find git repository at test/.git"));
-        assertTrue("Had: " + outStr, outStr.contains("exit"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertTrue(outStr.contains("mount"), "Had: " + outStr);
+        assertTrue(outStr.contains("Could not find git repository at test/.git"), "Had: " + outStr);
+        assertTrue(outStr.contains("exit"), "Had: " + outStr);
     }
 
     @Test
@@ -218,9 +218,9 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertTrue("Had: " + outStr, outStr.contains("unmount"));
-        assertTrue("Had: " + outStr, outStr.contains("exit"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertTrue(outStr.contains("unmount"), "Had: " + outStr);
+        assertTrue(outStr.contains("exit"), "Had: " + outStr);
     }
 
     @Test
@@ -232,9 +232,9 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertTrue("Had: " + outStr, outStr.contains("unmount"));
-        assertTrue("Had: " + outStr, outStr.contains("exit"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertTrue(outStr.contains("unmount"), "Had: " + outStr);
+        assertTrue(outStr.contains("exit"), "Had: " + outStr);
     }
 
     @Test
@@ -246,8 +246,8 @@ public class ConsoleTest {
         out.close();
 
         String outStr = out.toString();
-        assertTrue("Had: " + outStr, outStr.contains("jgitfs>"));
-        assertTrue("Had: " + outStr, outStr.contains("umount"));
-        assertTrue("Had: " + outStr, outStr.contains("exit"));
+        assertTrue(outStr.contains("jgitfs>"), "Had: " + outStr);
+        assertTrue(outStr.contains("umount"), "Had: " + outStr);
+        assertTrue(outStr.contains("exit"), "Had: " + outStr);
     }
 }

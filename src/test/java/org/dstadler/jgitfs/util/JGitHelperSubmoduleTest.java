@@ -4,19 +4,17 @@ import net.fusejna.StructStat.StatWrapper;
 import net.fusejna.types.TypeMode.NodeType;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.NoSuchElementException;
 
 import static org.dstadler.jgitfs.JGitFilesystemTest.getStatsWrapper;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class JGitHelperSubmoduleTest {
     private static final String CLONE_URL = "https://github.com/githubtraining/example-dependency.git";
@@ -26,7 +24,7 @@ public class JGitHelperSubmoduleTest {
 
     private JGitHelper helper;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws GitAPIException {
         // clone sample repo if not available yet
         if (!CLONE_DIR.exists()) {
@@ -40,12 +38,12 @@ public class JGitHelperSubmoduleTest {
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         helper = new JGitHelper(CLONE_DIR.getAbsolutePath());
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         helper.close();
     }

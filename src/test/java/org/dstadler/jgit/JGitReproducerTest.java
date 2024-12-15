@@ -12,15 +12,14 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.junit.Assume;
-import org.junit.Test;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Some tests to try to narrow down/reproduce some problems in JGit itself.
@@ -28,7 +27,7 @@ import java.nio.file.Paths;
 public class JGitReproducerTest {
     @Test
     public void testSymlink() throws Exception {
-        Assume.assumeFalse("Symbolic links do not work on Windows", SystemUtils.IS_OS_WINDOWS);
+        Assumptions.assumeFalse(SystemUtils.IS_OS_WINDOWS, "Symbolic links do not work on Windows");
 
         try (Repository repository = createNewRepository()) {
             commitSymbolicLink(repository);
@@ -71,8 +70,8 @@ public class JGitReproducerTest {
     private void commitSymbolicLink(Repository repository) throws IOException, GitAPIException {
         try (Git git = new Git(repository)) {
             // create a symbolic link
-            Path newLink = Paths.get(repository.getDirectory().getParentFile().getAbsolutePath(), "link");
-            Path target = Paths.get("/tmp");
+            Path newLink = Path.of(repository.getDirectory().getParentFile().getAbsolutePath(), "link");
+            Path target = Path.of("/tmp");
             Files.createSymbolicLink(newLink, target);
 
             // run the add-call
