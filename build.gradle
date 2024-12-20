@@ -17,15 +17,15 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.17.0'
 	implementation 'net.java.dev.jna:jna:3.5.2'
 	implementation 'org.eclipse.jgit:org.eclipse.jgit:7.0.0.202409031743-r'
-	implementation 'com.google.guava:guava:33.3.1-jre'
+	implementation 'com.google.guava:guava:33.4.0-jre'
 	implementation files('lib/fuse-jna-1.0.3.2.jar')
 	implementation 'jline:jline:2.14.6'
 
 	runtimeOnly 'org.slf4j:slf4j-simple:2.0.16'
 
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.3'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.3'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.4'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.11.4'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
 	testImplementation 'org.dstadler:commons-test:1.0.0.21'
 }
 
