@@ -24,9 +24,9 @@ dependencies {
 
 	runtimeOnly 'org.slf4j:slf4j-simple:2.0.17'
 
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.0'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.13.0'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.0'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.13.1'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.13.1'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.13.1'
 
 	testImplementation 'org.dstadler:commons-test:1.0.0.22'
 }
@@ -36,7 +36,7 @@ test {
 }
 
 wrapper {
-    gradleVersion = '8.14.1'
+    gradleVersion = '8.14.2'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -47,7 +47,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 jacoco {
-	toolVersion = '0.8.12'
+	toolVersion = '0.8.13'
 }
 
 jacocoTestReport {
