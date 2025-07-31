@@ -2,14 +2,14 @@
 [![Gradle Status](https://gradleupdate.appspot.com/centic9/JGitFS/status.svg?branch=master)](https://gradleupdate.appspot.com/centic9/JGitFS/status)
 [![Tag](https://img.shields.io/github/tag/centic9/JGitFS.svg)](https://github.com/centic9/JGitFS/tags)
 
-JGitFS provides access to Git branches/tags/commits like if they would be separate directories via a [FUSE][Linux-Fuse] 
+JGitFS provides access to Git branches/tags/commits as if they would be separate directories. Implemented via a [FUSE][Linux-Fuse] 
 userland filesystem. 
 
 ## Getting started
 
 #### Required packages
 
-Make sure to have Java 8+ and libfuse2 installed.
+Make sure to have Java 17+ and libfuse2 installed.
 
 On Debian/Ubuntu based systems you can run:
 
