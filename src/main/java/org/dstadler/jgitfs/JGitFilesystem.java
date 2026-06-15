@@ -28,7 +28,7 @@ import net.fusejna.types.TypeMode.NodeType;
 import net.fusejna.util.FuseFilesystemAdapterFull;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.tuple.Pair;
 import org.dstadler.jgitfs.util.GitUtils;
 import org.dstadler.jgitfs.util.JGitHelper;
@@ -261,7 +261,7 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
             return 0;
         } else if (GitUtils.isCommitSub(path)) {
             // get the sub that is requested here
-            String sub = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH);
+            String sub = Strings.CS.removeStart(path, GitUtils.COMMIT_SLASH);
             try {
                 // list all commits for the requested sub
                 Collection<String> items = jgitHelper.allCommits(sub);
@@ -361,15 +361,15 @@ public class JGitFilesystem extends FuseFilesystemAdapterFull implements Closeab
                             try {
                                 final String commit;
                                 if (GitUtils.isBranchDir(path)) {
-                                    commit = jgitHelper.getBranchHeadCommit(StringUtils.removeStart(path, GitUtils.BRANCH_SLASH));
+                                    commit = jgitHelper.getBranchHeadCommit(Strings.CS.removeStart(path, GitUtils.BRANCH_SLASH));
                                 } else if (GitUtils.isTagDir(path)) {
-                                    commit = jgitHelper.getTagHeadCommit(StringUtils.removeStart(path, GitUtils.TAG_SLASH));
+                                    commit = jgitHelper.getTagHeadCommit(Strings.CS.removeStart(path, GitUtils.TAG_SLASH));
                                 } else if (GitUtils.isRemoteDir(path)) {
-                                    commit = jgitHelper.getRemoteHeadCommit(StringUtils.removeStart(path, GitUtils.REMOTE_SLASH));
+                                    commit = jgitHelper.getRemoteHeadCommit(Strings.CS.removeStart(path, GitUtils.REMOTE_SLASH));
                                 } else if (GitUtils.isStashDir(path)) {
-                                    commit = jgitHelper.getStashHeadCommit(StringUtils.removeStart(path, GitUtils.STASH_SLASH));
+                                    commit = jgitHelper.getStashHeadCommit(Strings.CS.removeStart(path, GitUtils.STASH_SLASH));
                                 } else if (GitUtils.isStashOrigDir(path)) {
-                                    commit = jgitHelper.getStashOrigCommit(StringUtils.removeStart(path, GitUtils.STASHORIG_SLASH));
+                                    commit = jgitHelper.getStashOrigCommit(Strings.CS.removeStart(path, GitUtils.STASHORIG_SLASH));
                                 } else {
                                     String lCommit = jgitHelper.readCommit(path);
                                     String dir = jgitHelper.readPath(path);

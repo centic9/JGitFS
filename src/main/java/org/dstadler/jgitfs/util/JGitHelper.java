@@ -20,6 +20,7 @@ import net.fusejna.types.TypeMode.NodeType;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -106,7 +107,7 @@ public class JGitHelper implements Closeable {
         if (!repository.isBare()) {
             return repository.getWorkTree().getName();
         }
-        return new File(StringUtils.removeEnd(
+        return new File(Strings.CS.removeEnd(
                 repository.getDirectory().getAbsolutePath(),
                 ".git")).getName();
     }
@@ -119,7 +120,7 @@ public class JGitHelper implements Closeable {
      * @return The resulting commit-id
      */
     public String readCommit(String path) {
-        String commit = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH).replace("/", "");
+        String commit = Strings.CS.removeStart(path, GitUtils.COMMIT_SLASH).replace("/", "");
         return StringUtils.substring(commit, 0, 40);
     }
 
@@ -131,7 +132,7 @@ public class JGitHelper implements Closeable {
      * @return The extracted path to the directory/file
      */
     public String readPath(final String path) {
-        String file = StringUtils.removeStart(path, GitUtils.COMMIT_SLASH);
+        String file = Strings.CS.removeStart(path, GitUtils.COMMIT_SLASH);
         return StringUtils.substring(file, 40 + 2);    // cut away commitish and two slashes
     }
 
@@ -311,7 +312,7 @@ public class JGitHelper implements Closeable {
             String name = adjustName(ref.getName());
             branches.add(name);
             if (name.startsWith("refs_heads_")) {
-                branches.add(StringUtils.removeStart(name, "refs_heads_"));
+                branches.add(Strings.CS.removeStart(name, "refs_heads_"));
             }
         }
         return branches;
@@ -367,7 +368,7 @@ public class JGitHelper implements Closeable {
             String name = adjustName(ref.getName());
             remotes.add(name);
             if (name.startsWith("refs_remotes_")) {
-                remotes.add(StringUtils.removeStart(name, "refs_remotes_"));
+                remotes.add(Strings.CS.removeStart(name, "refs_remotes_"));
             }
         }
         return remotes;
@@ -422,7 +423,7 @@ public class JGitHelper implements Closeable {
             String name = adjustName(ref.getName());
             tags.add(name);
             if (name.startsWith("refs_tags_")) {
-                tags.add(StringUtils.removeStart(name, "refs_tags_"));
+                tags.add(Strings.CS.removeStart(name, "refs_tags_"));
             }
         }
         return tags;

@@ -50,20 +50,20 @@ public class JGitFS {
         // try to determine mountpoint if only one path to a git-repository is given
         List<String> argList = cmd.getArgList();
         if (argList.size() == 1) {
-            String name = new File(argList.get(0)).getName();
+            String name = new File(argList.getFirst()).getName();
 
 			if (".".equals(name)) {
-				name = new File(argList.get(0)).getCanonicalFile().getName();
+				name = new File(argList.getFirst()).getCanonicalFile().getName();
 			}
 
             if ("git".equals(name)) {
                 // use a different name than "git" for automatically finding the name
                 // for the mount
-                name = new File(argList.get(0)).getCanonicalFile().getParentFile().getName();
+                name = new File(argList.getFirst()).getCanonicalFile().getParentFile().getName();
             }
 
-            System.out.println("Using mountpoint " + "/fs/" + name + " for repository at " + argList.get(0));
-            argList = ImmutableList.of(argList.get(0), "/fs/" + name);
+            System.out.println("Using mountpoint " + "/fs/" + name + " for repository at " + argList.getFirst());
+            argList = ImmutableList.of(argList.getFirst(), "/fs/" + name);
         }
 
         if (argList.size() % 2 != 0) {

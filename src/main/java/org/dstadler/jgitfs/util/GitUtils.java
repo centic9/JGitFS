@@ -125,8 +125,7 @@ public class GitUtils {
     private static long getID(boolean user) {
         String userName = System.getProperty("user.name");
         try {
-            String command = "id -" + (user ? "u " : "g ") + userName;
-            Process child = Runtime.getRuntime().exec(command);
+            Process child = Runtime.getRuntime().exec(new String[] { "id", user ? "u" : "g", userName});
 
             // Get the input stream and read from it
             try (InputStream inputStream = child.getInputStream()) {
